@@ -7,6 +7,24 @@
 </head>
 <body>
     <h1>Ok</h1>
+    <form name="contact" netlify>
+    <p>
+        <label>Name <input type="text" name="name" /></label>
+    </p>
+    <p>
+        <label>Email <input type="email" name="email" /></label>
+    </p>
+    <p>
+        <button type="submit">Send</button>
+    </p>
+    </form>
+    <hr>
+    <form name="contact" method="POST" data-netlify="true">
+    <p><label>Nama: <input type="text" name="name" /></label></p>
+    <p><label>Email: <input type="email" name="email" /></label></p>
+    <p><label>Pesan: <textarea name="message"></textarea></label></p>
+    <p><button type="submit">Kirim</button></p>
+    </form>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 </body>
