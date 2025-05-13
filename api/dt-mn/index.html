@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+function callViaJavaScript() {
+    fetch('https://cdn.weva.my.id/apix/dtMn', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tgl: '2025-05-13' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Response:', data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function callViaAxios() {
+    axios.post('https://cdn.weva.my.id/apix/dtMn', {
+        tgl: '2025-05-13'
+    })
+    .then(response => {
+        console.log('Response:', response.data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function callViaJQuery() {
+    $.ajax({
+        url: 'https://cdn.weva.my.id/apix/dtMn',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ tgl: '2025-05-13' }),
+        success: function (data) {
+            console.log('Response:', data);
+        },
+        error: function (xhr, status, error) {
+            console.error('Error:', error);
+        }
+    });
+}
+    </script>
+</body>
+</html>
