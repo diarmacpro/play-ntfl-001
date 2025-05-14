@@ -1,57 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xxx</title>
-</head>
-<body>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-function callViaJavaScript() {
-    fetch('https://cdn.weva.my.id/apix/dtMn', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tgl: '2025-05-13' })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Response:', data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>xxx</title>
+    </head>
+    <body>
+        
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" integrity="sha256-xxU8WD/MI8uoZ1geRPVqbSvo6MuHLOUHfu/0Vg8Bewg=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@f52d4e44b5e1b0405705bf4555d9fc6a3558ae61/firebase-olah-data/f.o.d_v.0.1.js" integrity="sha256-zWulae3cn5J3A+XOHBtvtBUR7ZWYCl49OslL4exrlyQ=" crossorigin="anonymous"></script>
 
-function callViaAxios() {
-    axios.post('https://cdn.weva.my.id/apix/dtMn', {
-        tgl: '2025-05-13'
-    })
-    .then(response => {
-        console.log('Response:', response.data);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
-}
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js';
 
-function callViaJQuery() {
-    $.ajax({
-        url: 'https://cdn.weva.my.id/apix/dtMn',
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ tgl: '2025-05-13' }),
-        success: function (data) {
-            console.log('Response:', data);
-        },
-        error: function (xhr, status, error) {
-            console.error('Error:', error);
-        }
-    });
-}
+        const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
+        const db = getDatabase(app);
+        Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
     </script>
-</body>
+    <script>
+        let fbsSvc;
+        function callViaJavaScript(tgl, callback) {
+            fetch('https://cdn.weva.my.id/apix/dtMn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tgl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (typeof callback === 'function') {
+                    callback(null, data); // callback(error, data)
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (typeof callback === 'function') {
+                    callback(error, null); // callback(error, data)
+                }
+            });
+        }
+
+    </script>
+    <script>
+        $(()=>{
+            fbsSvc = new Fbs(db);
+        })
+    </script>
+    </body>
 </html>
