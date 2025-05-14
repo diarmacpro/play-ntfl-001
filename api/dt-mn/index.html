@@ -3,14 +3,42 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>xxx</title>
+        <title>Verifikasi Barang Masuk</title>
+        <link rel="icon" href="https://cdn-icons-png.freepik.com/512/628/628300.png" />
+        <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body>
-        
+        <div class="p-6 bg-gray-100 min-h-screen">
+            <div class="mx-auto bg-white shadow-lg rounded-xl">
+                <div class="overflow-x-auto">
+                    <div style="max-height:700px;overflow:auto;">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-800 text-white sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID Stock</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">No PO</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID Kain</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Lot#Roll</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty Supplier</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty Nett</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"></th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"></th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kol Rak</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID HLP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable" class="divide-y divide-gray-100 bg-white text-sm text-gray-700">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" integrity="sha256-xxU8WD/MI8uoZ1geRPVqbSvo6MuHLOUHfu/0Vg8Bewg=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@f52d4e44b5e1b0405705bf4555d9fc6a3558ae61/firebase-olah-data/f.o.d_v.0.1.js" integrity="sha256-zWulae3cn5J3A+XOHBtvtBUR7ZWYCl49OslL4exrlyQ=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" integrity="sha256-5kpwc2PDnZf+BOBdrhIYWlFq4QlxajP7UhRJZtU3Wos=" crossorigin="anonymous"></script>
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
@@ -21,34 +49,151 @@
         Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
     </script>
     <script>
-        let fbsSvc;
-        function callViaJavaScript(tgl, callback) {
-            fetch('https://cdn.weva.my.id/apix/dtMn', {
+        var fbsSvc, dataMainOnFbs, dataLocal = {
+            dataHelper: {},
+            dataRak: {},
+            dataKol: {}
+        };
+
+        // Load reference data
+        function loadReferenceData(callback) {
+            let loadCount = 0;
+            const checkComplete = () => {
+                loadCount++;
+                if (loadCount === 3) callback();
+            };
+            
+            fbsSvc.gDt('/app/data/helper', '', (dataHelper) => {
+                // Convert to id-based lookup object
+                dataLocal.dataHelper = _.reduce(dataHelper, (result, value) => {
+                    result[value.id_hlp] = value;
+                    return result;
+                }, {});
+                checkComplete();
+            });
+
+            fbsSvc.gDt('/app/data/rak', '', (dataRak) => {
+                // Convert to id-based lookup object by i, display v
+                dataLocal.dataRak = _.reduce(dataRak, (result, value) => {
+                    result[value.i] = value.v;
+                    return result;
+                }, {});
+                checkComplete();
+            });
+
+            fbsSvc.gDt('/app/data/kol', '', (dataKol) => {
+                // Convert to id-based lookup object by i, display v
+                dataLocal.dataKol = _.reduce(dataKol, (result, value) => {
+                    result[value.i] = value.v;
+                    return result;
+                }, {});
+                checkComplete();
+            });
+        }
+
+        function getHelperName(id) {
+            return _.get(dataLocal.dataHelper, [id, 'hlp'], id);
+        }
+
+        function getRakName(id) {
+            return dataLocal.dataRak[id] || id;
+        }
+
+        function getKolName(id) {
+            return dataLocal.dataKol[id] || id;
+        }
+
+        function renderTableData(data) {
+            const tableBody = document.getElementById('dataTable');
+            tableBody.innerHTML = '';
+            _.forEach(data, (item) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition';
+                // Compose Kol Rak and Lot#Roll
+                const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
+                const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
+                // Render columns in new order
+                const columns = [
+                    item.id_stock || '',
+                    item.no_po || '',
+                    item.id_kain || '',
+                    lotRoll,
+                    item.q_sup || '0.00',
+                    item.q_nett || '0.00',
+                    '', // empty col
+                    '', // empty col
+                    kolRak,
+                    getHelperName(item.id_hlp)
+                ];
+                columns.forEach(val => {
+                    const cell = document.createElement('td');
+                    cell.className = 'px-4 py-3';
+                    cell.textContent = val;
+                    row.appendChild(cell);
+                });
+                tableBody.appendChild(row);
+            });
+        }
+
+        function callData(url, payload, callback) {
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ tgl })
+                body: JSON.stringify(payload)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (typeof callback === 'function') {
-                    callback(null, data); // callback(error, data)
+                    callback(null, data);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 if (typeof callback === 'function') {
-                    callback(error, null); // callback(error, data)
+                    callback(error, null);
                 }
             });
         }
 
-    </script>
-    <script>
+        function callDataMain(tgl, callback) {
+            callData('https://cdn.weva.my.id/apix/dtMn', { tgl }, callback);
+        }
+
+        function generateDataMainOnFbs(tgl){
+            callDataMain(tgl,(err_data,data)=>{
+                if (err_data) {
+                    console.error(err_data);
+                }else{
+                    _.map(data,(v,k)=>{
+                        fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`,v,()=>{});
+                    })
+                }
+            })
+        }
+
+        function getDataMainOnFbs(tgl){
+            fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
+                dataMainOnFbs = data;
+                renderTableData(data);
+            });
+        }
+
         $(()=>{
             fbsSvc = new Fbs(db);
-        })
+            
+            // First load reference data, then get main data
+            loadReferenceData(() => {
+                const today = new Date().toISOString().split('T')[0];
+                getDataMainOnFbs(today);
+            });
+        });
     </script>
     </body>
 </html>
