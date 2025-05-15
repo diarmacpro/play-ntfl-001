@@ -15,3 +15,9 @@ callData('https://cdn.weva.my.id/apix/data/dtKol',{},(e,d)=>{
         fbsSvc.iDtKy('/app/data/kol',v,()=>{})
     })
 })
+
+callData('https://cdn.weva.my.id/apix/data/dtkain',{},(e,d)=>{
+    _.map(d,(v,k)=>{
+        fbsSvc.iDtKy('/app/data/kain',v,()=>{})
+    })
+})

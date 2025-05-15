@@ -10,6 +10,18 @@
     <body>
         <div class="p-6 bg-gray-100 min-h-screen">
             <div class="mx-auto bg-white shadow-lg rounded-xl">
+                <!-- Header Bar -->
+                <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
+                    <button id="btnRenew" class="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-900">Renew Data</button>
+                    <input id="searchInput" type="text" placeholder="Cari..." class="border rounded px-3 py-1 w-1/2 mx-4" />
+                    <span id="dataCount" class="text-xs text-gray-600">0 of 0</span>
+                    <div class="flex items-center gap-1">
+                        <span id="checkedCount" class="text-xs text-blue-700">Checked: 0</span>
+                        <button id="btnClearChecked" title="Clear Checked" class="text-xs text-gray-400 hover:text-red-500 focus:outline-none">&#10006;</button>
+                        <button id="btnSelectAll" title="Select All" class="text-xs text-gray-400 hover:text-green-600 focus:outline-none ml-1">&#10003; All</button>
+                    </div>
+                    <button id="btnProses" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800">Proses Data</button>
+                </div>
                 <div class="overflow-x-auto">
                     <div style="max-height:700px;overflow:auto;">
                         <table class="min-w-full divide-y divide-gray-200 border border-gray-400">
@@ -34,6 +46,16 @@
                 </div>
             </div>
         </div>
+        <!-- Modal for Proses Data -->
+        <div id="modalProses" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-xs flex flex-col items-center">
+                <h2 class="text-lg font-bold mb-4">Hello World</h2>
+                <div class="flex w-full gap-2">
+                    <button id="btnBatal" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-800 w-1/2">Batal</button>
+                    <button id="btnProsesModal" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800 w-1/2">Proses</button>
+                </div>
+            </div>
+        </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
@@ -54,6 +76,11 @@
             dataRak: {},
             dataKol: {}
         };
+        var checkedRows = {};
+        let totalData = 0;
+        
+        const dataCount = document.getElementById('dataCount');
+        const checkedCount = document.getElementById('checkedCount');
 
         // Load reference data
         function loadReferenceData(callback) {
@@ -73,18 +100,28 @@
             });
 
             fbsSvc.gDt('/app/data/rak', '', (dataRak) => {
-                // Convert to id-based lookup object by i, display v
-                dataLocal.dataRak = _.reduce(dataRak, (result, value) => {
-                    result[value.i] = value.v;
+                // Build lookup by i for display
+                dataLocal.dataRak = _.reduce(dataRak, function(result, value) {
+                    result[value.i] = value;
                     return result;
                 }, {});
                 checkComplete();
             });
 
             fbsSvc.gDt('/app/data/kol', '', (dataKol) => {
-                // Convert to id-based lookup object by i, display v
-                dataLocal.dataKol = _.reduce(dataKol, (result, value) => {
-                    result[value.i] = value.v;
+                // Build lookup by i for display
+                dataLocal.dataKol = _.reduce(dataKol, function(result, value) {
+                    result[value.i] = value;
+                    return result;
+                }, {});
+                checkComplete();
+            });
+
+            fbsSvc.gDt('/app/data/kain', '', (dataKain) => {
+                dataLocal.dataKain = dataKain; // keep as array
+                // Build lookup for rendering
+                dataLocal._kainLookup = _.reduce(dataKain, function(result, value) {
+                    result[value.id_kain] = value;
                     return result;
                 }, {});
                 checkComplete();
@@ -96,19 +133,73 @@
         }
 
         function getRakName(id) {
-            return dataLocal.dataRak[id] || id;
+            return (dataLocal.dataRak && dataLocal.dataRak[id]) ? dataLocal.dataRak[id].v : id;
         }
 
         function getKolName(id) {
-            return dataLocal.dataKol[id] || id;
+            return (dataLocal.dataKol && dataLocal.dataKol[id]) ? dataLocal.dataKol[id].v : id;
         }
 
+        function getKainName(id) {
+            return (dataLocal._kainLookup && dataLocal._kainLookup[id]) ? dataLocal._kainLookup[id].k : id;
+        }
+
+        function properText(text) {
+        return text
+            .toLowerCase()
+            .replace(/\b\w/g, char => char.toUpperCase());
+        }
+        
         function renderTableData(data) {
+            window._lastData = data;
+            let filtered = data;
+            console.log("xxx",filtered)
+            console.log("xxx",filtered.length)
+            let isSearchActive = window._searchQuery && window._searchQuery.length > 0;
+            if (isSearchActive) {
+                // Multi-keyword, order-insensitive search
+                const keywords = window._searchQuery.split(/\s+/).filter(Boolean);
+                filtered = _.filter(data, function(item) {
+                    const searchStr = [
+                        getKainName(item.id_kain),
+                        item.id_stock,
+                        item.no_po,
+                        item.lot,
+                        item.rol,
+                        getRakName(item.kd_rak),
+                        getKolName(item.kd_kol),
+                        getHelperName(item.id_hlp)
+                    ].join(' ').toLowerCase();
+                    return keywords.every(kw => searchStr.includes(kw));
+                });
+            }
+            // Update data count and checked count
+            if (window.dataMainOnFbs && typeof window.dataMainOnFbs === 'object') {
+                totalData = Object.keys(window.dataMainOnFbs).length;
+            }
+            if (dataCount) {
+                console.log(filtered.length);
+                dataCount.textContent = `${typeof filtered.length === 'undefined' ? totalData : (filtered.length === 0 ? 0 : filtered.length)} of ${totalData}`;
+            }
+            if (checkedCount) {
+                const checked = Object.values(checkedRows).filter(Boolean).length;
+                checkedCount.textContent = `Checked: ${checked}`;
+            }
             const tableBody = document.getElementById('dataTable');
             tableBody.innerHTML = '';
-            _.forEach(data, (item) => {
+            _.forEach(filtered, (item) => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition';
+                row.className = 'hover:bg-gray-50 transition cursor-pointer';
+                // Row check logic
+                row.onclick = function() {
+                    checkedRows[item.id_stock] = !checkedRows[item.id_stock];
+                    this.classList.toggle('bg-blue-100', checkedRows[item.id_stock]);
+                    this.classList.toggle('font-bold', checkedRows[item.id_stock]);
+                    updateCheckedInfo();
+                };
+                if (checkedRows[item.id_stock]) {
+                    row.classList.add('bg-blue-100', 'font-bold');
+                }
                 // Compose Kol Rak and Lot#Roll
                 const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
                 const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
@@ -121,7 +212,7 @@
                 const columns = [
                 item.id_stock || '',
                 item.no_po || '',
-                item.id_kain || '',
+                properText( getKainName( item.id_kain ) ),
                 lotRoll,
                 item.q_sup || '0.00',
                 item.q_nett || '0.00',
@@ -132,7 +223,7 @@
                 ];
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
-                    cell.className = 'px-4 py-3 border border-gray-400';
+                    cell.className = 'px-4 py-1 border border-gray-400';
                     // q_nett (idx 5) and selisih/sst (idx 6)
                     if (idx === 5 || idx === 6) {
                         const num = parseFloat(val);
@@ -144,6 +235,39 @@
                 });
                 tableBody.appendChild(row);
             });
+            updateCheckedInfo();
+        }
+
+        function filterAndRenderTable() {
+            // Always filter from the original data
+            const data = window._dataMainOnFbs || [];
+            let filtered = data;
+            if (window._searchQuery && window._searchQuery.length > 0) {
+                const keywords = window._searchQuery.split(/\s+/).filter(Boolean);
+                filtered = _.filter(data, function(item) {
+                    const searchStr = [
+                        getKainName(item.id_kain),
+                        item.id_stock,
+                        item.no_po,
+                        item.lot,
+                        item.rol,
+                        getRakName(item.kd_rak),
+                        getKolName(item.kd_kol),
+                        getHelperName(item.id_hlp)
+                    ].join(' ').toLowerCase();
+                    return keywords.every(kw => searchStr.includes(kw));
+                });
+            }
+            renderTableData(filtered);
+        }
+
+        function updateCheckedInfo() {
+            // Show checked count in checkedCount span
+            const checkedCount = document.getElementById('checkedCount');
+            if (checkedCount) {
+                const checked = Object.values(checkedRows).filter(Boolean).length;
+                checkedCount.textContent = `Checked: ${checked}`;
+            }
         }
 
         function callData(url, payload, callback) {
@@ -181,7 +305,10 @@
             callDataMain(tgl,(err_data,data)=>{
                 if (err_data) {
                     console.error(err_data);
-                }else{
+                } else if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'object' && Object.keys(data).length === 0)) {
+                    alert('Data tidak tersedia untuk tanggal tersebut!');
+                    window.location.href = './';
+                } else {
                     _.map(data,(v,k)=>{
                         fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`,v,()=>{});
                     })
@@ -189,10 +316,54 @@
             })
         }
 
-        function getDataMainOnFbs(tgl){
+        function checkAndFixDuplicates(tgl, callback) {
+            // Ambil data dari Firebase
             fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
-                dataMainOnFbs = data;
-                renderTableData(data);
+                if (!data || _.isEmpty(data)) {
+                    if (typeof callback === 'function') callback();
+                    return;
+                }
+                // Deteksi duplikat berdasarkan id_stock
+                const countById = _.countBy(data, 'id_stock');
+                const hasDuplicate = Object.values(countById).some(cnt => cnt > 1);
+                if (!hasDuplicate) {
+                    if (typeof callback === 'function') callback();
+                    return;
+                }
+                // Jika ada duplikat, hapus semua data di path utama
+                fbsSvc.delDt(`/app/verif-data-masuk/${tgl}`, '', () => {
+                    // Fetch data baru dari API
+                    callDataMain(tgl, (err, newData) => {
+                        if (!err && newData) {
+                            _.map(newData, (v) => {
+                                fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, v, () => {});
+                            });
+                            // Tunggu sebentar lalu callback
+                            setTimeout(() => {
+                                if (typeof callback === 'function') callback();
+                            }, 1200);
+                        } else {
+                            if (typeof callback === 'function') callback();
+                        }
+                    });
+                });
+            });
+        }
+
+        function getDataMainOnFbs(tgl){
+            checkAndFixDuplicates(tgl, () => {
+                fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
+                    dataMainOnFbs = data;
+                    window._dataMainOnFbs = data; // Save original data for filtering
+                    // If data is empty or null, generate and reload
+                    if (!data || _.isEmpty(data)) {
+                        generateDataMainOnFbs(tgl);
+                        // After generate, reload data (with delay to ensure write completes)
+                        setTimeout(() => getDataMainOnFbs(tgl), 1200);
+                    } else {
+                        filterAndRenderTable();
+                    }
+                });
             });
         }
 
@@ -200,11 +371,88 @@
             const urlParams = new URLSearchParams(window.location.search);
             const tgl = urlParams.get('tgl');
             fbsSvc = new Fbs(db);
+            if (!tgl) {
+                // Remove all body content
+                document.body.innerHTML = '';
+                // Create modal
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+                modal.innerHTML = `
+                    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-xs flex flex-col items-center">
+                        <h2 class="text-lg font-bold mb-4">Masukkan Tanggal</h2>
+                        <input id="tglInput" type="date" class="border rounded px-3 py-2 mb-4 w-full" value="${new Date().toISOString().split('T')[0]}">
+                        <button id="submitTgl" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">Lanjutkan</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                document.getElementById('submitTgl').onclick = function() {
+                    const tglVal = document.getElementById('tglInput').value;
+                    if (tglVal) {
+                        window.location.search = '?tgl=' + tglVal;
+                    }
+                };
+                return;
+            }
             // First load reference data, then get main data
             loadReferenceData(() => {
-                const today = new Date().toISOString().split('T')[0];
                 getDataMainOnFbs(tgl);
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnRenew = document.getElementById('btnRenew');
+            if (btnRenew) btnRenew.onclick = () => console.log('renew');
+            const btnProses = document.getElementById('btnProses');
+            const modalProses = document.getElementById('modalProses');
+            if (btnProses) btnProses.onclick = () => { modalProses.classList.remove('hidden'); };
+            if (modalProses) {
+                document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
+                document.getElementById('btnProsesModal').onclick = () => { alert('Proses!'); modalProses.classList.add('hidden'); };
+            }
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    // Multi-keyword: lowercase, split by space
+                    window._searchQuery = this.value.toLowerCase();
+                    filterAndRenderTable();
+                });
+            }
+            // Clear checked button
+            const btnClearChecked = document.getElementById('btnClearChecked');
+            if (btnClearChecked) {
+                btnClearChecked.onclick = function() {
+                    // Uncheck hanya data yang sedang terlihat/disajikan di tabel
+                    const tableBody = document.getElementById('dataTable');
+                    if (tableBody) {
+                        for (let row of tableBody.children) {
+                            const idStock = row.children[0]?.textContent;
+                            if (idStock) checkedRows[idStock] = false;
+                        }
+                    }
+                    updateCheckedInfo();
+                    filterAndRenderTable();
+                };
+            }
+            // Select all button
+            const btnSelectAll = document.getElementById('btnSelectAll');
+            if (btnSelectAll) {
+                btnSelectAll.onclick = function() {
+                    // Ambil data yang sedang ditampilkan di tabel (hasil filter/pencarian atau render awal)
+                    let filtered = [];
+                    const tableBody = document.getElementById('dataTable');
+                    if (tableBody) {
+                        // Ambil semua id_stock dari baris yang sedang tampil
+                        for (let row of tableBody.children) {
+                            // Ambil id_stock dari kolom pertama (pastikan urutan kolom benar)
+                            const idStock = row.children[0]?.textContent;
+                            if (idStock) checkedRows[idStock] = true;
+                        }
+                    }
+                    updateCheckedInfo();
+                    filterAndRenderTable();
+                };
+            }
         });
     </script>
     </body>
