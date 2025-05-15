@@ -12,19 +12,19 @@
             <div class="mx-auto bg-white shadow-lg rounded-xl">
                 <div class="overflow-x-auto">
                     <div style="max-height:700px;overflow:auto;">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-800 text-white sticky top-0 z-10">
+                        <table class="min-w-full divide-y divide-gray-200 border border-gray-400">
+                            <thead class="bg-gray-900 text-white sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID Stock</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">No PO</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID Kain</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Lot#Roll</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty Supplier</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Qty Nett</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"></th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"></th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Kol Rak</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID HLP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">PO</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider border border-gray-400">ID Kain</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">LTRL</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">SUP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">Nett</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">SST</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">%</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">LOC</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">HLP</th>
                                 </tr>
                             </thead>
                             <tbody id="dataTable" class="divide-y divide-gray-100 bg-white text-sm text-gray-700">
@@ -113,21 +113,32 @@
                 const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
                 const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
                 // Render columns in new order
+                const selisih = (item.q_nett > 0 && item.q_sup > 0) ? (item.q_nett - item.q_sup) : 0;
+                const persentase = (selisih !== 0 && item.q_sup > 0)
+                ? ((selisih / item.q_sup) * 100).toFixed(2) + '%'
+                : '0%';
+
                 const columns = [
-                    item.id_stock || '',
-                    item.no_po || '',
-                    item.id_kain || '',
-                    lotRoll,
-                    item.q_sup || '0.00',
-                    item.q_nett || '0.00',
-                    '', // empty col
-                    '', // empty col
-                    kolRak,
-                    getHelperName(item.id_hlp)
+                item.id_stock || '',
+                item.no_po || '',
+                item.id_kain || '',
+                lotRoll,
+                item.q_sup || '0.00',
+                item.q_nett || '0.00',
+                selisih.toFixed(2),     // kolom selisih
+                persentase,             // kolom persentase
+                kolRak,
+                getHelperName(item.id_hlp)
                 ];
-                columns.forEach(val => {
+                columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
-                    cell.className = 'px-4 py-3';
+                    cell.className = 'px-4 py-3 border border-gray-400';
+                    // q_nett (idx 5) and selisih/sst (idx 6)
+                    if (idx === 5 || idx === 6) {
+                        const num = parseFloat(val);
+                        if (num < 0) cell.classList.add('text-red-600');
+                        else if (num > 0) cell.classList.add('text-blue-600');
+                    }
                     cell.textContent = val;
                     row.appendChild(cell);
                 });
@@ -186,12 +197,13 @@
         }
 
         $(()=>{
+            const urlParams = new URLSearchParams(window.location.search);
+            const tgl = urlParams.get('tgl');
             fbsSvc = new Fbs(db);
-            
             // First load reference data, then get main data
             loadReferenceData(() => {
                 const today = new Date().toISOString().split('T')[0];
-                getDataMainOnFbs(today);
+                getDataMainOnFbs(tgl);
             });
         });
     </script>
