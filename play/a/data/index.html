@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Firebase Form</title>
+</head>
+<body>
+
+  <div id="output">Loading data...</div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      databaseURL: "https://notes-d9b41-default-rtdb.asia-southeast1.firebasedatabase.app",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Fungsi mengirim data baru ke Firebase
+    async function kirimKeFirebase(payload) {
+      const ref = db.ref("pesrta").push();
+      await ref.set(payload);
+      return ref.key;
+    }
+
+    // Fungsi mendapatkan data berdasarkan key peserta
+    async function getDataPesertaById(id) {
+      return new Promise((resolve, reject) => {
+        const ref = db.ref(`peserta/${id}`);
+        ref.once('value', snapshot => {
+          if (snapshot.exists()) {
+            resolve(snapshot.val());
+          } else {
+            reject('Data tidak ditemukan');
+          }
+        }, error => reject(error));
+      });
+    }
+
+    // Fungsi untuk mengambil parameter URL (query string)
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    // Main logic
+    (async () => {
+      const pesertaId = getQueryParam('id');
+
+      if (pesertaId) {
+        try {
+          const data = await getDataPesertaById(pesertaId);
+          document.getElementById('output').innerHTML = `
+            <h2>Data Peserta</h2>
+            <p><strong>Nama:</strong> ${data.nama || '-'}</p>
+            <p><strong>Email:</strong> ${data.email || '-'}</p>
+            <p><strong>No HP:</strong> ${data.nohp || '-'}</p>
+          `;
+        } catch (error) {
+          document.getElementById('output').textContent = `Error: ${error}`;
+        }
+      } else {
+        document.getElementById('output').textContent = 'Parameter id tidak ditemukan pada URL.';
+      }
+    })();
+  </script>
+
+</body>
+</html>
