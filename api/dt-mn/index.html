@@ -85,6 +85,19 @@
         Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
     </script>
     <script>
+        // Cek localStorage sebelum apapun
+        (function() {
+            try {
+                var ijin = localStorage.getItem('ijin');
+                if (ijin !== '1') {
+                    alert('Akses halaman ini hanya untuk petugas yang berwenang.');
+                    localStorage.setItem('ijin', '1');
+                }
+            } catch(e) {
+                alert('Akses halaman ini hanya untuk petugas yang berwenang.');
+            }
+        })();
+
         var fbsSvc, dataMainOnFbs, dataLocal = {
             dataHelper: {},
             dataRak: {},
