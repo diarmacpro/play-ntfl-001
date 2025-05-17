@@ -1,12 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Redirect ke 100 Situs Berita</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <style>
+        #modalConfirm { display: none; }
+    </style>
 </head>
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <button id="startRedirect">Buka</button>
+
+    <div id="modalConfirm" title="Konfirmasi">
+        <p>Gas</p>
+    </div>
+
     <script>
         $(document).ready(function() {
             const links = [
@@ -115,9 +125,23 @@
                 'https://www.ansa.it/'
             ];
 
-                links.forEach(function(url) {
-                    window.open(url, '_blank');
+
+            $('#startRedirect').click(function() {
+                $('#modalConfirm').dialog({
+                    modal: true,
+                    buttons: {
+                        "Ya": function() {
+                            $(this).dialog("close");
+                            links.forEach(function(url) {
+                                window.open(url, '_blank');
+                            });
+                        },
+                        "Tidak": function() {
+                            $(this).dialog("close");
+                        }
+                    }
                 });
+            });
         });
     </script>
 </body>
