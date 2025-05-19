@@ -13,16 +13,20 @@
         <div class="p-6 bg-gray-100 min-h-screen">
             <div class="mx-auto bg-white shadow-lg rounded-xl">
                 <!-- Header Bar -->
-                <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
+                <div class="flex items-center px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
                     <!-- Left group: Renew & Search -->
-                    <div class="flex items-center gap-2">
-                        <button id="btnRenew" class="flex items-center bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-900">
-                            <i class="bi-arrow-clockwise mr-2"></i>Renew Data
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <button onclick="window.location.href='./'" class="flex items-center bg-red-700 text-white px-3 py-1 rounded hover:bg-gray-900">
+                            <i class="bi bi-power"></i>
                         </button>
-                        <input id="searchInput" type="text" placeholder="Cari..." class="border rounded px-3 py-1 w-64" />
+
+                        <button id="btnRenew" class="flex items-center bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-900">
+                            <i class="bi-arrow-clockwise mr-2"></i>
+                        </button>
+                        <input id="searchInput" type="text" placeholder="Cari..." class="border rounded px-3 py-1 w-full flex-grow min-w-0 mx-3" />
                     </div>
                     <!-- Right group: Data count, checked badge, check/uncheck, proses -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 ml-auto flex-none">
                         <span id="dataCount" class="text-xs text-gray-600">0 of 0</span>
                         <span id="checkedCount" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300 ml-2">Checked: 0</span>
                         <button id="btnClearChecked" title="Clear Checked" class="flex items-center bg-red-600 text-white px-3 py-1 rounded hover:bg-red-800 focus:outline-none">
@@ -43,7 +47,7 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">ID</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">PO</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider border border-gray-400">ID Kain</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider border border-gray-400">Barang</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">LTRL</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">SUP</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">Nett</th>
@@ -62,9 +66,32 @@
         </div>
         <!-- Modal for Proses Data -->
         <div id="modalProses" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 hidden">
-            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-xs flex flex-col items-center">
-                <h2 class="text-lg font-bold mb-4">Hello World</h2>
-                <div class="flex w-full gap-2">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl flex flex-col items-center">
+                <h2 class="text-lg font-bold mb-4">Bulk Action</h2>
+                <div id="bulkForm" class="w-full flex flex-col gap-3 mb-2">
+                    <div>
+                        <label for="inputLokasi" class="block text-xs font-semibold mb-1">Lokasi</label>
+                        <input id="inputLokasi" name="lokasi" type="text" placeholder="Masukkan lokasi" class="border rounded px-3 py-2 w-full" autocomplete="off" />
+                    </div>
+                    <div>
+                        <label for="inputHelper" class="block text-xs font-semibold mb-1">Helper</label>
+                        <input id="inputHelper" name="helper" type="text" placeholder="Masukkan helper" class="border rounded px-3 py-2 w-full" autocomplete="off" />
+                    </div>
+                    <div>
+                        <label for="inputQtyNett" class="block text-xs font-semibold mb-1">Qty Nett</label>
+                        <input id="inputQtyNett" name="qty_nett" type="number" step="any" placeholder="Qty Nett" class="border rounded px-3 py-2 w-full" autocomplete="off" />
+                    </div>
+                    <div>
+                        <label for="inputQtyNett" class="block text-xs font-semibold mb-1">Id Selected</label>
+                        <textarea id="textAreaMenampungIdStock" rows=5 class="border rounded px-3 py-2 w-full"></textarea>
+                    </div>
+                    <div class="flex w-full gap-2">
+                        <button id="btnPrintOnline" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-800 w-1/2">Print Online</button>
+                        <button id="btnPrintLangsung" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800 w-1/2">Print Langsung</button>
+                    </div>
+                </div>
+                <hr class="w-full border border-gray-300 my-3">
+                <div class="flex w-full gap-2 mt-2">
                     <button id="btnBatal" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-800 w-1/2">Batal</button>
                     <button id="btnProsesModal" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-800 w-1/2">Proses</button>
                 </div>
@@ -273,84 +300,78 @@
             tableBody.innerHTML = '';
             _.forEach(filtered, (item) => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition cursor-pointer';
-                // Tambahkan atribut data-key dan data-select
+                row.className = '';
                 row.setAttribute('data-key', item.id_stock);
-                // Pastikan data-select diupdate setelah classList
                 if (checkedRows[item.id_stock]) {
                     row.classList.add('bg-blue-100', 'font-bold');
                     row.setAttribute('data-select', 'true');
                 } else {
                     row.setAttribute('data-select', 'false');
                 }
-                // Row check logic
-                row.onclick = function() {
-                    checkedRows[item.id_stock] = !checkedRows[item.id_stock];
-                    this.classList.toggle('bg-blue-100', checkedRows[item.id_stock]);
-                    this.classList.toggle('font-bold', checkedRows[item.id_stock]);
-                    // Update atribut data-select setelah toggle
-                    this.setAttribute('data-select', checkedRows[item.id_stock] ? 'true' : 'false');
-                    // Setor data ke dataCHecked dengan 13 properti (join dataLocal)
-                    if (checkedRows[item.id_stock]) {
-                        const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
-                        const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
-                        const selisih = (item.q_nett > 0 && item.q_sup > 0) ? (item.q_nett - item.q_sup) : 0;
-                        const persentase = (selisih !== 0 && item.q_sup > 0)
-                            ? ((selisih / item.q_sup) * 100).toFixed(2) + '%'
-                            : '0%';
-                        dataCHecked[item.id_stock] = {
-                            id_stock: item.id_stock,
-                            no_po: item.no_po,
-                            id_kain: item.id_kain,
-                            kain: getKainName(item.id_kain),
-                            lot: item.lot,
-                            rol: item.rol,
-                            q_sup: item.q_sup,
-                            q_nett: item.q_nett,
-                            selisih: selisih,
-                            persentase: persentase,
-                            rak: (dataLocal.dataRak[item.kd_rak] && dataLocal.dataRak[item.kd_rak].v) || null,
-                            kol: (dataLocal.dataKol[item.kd_kol] && dataLocal.dataKol[item.kd_kol].v) || null,
-                            helper: (dataLocal.dataHelper[item.id_hlp] && dataLocal.dataHelper[item.id_hlp].hlp) || null,
-                            lotRoll: lotRoll,
-                            kolRak: kolRak
-                        };
-                    } else {
-                        delete dataCHecked[item.id_stock];
-                    }
-                    updateCheckedInfo();
-                };
-                // Compose Kol Rak and Lot#Roll
                 const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
                 const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
-                // Render columns in new order
                 const selisih = (item.q_nett > 0 && item.q_sup > 0) ? (item.q_nett - item.q_sup) : 0;
                 const persentase = (selisih !== 0 && item.q_sup > 0)
-                ? ((selisih / item.q_sup) * 100).toFixed(2) + '%'
-                : '0%';
-
+                    ? ((selisih / item.q_sup) * 100).toFixed(2) + '%'
+                    : '0%';
                 const columns = [
-                item.id_stock || '',
-                item.no_po || '',
-                properText( getKainName( item.id_kain ) ),
-                lotRoll,
-                item.q_sup || '0.00',
-                item.q_nett || '0.00',
-                selisih.toFixed(2),     // kolom selisih
-                persentase,             // kolom persentase
-                kolRak,
-                getHelperName(item.id_hlp)
+                    item.id_stock || '',
+                    item.no_po || '',
+                    properText(getKainName(item.id_kain)),
+                    lotRoll,
+                    item.q_sup || '0.00',
+                    item.q_nett || '0.00',
+                    selisih.toFixed(2),
+                    persentase,
+                    kolRak,
+                    getHelperName(item.id_hlp)
                 ];
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
                     cell.className = 'px-4 py-1 border border-gray-400';
-                    // q_nett (idx 5) and selisih/sst (idx 6)
                     if (idx === 5 || idx === 6) {
                         const num = parseFloat(val);
                         if (num < 0) cell.classList.add('text-red-600');
                         else if (num > 0) cell.classList.add('text-blue-600');
                     }
                     cell.textContent = val;
+                    // Hanya kolom 0-4 yang bisa select
+                    if (idx <= 4) {
+                        cell.classList.add('hover:bg-gray-50', 'cursor-pointer');
+                        cell.onclick = function(e) {
+                            e.stopPropagation();
+                            checkedRows[item.id_stock] = !checkedRows[item.id_stock];
+                            row.classList.toggle('bg-blue-100', checkedRows[item.id_stock]);
+                            row.classList.toggle('font-bold', checkedRows[item.id_stock]);
+                            row.setAttribute('data-select', checkedRows[item.id_stock] ? 'true' : 'false');
+                            if (checkedRows[item.id_stock]) {
+                                dataCHecked[item.id_stock] = {
+                                    id_stock: item.id_stock,
+                                    no_po: item.no_po,
+                                    id_kain: item.id_kain,
+                                    kain: getKainName(item.id_kain),
+                                    lot: item.lot,
+                                    rol: item.rol,
+                                    q_sup: item.q_sup,
+                                    q_nett: item.q_nett,
+                                    selisih: selisih,
+                                    persentase: persentase,
+                                    rak: (dataLocal.dataRak[item.kd_rak] && dataLocal.dataRak[item.kd_rak].v) || null,
+                                    kol: (dataLocal.dataKol[item.kd_kol] && dataLocal.dataKol[item.kd_kol].v) || null,
+                                    helper: (dataLocal.dataHelper[item.id_hlp] && dataLocal.dataHelper[item.id_hlp].hlp) || null,
+                                    lotRoll: lotRoll,
+                                    kolRak: kolRak
+                                };
+                            } else {
+                                delete dataCHecked[item.id_stock];
+                            }
+                            updateCheckedInfo();
+                        };
+                    } else {
+                        // Pastikan kolom lain tidak bisa select
+                        cell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
+                        cell.onclick = null;
+                    }
                     row.appendChild(cell);
                 });
                 tableBody.appendChild(row);
@@ -377,6 +398,30 @@
             };
         }
 
+        function getSelectedDataMain() {
+            // Clear pencarian
+            if ($('#searchInput').length) $('#searchInput').val('');
+            window._searchQuery = '';
+            filterAndRenderTable();
+            // Ambil hanya <tr> yang memiliki data-select="true" di dalam #dataTable
+            const $rows = $('#dataTable tr[data-select="true"]');
+            const dataKeys = $rows.map(function() {
+                return $(this).data('key');
+            }).get();
+            // Ambil data dari dataMainOnFbs sesuai urutan dataKeys
+            let mainData = [];
+            if (window.dataMainOnFbs && Array.isArray(window.dataMainOnFbs)) {
+                mainData = window.dataMainOnFbs.filter(item => dataKeys.includes(item.id_stock));
+            } else if (window.dataMainOnFbs && typeof window.dataMainOnFbs === 'object') {
+                // Jika dataMainOnFbs object (bukan array)
+                mainData = Object.values(window.dataMainOnFbs).filter(item => dataKeys.includes(item.id_stock));
+            }
+            return {
+                jumlah: dataKeys.length,
+                dataKeys: dataKeys,
+                dataMain: mainData
+            };
+        }
 
         function filterAndRenderTable() {
             // Always filter from the original data
@@ -545,7 +590,13 @@
             if (btnRenew) btnRenew.onclick = () => console.log('renew');
             const btnProses = document.getElementById('btnProses');
             const modalProses = document.getElementById('modalProses');
-            if (btnProses) btnProses.onclick = () => { modalProses.classList.remove('hidden'); };
+            if (btnProses) btnProses.onclick = () => {
+                modalProses.classList.remove('hidden');
+                
+                const idSelected = getSelectedDataMain().jumlah == 0 ? null : getSelectedDataMain().dataKeys.join(', ');
+                $('#textAreaMenampungIdStock').val(idSelected);
+                // console.log(idSelected);
+            };
             if (modalProses) {
                 document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
                 document.getElementById('btnProsesModal').onclick = () => { alert('Proses!'); modalProses.classList.add('hidden'); };
