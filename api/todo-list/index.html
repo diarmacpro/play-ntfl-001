@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List with Firebase</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold mb-4 text-center">Todo List</h2>
+        
+        <div class="flex flex-col sm:flex-row gap-2 mb-4 items-center justify-between">
+            <input type="date" id="datePicker" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <div class="flex gap-1 flex-wrap justify-center items-center">
+                <form id="todoForm" class="mb-0">
+                    <button type="button" id="addTodoBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded flex items-center" title="Tambah Todo">
+                        <i class="bi bi-plus text-lg"></i>
+                    </button>
+                </form>
+                <button class="filter-btn p-2 rounded bg-gray-200 flex items-center justify-center" data-filter="all" title="All">
+                    <i class="bi bi-list-task text-gray-600 text-lg"></i>
+                </button>
+                <button class="filter-btn p-2 rounded bg-blue-100 flex items-center justify-center" data-filter="todos" title="Todos">
+                    <i class="bi bi-lightbulb text-blue-500 text-lg"></i>
+                </button>
+                <button class="filter-btn p-2 rounded bg-yellow-100 flex items-center justify-center" data-filter="on-progress" title="On Progress">
+                    <i class="bi bi-hourglass-split text-yellow-500 text-lg"></i>
+                </button>
+                <button class="filter-btn p-2 rounded bg-purple-100 flex items-center justify-center" data-filter="testing" title="Testing">
+                    <i class="bi bi-bug text-purple-500 text-lg"></i>
+                </button>
+                <button class="filter-btn p-2 rounded bg-green-100 flex items-center justify-center" data-filter="done" title="Done">
+                    <i class="bi bi-check2-circle text-green-600 text-lg"></i>
+                </button>
+            </div>
+        </div>
+        <ul id="todoList" class="divide-y divide-gray-200"></ul>
+    </div>
+    <!-- Modal Detail -->
+    <div id="modalDetail" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
+            <button id="closeModalDetail" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700"><i class="bi bi-x-lg"></i></button>
+            <h3 class="text-lg font-bold mb-4">Detail Status</h3>
+            <table class="w-full text-sm">
+                <tbody id="modalDetailBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js';
+
+        const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
+        const db = getDatabase(app);
+        Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+    </script>
+    <script>
+        // Password protection for olah page
+        const allowedPassword = 'todo2024'; // Ganti sesuai kebutuhan
+        if (!sessionStorage.getItem('todo-olah-auth')) {
+            let pass = prompt('Masukkan password untuk mengakses halaman olah:');
+            if (pass !== allowedPassword) {
+                alert('Password salah!');
+                window.location.href = '/';
+            } else {
+                sessionStorage.setItem('todo-olah-auth', '1');
+            }
+        }
+
+        let fbsSvc;
+        let editingKey = null;
+        let currentFilter = 'all';
+        let lastData = {};
+        let selectedDate = new Date().toISOString().slice(0, 10);
+        let todosListenerActive = false;
+
+        // Highlight filter button active state
+        function setActiveFilterBtn(filter) {
+            $('.filter-btn').removeClass('ring-2 ring-blue-400 ring-offset-2 shadow-md scale-105');
+            $(`.filter-btn[data-filter='${filter}']`).addClass('ring-2 ring-blue-400 ring-offset-2 shadow-md scale-105');
+        }
+
+        $(async ()=>{
+            fbsSvc = new Fbs(db);
+            $('#datePicker').val(selectedDate);
+            enableTodosRealtime();
+            setActiveFilterBtn(currentFilter); // set default active
+            $(document).on('click', '.filter-btn', function() {
+                currentFilter = $(this).data('filter');
+                setActiveFilterBtn(currentFilter);
+                renderTodos(lastData);
+            });
+            $('#datePicker').on('change', function() {
+                selectedDate = this.value;
+                renderTodos(lastData);
+            });
+            $('#addTodoBtn').on('click', function() {
+                // Tambah input inline di atas list
+                if ($('#inlineInput').length) return;
+                $('#todoList').prepend(`
+                    <li id="inlineInput" class="flex items-center gap-2 py-2">
+                        <input type="text" id="newTodoText" class="flex-1 border border-blue-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Tulis todo baru..." autofocus />
+                        <button id="saveNewTodo" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded"><i class="bi bi-check2"></i></button>
+                        <button id="cancelNewTodo" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded"><i class="bi bi-x"></i></button>
+                    </li>
+                `);
+                $('#newTodoText').focus();
+            });
+            $(document).on('click', '#saveNewTodo', function() {
+                const val = $('#newTodoText').val().trim();
+                if (!val) return;
+                const now = new Date().toISOString();
+                fbsSvc.iDtKy('todos', {
+                    task: val,
+                    stamp: now,
+                    status: 'todos',
+                    todos: now,
+                    ['on-progress']: null,
+                    testing: null,
+                    done: null
+                }, ()=>{
+                    $('#inlineInput').remove();
+                    // Tidak perlu loadTodos, realtime
+                });
+            });
+            $(document).on('click', '#cancelNewTodo', function() {
+                $('#inlineInput').remove();
+            });
+        });
+
+        function enableTodosRealtime() {
+            if (todosListenerActive && fbsSvc && fbsSvc.gDtOff) {
+                fbsSvc.gDtOff('todos');
+            }
+            fbsSvc.gDtOn('todos', function(snapshot) {
+                lastData = snapshot.val() || {};
+                renderTodos(lastData);
+            });
+            todosListenerActive = true;
+        }
+
+        function loadTodos() {
+            // Tidak perlu lagi, realtime sudah aktif
+        }
+
+        const statusList = [
+            { key: 'todos', icon: 'bi-lightbulb', color: 'text-blue-500', bg: 'bg-blue-100' },
+            { key: 'on-progress', icon: 'bi-hourglass-split', color: 'text-yellow-500', bg: 'bg-yellow-100' },
+            { key: 'testing', icon: 'bi-bug', color: 'text-purple-500', bg: 'bg-purple-100' },
+            { key: 'done', icon: 'bi-check2-circle', color: 'text-green-600', bg: 'bg-green-100' }
+        ];
+        function getStatusObj(status) {
+            return statusList.find(s => s.key === status) || statusList[0];
+        }
+        function renderTodos(data) {
+            const $list = $('#todoList');
+            $list.empty();
+            if (data) {
+                Object.entries(data).forEach(([key, todo]) => {
+                    // Filter by date (stamp)
+                    if (selectedDate && todo.stamp && todo.stamp.slice(0, 10) !== selectedDate) return;
+                    if (currentFilter !== 'all' && todo.status !== currentFilter) return;
+                    const statusObj = getStatusObj(todo.status);
+                    const completedClass = todo.status === 'done' ? 'line-through text-gray-400' : '';
+                    $list.append(`
+                        <li class="flex items-center justify-between py-2" data-key="${key}">
+                            <span class="flex items-center gap-2 flex-1">
+                                <span class="${statusObj.bg} ${statusObj.color} rounded-full px-2 py-1 flex items-center text-xs font-semibold">
+                                    <i class="bi ${statusObj.icon} mr-1"></i>${todo.status.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                                </span>
+                                <span class="${completedClass} ml-2 editable-task cursor-pointer" data-key="${key}">${todo.task}</span>
+                            </span>
+                            <span class="flex gap-2">
+                                <button class="detail-btn text-gray-500 hover:text-blue-600" data-key="${key}" title="Detail"><i class="bi bi-info-circle"></i></button>
+                                <button class="delete-btn text-red-500 hover:text-red-700" data-key="${key}" title="Delete"><i class="bi bi-trash"></i></button>
+                                ${statusList.filter(s=>s.key!==todo.status).map(s=>`<button class="status-btn ${s.color}" data-key="${key}" data-status="${s.key}" title="Set ${s.key}"><i class="bi ${s.icon}"></i></button>`).join('')}
+                            </span>
+                        </li>
+                    `);
+                });
+            }
+            // Inline edit
+            $(document).off('click', '.editable-task').on('click', '.editable-task', function() {
+                const key = $(this).data('key');
+                const todo = lastData[key];
+                const $span = $(this);
+                if ($span.find('input').length) return;
+                const $input = $(`<input type="text" class="border border-blue-300 rounded px-2 py-1 w-full" value="${todo.task}" />`);
+                $span.html($input);
+                $input.focus();
+                $input.on('blur keydown', function(e) {
+                    if (e.type === 'blur' || (e.type === 'keydown' && e.key === 'Enter')) {
+                        const newVal = $input.val().trim();
+                        if (newVal && newVal !== todo.task) {
+                            fbsSvc.upd(`todos/${key}`, null, { task: newVal }, loadTodos);
+                        } else {
+                            $span.text(todo.task);
+                        }
+                    }
+                });
+            });
+            // Delete
+            $(document).off('click', '.delete-btn').on('click', '.delete-btn', function() {
+                const key = $(this).data('key');
+                fbsSvc.delDt('todos/' + key, loadTodos);
+            });
+            // Status change
+            $(document).off('click', '.status-btn').on('click', '.status-btn', function() {
+                const key = $(this).data('key');
+                const newStatus = $(this).data('status');
+                const todo = lastData[key];
+                const now = new Date().toISOString();
+                const updateObj = {
+                    ...todo,
+                    status: newStatus,
+                    [newStatus]: now
+                };
+                fbsSvc.upd(`todos/${key}`, null, updateObj, loadTodos);
+            });
+            // Detail
+            $(document).off('click', '.detail-btn').on('click', '.detail-btn', function() {
+                const key = $(this).data('key');
+                const todo = lastData[key];
+                // Format jam saja
+                function formatTime(dt) {
+                    if (!dt) return '-';
+                    const d = new Date(dt);
+                    if (isNaN(d)) return '-';
+                    const pad = n => n.toString().padStart(2, '0');
+                    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                }
+                // Header icon
+                const header = `<tr>${statusList.map(s => `<th class='text-center px-2'><i class='bi ${s.icon} ${s.color} text-lg'></i></th>`).join('')}</tr>`;
+                // Row jam
+                const row = `<tr>${statusList.map(s => {
+                    let val = todo[s.key];
+                    if (!val) val = '-';
+                    else if (typeof val === 'string' && val.match(/^\d{4}-\d{2}-\d{2}T/)) {
+                        val = formatTime(val);
+                    }
+                    return `<td class='text-center px-2 py-1'>${val}</td>`;
+                }).join('')}</tr>`;
+                // Task dan stamp
+                const info = [
+                    `<tr><td class='pr-2 py-1 font-semibold text-right'>Task</td><td class='py-1' colspan='${statusList.length}'>${todo.task || '-'}</td></tr>`,
+                    `<tr><td class='pr-2 py-1 font-semibold text-right'>Stamp</td><td class='py-1' colspan='${statusList.length}'>${formatTime(todo.stamp)}</td></tr>`
+                ];
+                $('#modalDetailBody').html(info.join('') + header + row);
+                $('#modalDetail').removeClass('hidden');
+            });
+            // Close modal
+            $(document).off('click', '#closeModalDetail').on('click', '#closeModalDetail', function() {
+                $('#modalDetail').addClass('hidden');
+            });
+            // Close modal on outside click
+            $(document).off('mousedown.modalDetail').on('mousedown.modalDetail', function(e) {
+                if ($(e.target).is('#modalDetail')) {
+                    $('#modalDetail').addClass('hidden');
+                }
+            });
+        }
+
+        // Tambahkan style untuk tombol filter aktif
+        document.addEventListener('DOMContentLoaded', function() {
+            $(document).on('click', '.filter-btn', function() {
+                $('.filter-btn').removeClass('ring-2 ring-blue-400 ring-offset-2 shadow-md scale-105');
+                $(this).addClass('ring-2 ring-blue-400 ring-offset-2 shadow-md scale-105');
+            });
+            // Set default aktif di awal
+            setTimeout(function() {
+                $('.filter-btn[data-filter="all"]').addClass('ring-2 ring-blue-400 ring-offset-2 shadow-md scale-105');
+            }, 100);
+        });
+    </script>
+</body>
+</html>
