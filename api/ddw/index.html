@@ -8,9 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8">
-    <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+    <div class="w-full bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-2xl font-bold mb-4 text-center">Diar Daily Workload</h2>
-        <div class="flex flex-col gap-2 mb-4 items-center justify-between">
+        <div class="flex flex-col gap-2 mb-4 items-center justify-between sticky top-0 z-20 bg-white">
             <input type="date" id="datePicker" class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
             <div class="flex gap-1 flex-wrap justify-center items-center">
                 <button class="filter-btn flex flex-col items-center justify-center p-2 rounded bg-gray-200 w-16 h-16" data-filter="all" title="All">
@@ -35,7 +35,7 @@
                 </button>
             </div>
         </div>
-        <ul id="todoList" class="divide-y divide-gray-200"></ul>
+        <ul id="todoList" class="divide-y divide-gray-200" style="max-height: 650px; overflow-y: auto; overflow-x: hidden;"></ul>
     </div>
     <div id="modalDetail" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
@@ -111,7 +111,14 @@
             const $list = $('#todoList');
             $list.empty();
             if (data) {
-                Object.entries(data).forEach(([key, todo]) => {
+                // Sort keys by stamp DESC (terbaru ke terlama)
+                const sortedEntries = Object.entries(data).sort((a, b) => {
+                    const sa = a[1].stamp || '';
+                    const sb = b[1].stamp || '';
+                    // ISO string, so string compare works, but reverse for DESC
+                    return (sb || '').localeCompare(sa || '');
+                });
+                sortedEntries.forEach(([key, todo]) => {
                     // Filter by date (stamp)
                     if (selectedDate && todo.stamp && todo.stamp.slice(0, 10) !== selectedDate) return;
                     if (currentFilter !== 'all' && todo.status !== currentFilter) return;
@@ -184,6 +191,17 @@
                 }
             });
         }
+        // Tambahkan CSS sticky dan overflow pada toolbar/header dan list
+        $(function() {
+            // Tambahkan class sticky dan z-20 pada toolbar/header
+            $('.flex.flex-col.gap-2.mb-4').addClass('sticky top-0 z-20 bg-white');
+            // Atur tinggi dan overflow pada list
+            $('#todoList').css({
+                'max-height': '650px',
+                'overflow-y': 'auto',
+                'overflow-x': 'hidden'
+            });
+        });
     </script>
 </body>
 </html>

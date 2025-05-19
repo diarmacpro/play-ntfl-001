@@ -90,6 +90,10 @@
             const kodeHashBase64 = "YTFmY2U0MzYzODU0ZmY4ODhjZmY0YjhlNzg3NWQ2MDBjMjY4MjM5MDQxMmE4Y2Y3OWIzN2QwYjExMTQ4YjBmYStjYTk3ODExMmNhMWJiZGNhZmFjMjMxYjM5YTIzZGM0ZGE3ODZlZmY4MTQ3YzRlNzJiOTgwNzc4NWFmZWU0OGJiKzUwZTcyMWU0OWMwMTNmMDBjNjJjZjU5ZjIxNjM1NDJhOWQ4ZGYwMjQ2NGVmZWI2MTVkMzEwNTFiMGZkZGMzMjYrZGU3ZDFiNzIxYTFlMDYzMmI3Y2YwNGVkZjUwMzJjOGVjZmZhOWY5YTA4NDkyMTUyYjkyNmYxYTVhN2U3NjVkNyswNDNhNzE4Nzc0YzU3MmJkOGEyNWFkYmViMWJmY2Q1YzAyNTZhZTExY2VjZjlmOWMzZjkyNWQwZTUyYmVhZjg5";
 
             function sha256(text) {
+                if (!window.crypto || !window.crypto.subtle || typeof window.TextEncoder === 'undefined') {
+                    alert('Fitur crypto.subtle tidak tersedia di browser ini. Silakan gunakan browser modern.');
+                    return Promise.reject(new Error('crypto.subtle not available'));
+                }
                 const data = new TextEncoder().encode(text);
                 return crypto.subtle.digest('SHA-256', data).then(buffer => {
                     return Array.from(new Uint8Array(buffer))
@@ -270,11 +274,22 @@
             _.forEach(filtered, (item) => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50 transition cursor-pointer';
+                // Tambahkan atribut data-key dan data-select
+                row.setAttribute('data-key', item.id_stock);
+                // Pastikan data-select diupdate setelah classList
+                if (checkedRows[item.id_stock]) {
+                    row.classList.add('bg-blue-100', 'font-bold');
+                    row.setAttribute('data-select', 'true');
+                } else {
+                    row.setAttribute('data-select', 'false');
+                }
                 // Row check logic
                 row.onclick = function() {
                     checkedRows[item.id_stock] = !checkedRows[item.id_stock];
                     this.classList.toggle('bg-blue-100', checkedRows[item.id_stock]);
                     this.classList.toggle('font-bold', checkedRows[item.id_stock]);
+                    // Update atribut data-select setelah toggle
+                    this.setAttribute('data-select', checkedRows[item.id_stock] ? 'true' : 'false');
                     // Setor data ke dataCHecked dengan 13 properti (join dataLocal)
                     if (checkedRows[item.id_stock]) {
                         const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
@@ -305,9 +320,6 @@
                     }
                     updateCheckedInfo();
                 };
-                if (checkedRows[item.id_stock]) {
-                    row.classList.add('bg-blue-100', 'font-bold');
-                }
                 // Compose Kol Rak and Lot#Roll
                 const lotRoll = (item.lot || '') + ' # ' + (item.rol || '');
                 const kolRak = (getRakName(item.kd_rak) || '') + ' ' + (getKolName(item.kd_kol) || '');
@@ -346,10 +358,31 @@
             updateCheckedInfo();
         }
 
+        function getSelectedDataKeys() {
+            // Clear pencarian
+            if ($('#searchInput').length) $('#searchInput').val('');
+            // Reset query pencarian global
+            window._searchQuery = '';
+            // Render ulang semua data (tanpa filter)
+            filterAndRenderTable();
+            // Ambil hanya <tr> yang memiliki data-select="true" di dalam #dataTable
+            const $rows = $('#dataTable tr[data-select="true"]');
+            const jumlahDipilih = $rows.length;
+            const dataKeys = $rows.map(function() {
+                return $(this).data('key');
+            }).get(); // Konversi ke array JavaScript biasa
+            return {
+                jumlah: jumlahDipilih,
+                dataKeys: dataKeys
+            };
+        }
+
+
         function filterAndRenderTable() {
             // Always filter from the original data
             const data = window._dataMainOnFbs || [];
             let filtered = data;
+            // console.log("filtered",filtered);
             if (window._searchQuery && window._searchQuery.length > 0) {
                 const keywords = window._searchQuery.split(/\s+/).filter(Boolean);
                 filtered = _.filter(data, function(item) {
