@@ -97,9 +97,74 @@
         //         alert('Akses halaman ini hanya untuk petugas yang berwenang.');
         //     }
         // })();
+        /*
+        (function() {
+            // Fungsi untuk SHA-256 (mengembalikan promise string hex)
+            function sha256(text) {
+                const data = new TextEncoder().encode(text);
+                return crypto.subtle.digest('SHA-256', data).then(buffer => {
+                    return Array.from(new Uint8Array(buffer))
+                        .map(b => b.toString(16).padStart(2, '0'))
+                        .join('');
+                });
+            }
+
+            // Baca cookie berdasarkan nama
+            function getCookie(name) {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [key, value] = cookie.trim().split('=');
+                    if (key === name) return value;
+                }
+                return null;
+            }
+
+            // Buat cookie dengan batas waktu (dalam menit)
+            function setCookie(name, value, minutes) {
+                const expires = new Date(Date.now() + minutes * 60000).toUTCString();
+                document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+            }
+
+            // Proses utama cek akses
+            async function cekAkses() {
+                const cookieIjin = getCookie('ijin');
+                const kodeRahasia = 'yawis';
+
+                // Hitung hash yang seharusnya
+                const hashHuruf = await Promise.all([...kodeRahasia].map(sha256));
+                const gabunganHash = hashHuruf.join('');
+                const finalHash = await sha256('1' + gabunganHash);
+
+                if (cookieIjin === finalHash) {
+                    console.log('Akses diizinkan.');
+                    return;
+                }
+
+                // Jika tidak cocok, minta masukan kode dari user
+                const input = prompt('Akses halaman ini hanya untuk petugas yang berwenang.\nMasukkan kode rahasia:');
+                if (input !== kodeRahasia) {
+                    alert('Kode salah. Akses ditolak.');
+                    return;
+                }
+
+                // Hitung ulang dan simpan cookie jika benar
+                const hashInputHuruf = await Promise.all([...input].map(sha256));
+                const gabunganInputHash = hashInputHuruf.join('');
+                const hasilAkhir = await sha256('1' + gabunganInputHash);
+
+                setCookie('ijin', hasilAkhir, 30); // Cookie berlaku 30 menit
+                alert('Akses diberikan selama 30 menit.');
+            }
+
+            cekAkses();
+        })();
+        */
+
 
 (function() {
-    // Fungsi untuk SHA-256 (mengembalikan promise string hex)
+    // Nilai hash base64 yang valid (gabungan 5 hash SHA-256 huruf dipisah '+', lalu base64)
+    const kodeHashBase64 = "YTFmY2U0MzYzODU0ZmY4ODhjZmY0YjhlNzg3NWQ2MDBjMjY4MjM5MDQxMmE4Y2Y3OWIzN2QwYjExMTQ4YjBmYStjYTk3ODExMmNhMWJiZGNhZmFjMjMxYjM5YTIzZGM0ZGE3ODZlZmY4MTQ3YzRlNzJiOTgwNzc4NWFmZWU0OGJiKzUwZTcyMWU0OWMwMTNmMDBjNjJjZjU5ZjIxNjM1NDJhOWQ4ZGYwMjQ2NGVmZWI2MTVkMzEwNTFiMGZkZGMzMjYrZGU3ZDFiNzIxYTFlMDYzMmI3Y2YwNGVkZjUwMzJjOGVjZmZhOWY5YTA4NDkyMTUyYjkyNmYxYTVhN2U3NjVkNyswNDNhNzE4Nzc0YzU3MmJkOGEyNWFkYmViMWJmY2Q1YzAyNTZhZTExY2VjZjlmOWMzZjkyNWQwZTUyYmVhZjg5";
+
     function sha256(text) {
         const data = new TextEncoder().encode(text);
         return crypto.subtle.digest('SHA-256', data).then(buffer => {
@@ -109,55 +174,56 @@
         });
     }
 
-    // Baca cookie berdasarkan nama
     function getCookie(name) {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            const [key, value] = cookie.trim().split('=');
-            if (key === name) return value;
-        }
-        return null;
+        return document.cookie.split('; ').reduce((acc, pair) => {
+            const [key, value] = pair.split('=');
+            return key === name ? value : acc;
+        }, null);
     }
 
-    // Buat cookie dengan batas waktu (dalam menit)
     function setCookie(name, value, minutes) {
         const expires = new Date(Date.now() + minutes * 60000).toUTCString();
         document.cookie = `${name}=${value}; expires=${expires}; path=/`;
     }
 
-    // Proses utama cek akses
     async function cekAkses() {
         const cookieIjin = getCookie('ijin');
-        const kodeRahasia = 'yawis';
+        if (cookieIjin) {
+            // Ambil kembali base64 target -> decode -> pecah '+' -> gabung ulang tanpa '+'
+            const decoded = atob(kodeHashBase64).split('+').join('');
+            const expectedFinalHash = await sha256('1' + decoded);
 
-        // Hitung hash yang seharusnya
-        const hashHuruf = await Promise.all([...kodeRahasia].map(sha256));
-        const gabunganHash = hashHuruf.join('');
-        const finalHash = await sha256('1' + gabunganHash);
+            if (cookieIjin === expectedFinalHash) {
+                console.log('Akses diizinkan.');
+                return;
+            }
+        }
 
-        if (cookieIjin === finalHash) {
-            console.log('Akses diizinkan.');
+        const input = prompt('Akses halaman ini hanya untuk petugas yang berwenang.\nMasukkan kode rahasia:');
+        if (!input || input.length !== 5) {
+            alert('Kode salah atau tidak valid.');
             return;
         }
 
-        // Jika tidak cocok, minta masukan kode dari user
-        const input = prompt('Akses halaman ini hanya untuk petugas yang berwenang.\nMasukkan kode rahasia:');
-        if (input !== kodeRahasia) {
+        const hashList = await Promise.all([...input].map(sha256));
+        const gabungan = hashList.join('+');
+        const encoded = btoa(gabungan);
+
+        if (encoded !== kodeHashBase64) {
             alert('Kode salah. Akses ditolak.');
             return;
         }
 
-        // Hitung ulang dan simpan cookie jika benar
-        const hashInputHuruf = await Promise.all([...input].map(sha256));
-        const gabunganInputHash = hashInputHuruf.join('');
-        const hasilAkhir = await sha256('1' + gabunganInputHash);
-
-        setCookie('ijin', hasilAkhir, 30); // Cookie berlaku 30 menit
+        // Cookie sah, buat hash akhir dan simpan
+        const hashTanpaPlus = hashList.join('');
+        const finalHash = await sha256('1' + hashTanpaPlus);
+        setCookie('ijin', finalHash, 30);
         alert('Akses diberikan selama 30 menit.');
     }
 
     cekAkses();
 })();
+
 
 
         var fbsSvc, dataMainOnFbs, dataLocal = {
