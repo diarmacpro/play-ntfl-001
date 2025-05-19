@@ -205,23 +205,98 @@
                     }
                 });
             });
-            // Delete
-            $(document).off('click', '.delete-btn').on('click', '.delete-btn', function() {
-                const key = $(this).data('key');
-                fbsSvc.delDt('todos/' + key, loadTodos);
-            });
+            // Tambahkan modal konfirmasi hapus
+            $('body').append(`
+<div id="modalConfirmDelete" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative flex flex-col items-center">
+    <div class="mb-4 text-center">
+      <i class="bi bi-exclamation-triangle text-red-500 text-3xl mb-2"></i>
+      <div class="text-lg font-semibold mb-2">Hapus Todo?</div>
+      <div class="text-sm text-gray-600" id="modalConfirmDeleteText"></div>
+    </div>
+    <div class="flex gap-3 mt-2">
+      <button id="confirmDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Hapus</button>
+      <button id="cancelDeleteBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">Batal</button>
+    </div>
+  </div>
+</div>
+`);
+// Modal konfirmasi perubahan status (hanya jika belum ada)
+if (!document.getElementById('modalConfirmStatus')) {
+$('body').append(`
+<div id="modalConfirmStatus" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative flex flex-col items-center">
+    <div class="mb-4 text-center">
+      <i class="bi bi-arrow-repeat text-blue-500 text-3xl mb-2"></i>
+      <div class="text-lg font-semibold mb-2">Ubah Status Todo?</div>
+      <div class="text-sm text-gray-600" id="modalConfirmStatusText"></div>
+    </div>
+    <div class="flex gap-3 mt-2">
+      <button id="confirmStatusBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Ubah</button>
+      <button id="cancelStatusBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">Batal</button>
+    </div>
+  </div>
+</div>
+`);
+}
+
+let deleteKey = null;
+let statusChange = { key: null, newStatus: null };
+
+// Delete
+$(document).off('click', '.delete-btn').on('click', '.delete-btn', function() {
+    deleteKey = $(this).data('key');
+    const todo = lastData[deleteKey];
+    $('#modalConfirmDeleteText').text(todo ? todo.task : '');
+    $('#modalConfirmDelete').removeClass('hidden');
+});
+
+$(document).off('click', '#cancelDeleteBtn').on('click', '#cancelDeleteBtn', function() {
+    $('#modalConfirmDelete').addClass('hidden');
+    deleteKey = null;
+});
+
+$(document).off('click', '#confirmDeleteBtn').on('click', '#confirmDeleteBtn', function() {
+    if (deleteKey) {
+        fbsSvc.delDt('todos/' + deleteKey, function() {
+            $('#modalConfirmDelete').addClass('hidden');
+            deleteKey = null;
+        });
+    }
+});
             // Status change
             $(document).off('click', '.status-btn').on('click', '.status-btn', function() {
-                const key = $(this).data('key');
-                const newStatus = $(this).data('status');
-                const todo = lastData[key];
-                const now = new Date().toISOString();
-                const updateObj = {
-                    ...todo,
-                    status: newStatus,
-                    [newStatus]: now
-                };
-                fbsSvc.upd(`todos/${key}`, null, updateObj, loadTodos);
+                statusChange.key = $(this).data('key');
+                statusChange.newStatus = $(this).data('status');
+                const todo = lastData[statusChange.key];
+                const statusLabel = statusList.find(s => s.key === statusChange.newStatus)?.key.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase()) || statusChange.newStatus;
+                $('#modalConfirmStatusText').html(`<b>${todo.task}</b><br>Menjadi status: <b>${statusLabel}</b>`);
+                $('#modalConfirmStatus').removeClass('hidden');
+            });
+
+            $(document).off('click', '#cancelStatusBtn').on('click', '#cancelStatusBtn', function() {
+                $('#modalConfirmStatus').addClass('hidden');
+                statusChange.key = null;
+                statusChange.newStatus = null;
+            });
+
+            $(document).off('click', '#confirmStatusBtn').on('click', '#confirmStatusBtn', function() {
+                if (statusChange.key && statusChange.newStatus) {
+                    const key = statusChange.key;
+                    const newStatus = statusChange.newStatus;
+                    const todo = lastData[key];
+                    const now = new Date().toISOString();
+                    const updateObj = {
+                        ...todo,
+                        status: newStatus,
+                        [newStatus]: now
+                    };
+                    fbsSvc.upd(`todos/${key}`, null, updateObj, function() {
+                        $('#modalConfirmStatus').addClass('hidden');
+                        statusChange.key = null;
+                        statusChange.newStatus = null;
+                    });
+                }
             });
             // Detail
             $(document).off('click', '.detail-btn').on('click', '.detail-btn', function() {
