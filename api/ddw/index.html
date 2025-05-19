@@ -116,7 +116,7 @@
                     if (selectedDate && todo.stamp && todo.stamp.slice(0, 10) !== selectedDate) return;
                     if (currentFilter !== 'all' && todo.status !== currentFilter) return;
                     const statusObj = getStatusObj(todo.status);
-                    const completedClass = todo.status === 'done' ? 'line-through text-gray-400' : '';
+                    const completedClass = todo.status === 'done' ? 'font-bold text-gray-400' : '';
                     $list.append(`
                         <li class="flex items-center justify-between py-2" data-key="${key}">
                             <span class="flex items-center gap-2 flex-1">
