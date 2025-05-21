@@ -270,11 +270,13 @@
             return (dataLocal._kainLookup && dataLocal._kainLookup[id]) ? dataLocal._kainLookup[id].k : id;
         }
 
+        /*
         function properText(text) {
         return text
             .toLowerCase()
             .replace(/\b\w/g, char => char.toUpperCase());
         }
+        */
         
         function renderTableData(data) {
             window._lastData = data;
@@ -332,7 +334,7 @@
                 const columns = [
                     item.id_stock || '',
                     item.no_po || '',
-                    properText(getKainName(item.id_kain)),
+                    getKainName(item.id_kain),
                     lotRoll,
                     item.q_sup || '0.00',
                     item.q_nett || '0.00',
@@ -525,7 +527,7 @@
                 }
             })
         }
-
+/*
         function checkAndFixDuplicates(tgl, callback) {
             // Ambil data dari Firebase
             fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
@@ -576,6 +578,66 @@
                 });
             });
         }
+        */
+var dtTempTry = {};
+
+function getDataMainOnFbs(tgl) {
+  fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
+
+    // Jika data kosong/null → langsung callDataMain
+    if (!data || _.isEmpty(data)) {
+      console.warn('Data kosong, akan generate ulang...');
+      callDataMain(tgl, (err, newData) => {
+        if (!err && Array.isArray(newData)) {
+          _.forEach(newData, (item) => {
+            fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, item, () => {});
+          });
+          // Setelah insert ulang, panggil ulang fungsi ini
+          setTimeout(() => getDataMainOnFbs(tgl), 1200);
+        } else {
+          console.error('Gagal ambil data baru dari callDataMain.');
+        }
+      });
+      return; // Stop proses selanjutnya
+    }
+
+    // Pastikan data dalam bentuk array
+    const dataArray = Array.isArray(data) ? data : Object.values(data);
+    const grouped = _.groupBy(dataArray, 'id_stock');
+
+    dtTempTry = {
+      data: dataArray,
+      cA: dataArray.length,
+      cB: Object.keys(grouped).length
+    };
+
+    // Jika ada duplikat id_stock, hapus & ambil ulang
+    if (dtTempTry.cA !== dtTempTry.cB) {
+      console.warn('Data tidak konsisten, ada duplikat id_stock');
+      fbsSvc.delDt(`/app/verif-data-masuk/${tgl}`, () => {
+        callDataMain(tgl, (err, newData) => {
+          if (!err && Array.isArray(newData)) {
+            _.forEach(newData, (item) => {
+              fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, item, () => {});
+            });
+            setTimeout(() => getDataMainOnFbs(tgl), 1200);
+          } else {
+            console.error('Gagal ambil data baru dari callDataMain.');
+          }
+        });
+      });
+      return;
+    }
+
+    // Data valid dan tidak duplikat
+    console.log('Data valid, tidak ada duplikat id_stock');
+    dataMainOnFbs = dataArray;
+    window._dataMainOnFbs = dataArray;
+
+    filterAndRenderTable();
+  });
+}
+
 
         // function listenerModalProses() {
         //     $('#inputLokasi').on('keydown', function(e) {
