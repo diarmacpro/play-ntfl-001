@@ -8,6 +8,8 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <!-- Bootstrap Icons CDN -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <style>
+        </style>
     </head>
     <body>
         <div class="p-6 bg-gray-100 min-h-screen">
@@ -69,18 +71,29 @@
             <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl flex flex-col items-center">
                 <h2 class="text-lg font-bold mb-4">Bulk Action</h2>
                 <div id="bulkForm" class="w-full flex flex-col gap-3 mb-2">
-                    <div>
-                        <label for="inputLokasi" class="block text-xs font-semibold mb-1">Lokasi</label>
-                        <input id="inputLokasi" name="lokasi" type="text" placeholder="Masukkan lokasi" class="border rounded px-3 py-2 w-full" autocomplete="off" />
-                    </div>
-                    <div>
-                        <label for="inputHelper" class="block text-xs font-semibold mb-1">Helper</label>
-                        <input id="inputHelper" name="helper" type="text" placeholder="Masukkan helper" class="border rounded px-3 py-2 w-full" autocomplete="off" />
-                    </div>
-                    <div>
+                    <div class="relative w-full" id="qtyWrapper">
                         <label for="inputQtyNett" class="block text-xs font-semibold mb-1">Qty Nett</label>
-                        <input id="inputQtyNett" name="qty_nett" type="number" step="any" placeholder="Qty Nett" class="border rounded px-3 py-2 w-full" autocomplete="off" />
+                        <input id="inputQtyNett" name="qty_nett" type="text"
+                            placeholder="Masukkan Qty Nett"
+                            class="border rounded px-3 py-2 w-full pr-10 text-right"
+                            autocomplete="off"
+                            inputmode="decimal"
+                            pattern="^\d+(\.\d{1,2})?$" />
                     </div>
+
+                    <div class="relative w-full" id="lokasiWrapper">
+                        <label for="inputLokasi" class="block text-xs font-semibold mb-1">Lokasi</label>
+                        <input id="inputLokasi" name="lokasi" type="text" placeholder="Masukkan lokasi"
+                                class="border rounded px-3 py-2 w-full pr-10" autocomplete="off">
+                    </div>
+                    <div class="relative w-full" id="helperWrapper">
+                        <label for="inputHelper" class="block text-xs font-semibold mb-1">Helper</label>
+                        <input id="inputHelper" name="helper" type="text"
+                            placeholder="Masukkan helper"
+                            class="border rounded px-3 py-2 w-full pr-10"
+                            autocomplete="off" />
+                    </div>
+
                     <div>
                         <label for="inputQtyNett" class="block text-xs font-semibold mb-1">Id Selected</label>
                         <textarea id="textAreaMenampungIdStock" rows=5 class="border rounded px-3 py-2 w-full"></textarea>
@@ -111,6 +124,8 @@
         const db = getDatabase(app);
         Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
     </script>
+
+    <script src="./script.js"></script>
     <script>
         (function() {
             // Nilai hash base64 yang valid (gabungan 5 hash SHA-256 huruf dipisah '+', lalu base64)
@@ -329,12 +344,20 @@
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
                     cell.className = 'px-4 py-1 border border-gray-400';
+                    // Kolom nett (5), loc (8), hlp (9) pakai span khusus
+                    if (idx === 5 || idx === 8 || idx === 9) {
+                        const span = document.createElement('span');
+                        span.className = 'edit-inline';
+                        span.textContent = val;
+                        cell.appendChild(span);
+                    } else {
+                        cell.textContent = val;
+                    }
                     if (idx === 5 || idx === 6) {
                         const num = parseFloat(val);
                         if (num < 0) cell.classList.add('text-red-600');
                         else if (num > 0) cell.classList.add('text-blue-600');
                     }
-                    cell.textContent = val;
                     // Hanya kolom 0-4 yang bisa select
                     if (idx <= 4) {
                         cell.classList.add('hover:bg-gray-50', 'cursor-pointer');
@@ -366,6 +389,7 @@
                                 delete dataCHecked[item.id_stock];
                             }
                             updateCheckedInfo();
+                            updateBtnProsesState();
                         };
                     } else {
                         // Pastikan kolom lain tidak bisa select
@@ -553,6 +577,272 @@
             });
         }
 
+        // function listenerModalProses() {
+        //     $('#inputLokasi').on('keydown', function(e) {
+        //         if (e.key === 'Enter') {
+        //             e.preventDefault(); // mencegah form submit jika ada
+        //             const inputValue = $(this).val();
+
+        //             cekLokasiAsync(inputValue).then(hasil => {
+        //                 console.log(hasil);
+        //                 if (hasil) {
+        //                     $(this).val(hasil.loc); // gunakan hasil.loc untuk ditampilkan
+        //                 } else {
+        //                     $(this).val('');
+        //                 }
+        //             });
+        //         }
+        //     });
+        // }
+
+        function listenerModalProses() {
+            // Lokasi
+            $('#inputLokasi').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputEl = $(this);
+                    const inputValue = inputEl.val();
+
+                    cekLokasiAsync(inputValue).then(hasil => {
+                        console.log(hasil);
+                        if (hasil) {
+                            inputEl
+                                .val(hasil.loc)
+                                .prop('disabled', true)
+                                .attr('data-k-rak', hasil.kode.rak)
+                                .attr('data-k-kol', hasil.kode.kol)
+                                .attr('data-has-val', true)
+                                .attr('data-loc', hasil.loc);
+
+                            if ($('#btnResetLokasi').length === 0) {
+                                const resetBtn = $('<button id="btnResetLokasi" type="button" class="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-red-700 bg-red-100 rounded-full hover:bg-red-200">clear lokasi</button>');
+                                $('#lokasiWrapper').append(resetBtn);
+
+                                resetBtn.on('click', function () {
+                                    inputEl
+                                        .val('')
+                                        .prop('disabled', false)
+                                        .removeAttr('data-k-rak')
+                                        .removeAttr('data-k-kol')
+                                        .removeAttr('data-has-val')
+                                        .removeAttr('data-loc')
+                                        .focus();
+                                    $(this).remove();
+                                });
+                            }
+                        } else {
+                            inputEl.val('');
+                        }
+                    });
+                }
+            });
+
+            // Helper
+            $('#inputHelper').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputEl = $(this);
+                    const inputValue = inputEl.val();
+
+                    cekHelperAsync(inputValue).then(hasil => {
+                        console.log(hasil);
+                        if (hasil) {
+                            inputEl
+                                .val(hasil.hlp)
+                                .prop('disabled', true)
+                                .attr('data-id-hlp', hasil.id_hlp)
+                                .attr('data-hlp', hasil.hlp)
+                                .attr('data-has-val', true);
+
+                            if ($('#btnResetHelper').length === 0) {
+                                const resetBtn = $('<button id="btnResetHelper" type="button" class="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-red-700 bg-red-100 rounded-full hover:bg-red-200">clear helper</button>');
+                                $('#helperWrapper').append(resetBtn);
+
+                                resetBtn.on('click', function () {
+                                    inputEl
+                                        .val('')
+                                        .prop('disabled', false)
+                                        .removeAttr('data-id-hlp')
+                                        .removeAttr('data-hlp')
+                                        .removeAttr('data-has-val')
+                                        .focus();
+                                    $(this).remove();
+                                });
+                            }
+                        } else {
+                            inputEl.val('');
+                        }
+                    });
+                }
+            });
+
+            // Qty Nett (maks 2 angka di belakang koma)
+            $('#inputQtyNett').on('input', function () {
+                const inputEl = $(this);
+                const val = inputEl.val();
+
+                // Validasi: hanya angka dan maksimal 2 digit desimal
+                if (!/^\d*(\.\d{0,2})?$/.test(val)) {
+                    inputEl.val(val.slice(0, -1));
+                }
+            });
+
+            $('#inputQtyNett').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const inputEl = $(this);
+                    const val = inputEl.val();
+
+                    if (val && /^\d+(\.\d{1,2})?$/.test(val)) {
+                        inputEl
+                            .val(parseFloat(val).toFixed(2))
+                            .prop('disabled', true)
+                            .attr('data-has-val', true)
+                            .attr('data-qty', val);
+
+                        if ($('#btnResetQty').length === 0) {
+                            const resetBtn = $('<button id="btnResetQty" type="button" class="inline-flex items-center px-2 py-0.5 text-xs font-semibold text-red-700 bg-red-100 rounded-full hover:bg-red-200">clear qty</button>');
+                            $('#qtyWrapper').append(resetBtn);
+
+                            resetBtn.on('click', function () {
+                                inputEl
+                                    .val('')
+                                    .prop('disabled', false)
+                                    .removeAttr('data-has-val')
+                                    .removeAttr('data-qty')
+                                    .focus();
+                                $(this).remove();
+                            });
+                        }
+                    } else {
+                        inputEl.val('');
+                    }
+                }
+            });
+        }
+
+        // Tambahkan event delegation untuk edit-inline agar bisa edit inline
+        $(document).on('click', 'span.edit-inline', function(e) {
+            e.stopPropagation();
+            const span = $(this);
+            if (span.data('editing')) return;
+            span.data('editing', true);
+            const oldVal = span.text();
+            const idx = span.closest('td').index();
+            const input = $('<input type="text" class="border rounded px-1 py-0.5 w-full font-bold text-red-600" />')
+                .val(oldVal)
+                .css({ minWidth: '40px', maxWidth: '120px' })
+                .on('keydown', function(ev) {
+                    if (ev.key === 'Enter' || ev.key === 'Tab') {
+                        if (idx === 8) {
+                            const inputVal = this.value;
+                            cekLokasiAsync(inputVal).then(hasil => {
+                                if (hasil) {
+                                    span.text(hasil.loc);
+                                    console.log(hasil);
+                                    span.data('editing', false);
+                                    span.show();
+                                    input.remove();
+                                    // Auto-advance to HELPER (col 9)
+                                    const tdHelper = span.closest('tr').find('td').eq(9);
+                                    const spanHelper = tdHelper.find('span.edit-inline');
+                                    if (spanHelper.length && !spanHelper.data('editing')) {
+                                        spanHelper.trigger('click');
+                                    }
+                                } else {
+                                    span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                                    span.data('editing', false);
+                                    span.show();
+                                    input.remove();
+                                }
+                            });
+                        } else if (idx === 9) {
+                            const inputVal = this.value;
+                            cekHelperAsync(inputVal).then(hasil => {
+                                if (hasil) {
+                                    span.text(hasil.hlp);
+                                    console.log(hasil);
+                                } else {
+                                    span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                                }
+                                span.data('editing', false);
+                                span.show();
+                                input.remove();
+                            });
+                        } else {
+                            span.text(this.value);
+                            span.data('editing', false);
+                            span.show();
+                            input.remove();
+                        }
+                    } else if (ev.key === 'Escape') {
+                        span.data('editing', false);
+                        span.show();
+                        input.remove();
+                    }
+                })
+                .on('blur', function() {
+                    if (idx === 8) {
+                        const inputVal = this.value;
+                        cekLokasiAsync(inputVal).then(hasil => {
+                            if (hasil) {
+                                span.text(hasil.loc);
+                                console.log(hasil);
+                                span.data('editing', false);
+                                span.show();
+                                input.remove();
+                                // Auto-advance to HELPER (col 9)
+                                const tdHelper = span.closest('tr').find('td').eq(9);
+                                const spanHelper = tdHelper.find('span.edit-inline');
+                                if (spanHelper.length && !spanHelper.data('editing')) {
+                                    spanHelper.trigger('click');
+                                }
+                            } else {
+                                span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                                span.data('editing', false);
+                                span.show();
+                                input.remove();
+                            }
+                        });
+                    } else if (idx === 9) {
+                        const inputVal = this.value;
+                        cekHelperAsync(inputVal).then(hasil => {
+                            if (hasil) {
+                                span.text(hasil.hlp);
+                                console.log(hasil);
+                            } else {
+                                span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                            }
+                            span.data('editing', false);
+                            span.show();
+                            input.remove();
+                        });
+                    } else {
+                        span.text(this.value);
+                        span.data('editing', false);
+                        span.show();
+                        input.remove();
+                    }
+                });
+            span.hide().after(input);
+            input.focus().select();
+        });
+
+        // Tambahkan fungsi utilitas untuk update status tombol proses
+        function updateBtnProsesState() {
+            const btnProses = document.getElementById('btnProses');
+            if (!btnProses) return;
+            const enable = getSelectedDataKeys().jumlah > 0;
+            btnProses.disabled = !enable;
+            if (enable) {
+                btnProses.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnProses.classList.add('cursor-pointer');
+            } else {
+                btnProses.classList.add('opacity-50', 'cursor-not-allowed');
+                btnProses.classList.remove('cursor-pointer');
+            }
+        }
+
         $(()=>{
             const urlParams = new URLSearchParams(window.location.search);
             const tgl = urlParams.get('tgl');
@@ -590,12 +880,20 @@
             if (btnRenew) btnRenew.onclick = () => console.log('renew');
             const btnProses = document.getElementById('btnProses');
             const modalProses = document.getElementById('modalProses');
+            // --- Tambahan: Set default disabled pada tombol Proses Data ---
+            if (btnProses) {
+                btnProses.disabled = true;
+                btnProses.classList.add('opacity-50', 'cursor-not-allowed');
+                btnProses.classList.remove('cursor-pointer');
+            }
+            // ---
             if (btnProses) btnProses.onclick = () => {
+                if (btnProses.disabled) return;
                 modalProses.classList.remove('hidden');
-                
                 const idSelected = getSelectedDataMain().jumlah == 0 ? null : getSelectedDataMain().dataKeys.join(', ');
                 $('#textAreaMenampungIdStock').val(idSelected);
                 // console.log(idSelected);
+                listenerModalProses();
             };
             if (modalProses) {
                 document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
@@ -624,6 +922,7 @@
                     }
                     updateCheckedInfo();
                     filterAndRenderTable();
+                    updateBtnProsesState();
                 };
             }
             // Select all button
@@ -670,8 +969,15 @@
                     }
                     updateCheckedInfo();
                     filterAndRenderTable();
+                    updateBtnProsesState();
                 };
             }
+
+            $(document).on('click', '#dataTable td.hover\\:bg-gray-50', function() {
+                setTimeout(function() {
+                    updateBtnProsesState();
+                }, 10);
+            });
         });
     </script>
     </body>
