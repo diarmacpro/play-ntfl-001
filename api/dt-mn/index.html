@@ -300,6 +300,7 @@
                     ].join(' ').toLowerCase();
                     return keywords.every(kw => searchStr.includes(kw));
                 });
+                console.log("xxx",filtered)
             }
             // Update data count and checked count
             if (window.dataMainOnFbs && typeof window.dataMainOnFbs === 'object') {
@@ -318,7 +319,7 @@
             _.forEach(filtered, (item) => {
                 const row = document.createElement('tr');
                 row.className = '';
-                row.setAttribute('data-key', item.id_stock);
+                row.setAttribute('data-key', item.key || item.id_stock);
                 if (checkedRows[item.id_stock]) {
                     row.classList.add('bg-blue-100', 'font-bold');
                     row.setAttribute('data-select', 'true');
@@ -343,9 +344,15 @@
                     kolRak,
                     getHelperName(item.id_hlp)
                 ];
+                console.log(columns);
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
                     cell.className = 'px-4 py-1 border border-gray-400';
+                    
+                    if (idx == 5) {
+                        cell.className = 'px-1 py-0 border border-gray-400 text-center';
+                    }
+                    
                     // Kolom nett (5), loc (8), hlp (9) pakai span khusus
                     if (idx === 5 || idx === 8 || idx === 9) {
                         const span = document.createElement('span');
@@ -453,6 +460,9 @@
             // Always filter from the original data
             const data = window._dataMainOnFbs || [];
             let filtered = data;
+
+            // console.log(dataMainOnFbs);
+            // console.log(data);
             // console.log("filtered",filtered);
             if (window._searchQuery && window._searchQuery.length > 0) {
                 const keywords = window._searchQuery.split(/\s+/).filter(Boolean);
@@ -583,6 +593,11 @@ var dtTempTry = {};
 
 function getDataMainOnFbs(tgl) {
   fbsSvc.gDt(`/app/verif-data-masuk/${tgl}`, '', (data) => {
+    data = Object.entries(data || {}).map(([key, value]) => ({
+        key,
+        ...value
+    }));
+    // console.log(data);
 
     // Jika data kosong/null → langsung callDataMain
     if (!data || _.isEmpty(data)) {
@@ -790,18 +805,77 @@ function getDataMainOnFbs(tgl) {
             if (span.data('editing')) return;
             span.data('editing', true);
             const oldVal = span.text();
+            // console.log(oldVal);
             const idx = span.closest('td').index();
-            const input = $('<input type="text" class="border rounded px-1 py-0.5 w-full font-bold text-red-600" />')
+            const input = $('<input type="text" class="w-full p-0 font-medium text-red-600 focus:outline-none focus:ring-0 focus:border-none rounded-none border-none text-right" />')
                 .val(oldVal)
                 .css({ minWidth: '40px', maxWidth: '120px' })
                 .on('keydown', function(ev) {
                     if (ev.key === 'Enter' || ev.key === 'Tab') {
-                        if (idx === 8) {
+                        if (idx === 5) {
                             const inputVal = this.value;
+                            // Validasi: hanya angka dan maksimal 2 digit desimal
+                            if (/^\d+(\.\d{1,2})?$/.test(inputVal)) {
+                                const newNett = parseFloat(inputVal).toFixed(2);
+                                span.text(newNett);
+                                // Hitung ulang kolom sst (idx 6) dan persentase (idx 7)
+                                const row = span.closest('tr');
+                                const tdSup = row.find('td').eq(4); // q_sup
+                                const tdSst = row.find('td').eq(6); // sst
+                                const tdPersen = row.find('td').eq(7); // %
+                                const q_sup = parseFloat(tdSup.text()) || 0;
+                                const q_nett = parseFloat(newNett) || 0;
+                                const selisih = (q_nett > 0 && q_sup > 0) ? (q_nett - q_sup) : 0;
+                                const persentase = (selisih !== 0 && q_sup > 0)
+                                    ? ((selisih / q_sup) * 100).toFixed(2) + '%'
+                                    : '0%';
+                                // Update kolom sst dan %
+                                tdSst.text(selisih.toFixed(2));
+                                tdPersen.text(persentase);
+                                // Warnai sesuai logic awal
+                                tdSst.removeClass('text-red-600 text-blue-600');
+                                if (selisih < 0) tdSst.addClass('text-red-600');
+                                else if (selisih > 0) tdSst.addClass('text-blue-600');
+                                tdPersen.removeClass('text-red-600 text-blue-600');
+                                if (parseFloat(persentase) < 0) tdPersen.addClass('text-red-600');
+                                else if (parseFloat(persentase) > 0) tdPersen.addClass('text-blue-600');
+                                // Simpan ke dataInputRow
+                                const id = row.find('td').eq(0).text();
+                                window.dataInputRow = window.dataInputRow || {};
+                                if (id) {
+                                    window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                    window.dataInputRow[id].nett = newNett;
+                                }
+                                span.data('editing', false);
+                                span.show();
+                                input.remove();
+                                // Optional: auto-advance ke kolom lokasi (col 8)
+                                const tdLokasi = row.find('td').eq(8);
+                                const spanLokasi = tdLokasi.find('span.edit-inline');
+                                if (spanLokasi.length && !spanLokasi.data('editing')) {
+                                    spanLokasi.trigger('click');
+                                }
+                            } else {
+                                span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                                span.data('editing', false);
+                                span.show();
+                                input.remove();
+                            }
+                        } else if (idx === 8) {
+                            const inputVal = this.value;
+                            const row = span.closest('tr');
+                            const id = row.find('td').eq(0).text();
                             cekLokasiAsync(inputVal).then(hasil => {
                                 if (hasil) {
                                     span.text(hasil.loc);
-                                    console.log(hasil);
+                                    // Simpan ke dataInputRow
+                                    window.dataInputRow = window.dataInputRow || {};
+                                    if (id) {
+                                        window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                        window.dataInputRow[id].loc = hasil.loc;
+                                        window.dataInputRow[id].kode_rak = hasil.kode.rak;
+                                        window.dataInputRow[id].kode_kol = hasil.kode.kol;
+                                    }
                                     span.data('editing', false);
                                     span.show();
                                     input.remove();
@@ -820,10 +894,20 @@ function getDataMainOnFbs(tgl) {
                             });
                         } else if (idx === 9) {
                             const inputVal = this.value;
+                            const row = span.closest('tr');
+                            const id = row.find('td').eq(0).text();
                             cekHelperAsync(inputVal).then(hasil => {
                                 if (hasil) {
                                     span.text(hasil.hlp);
-                                    console.log(hasil);
+                                    // Simpan ke dataInputRow
+                                    window.dataInputRow = window.dataInputRow || {};
+                                    if (id) {
+                                        window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                        window.dataInputRow[id].hlp = hasil.hlp;
+                                        window.dataInputRow[id].id_hlp = hasil.id_hlp;
+                                        window.dataInputRow[id].id_stock = id;
+                                        console.log(dataInputRow);
+                                    }
                                 } else {
                                     span.text(oldVal); // Kembalikan ke value default jika tidak valid
                                 }
@@ -844,12 +928,70 @@ function getDataMainOnFbs(tgl) {
                     }
                 })
                 .on('blur', function() {
-                    if (idx === 8) {
+                    if (idx === 5) {
                         const inputVal = this.value;
+                        // Validasi: hanya angka dan maksimal 2 digit desimal
+                        if (/^\d+(\.\d{1,2})?$/.test(inputVal)) {
+                            const newNett = parseFloat(inputVal).toFixed(2);
+                            span.text(newNett);
+                            // Hitung ulang kolom sst (idx 6) dan persentase (idx 7)
+                            const row = span.closest('tr');
+                            const tdSup = row.find('td').eq(4); // q_sup
+                            const tdSst = row.find('td').eq(6); // sst
+                            const tdPersen = row.find('td').eq(7); // %
+                            const q_sup = parseFloat(tdSup.text()) || 0;
+                            const q_nett = parseFloat(newNett) || 0;
+                            const selisih = (q_nett > 0 && q_sup > 0) ? (q_nett - q_sup) : 0;
+                            const persentase = (selisih !== 0 && q_sup > 0)
+                                ? ((selisih / q_sup) * 100).toFixed(2) + '%'
+                                : '0%';
+                            // Update kolom sst dan %
+                            tdSst.text(selisih.toFixed(2));
+                            tdPersen.text(persentase);
+                            // Warnai sesuai logic awal
+                            tdSst.removeClass('text-red-600 text-blue-600');
+                            if (selisih < 0) tdSst.addClass('text-red-600');
+                            else if (selisih > 0) tdSst.addClass('text-blue-600');
+                            tdPersen.removeClass('text-red-600 text-blue-600');
+                            if (parseFloat(persentase) < 0) tdPersen.addClass('text-red-600');
+                            else if (parseFloat(persentase) > 0) tdPersen.addClass('text-blue-600');
+                            // Simpan ke dataInputRow
+                            const id = row.find('td').eq(0).text();
+                            window.dataInputRow = window.dataInputRow || {};
+                            if (id) {
+                                window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                window.dataInputRow[id].nett = newNett;
+                            }
+                            span.data('editing', false);
+                            span.show();
+                            input.remove();
+                            // Optional: auto-advance ke kolom lokasi (col 8)
+                            const tdLokasi = row.find('td').eq(8);
+                            const spanLokasi = tdLokasi.find('span.edit-inline');
+                            if (spanLokasi.length && !spanLokasi.data('editing')) {
+                                spanLokasi.trigger('click');
+                            }
+                        } else {
+                            span.text(oldVal); // Kembalikan ke value default jika tidak valid
+                            span.data('editing', false);
+                            span.show();
+                            input.remove();
+                        }
+                    } else if (idx === 8) {
+                        const inputVal = this.value;
+                        const row = span.closest('tr');
+                        const id = row.find('td').eq(0).text();
                         cekLokasiAsync(inputVal).then(hasil => {
                             if (hasil) {
                                 span.text(hasil.loc);
-                                console.log(hasil);
+                                // Simpan ke dataInputRow
+                                window.dataInputRow = window.dataInputRow || {};
+                                if (id) {
+                                    window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                    window.dataInputRow[id].loc = hasil.loc;
+                                    window.dataInputRow[id].kode_rak = hasil.kode.rak;
+                                    window.dataInputRow[id].kode_kol = hasil.kode.kol;
+                                }
                                 span.data('editing', false);
                                 span.show();
                                 input.remove();
@@ -868,10 +1010,18 @@ function getDataMainOnFbs(tgl) {
                         });
                     } else if (idx === 9) {
                         const inputVal = this.value;
+                        const row = span.closest('tr');
+                        const id = row.find('td').eq(0).text();
                         cekHelperAsync(inputVal).then(hasil => {
                             if (hasil) {
                                 span.text(hasil.hlp);
-                                console.log(hasil);
+                                // Simpan ke dataInputRow
+                                window.dataInputRow = window.dataInputRow || {};
+                                if (id) {
+                                    window.dataInputRow[id] = window.dataInputRow[id] || {};
+                                    window.dataInputRow[id].hlp = hasil.hlp;
+                                    window.dataInputRow[id].id_hlp = hasil.id_hlp;
+                                }
                             } else {
                                 span.text(oldVal); // Kembalikan ke value default jika tidak valid
                             }
