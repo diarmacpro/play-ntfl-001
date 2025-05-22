@@ -97,7 +97,7 @@
 
                     <div>
                         <label for="inputQtyNett" class="block text-xs font-semibold mb-1">Id Selected</label>
-                        <textarea id="textAreaMenampungIdStock" rows=5 class="border rounded px-3 py-2 w-full"></textarea>
+                        <textarea id="textAreaMenampungIdStock" rows=8 class="border rounded px-3 py-2 w-full"></textarea>
                     </div>
                     <div class="flex w-full gap-2">
                         <button id="btnPrintOnline" class="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-800 w-1/2">Print Online</button>
@@ -322,7 +322,8 @@
             _.forEach(filtered, (item) => {
                 const row = document.createElement('tr');
                 row.className = '';
-                row.setAttribute('data-key', item.key || item.id_stock);
+                row.setAttribute('data-id', item.id_stock);
+                row.setAttribute('data-key', item.key);
                 if (checkedRows[item.id_stock]) {
                     row.classList.add('bg-blue-100', 'font-bold');
                     row.setAttribute('data-select', 'true');
@@ -359,7 +360,7 @@
                     // Kolom nett (5), loc (8), hlp (9) pakai span khusus
                     if (idx === 5 || idx === 8 || idx === 9) {
                         const span = document.createElement('span');
-                        span.className = 'edit-inline';
+                        span.className = 'edit-inline w-full inline-block min-h-[1rem] cursor-pointer';
                         span.textContent = val;
                         cell.appendChild(span);
                     } else {
@@ -442,7 +443,7 @@
             // Ambil hanya <tr> yang memiliki data-select="true" di dalam #dataTable
             const $rows = $('#dataTable tr[data-select="true"]');
             const dataKeys = $rows.map(function() {
-                return $(this).data('key');
+                return $(this).data('id');
             }).get();
             // Ambil data dari dataMainOnFbs sesuai urutan dataKeys
             let mainData = [];
@@ -907,11 +908,15 @@ function getDataMainOnFbs(tgl) {
                                     // Simpan ke dataInputRow
                                     window.dataInputRow = window.dataInputRow || {};
                                     if (id) {
+                                        const keyPerRow = row.data('key');
+                                        const dataMainPerRow = _.find(dataMainOnFbs, { key: keyPerRow });
                                         window.dataInputRow[id] = window.dataInputRow[id] || {};
                                         window.dataInputRow[id].hlp = hasil.hlp;
                                         window.dataInputRow[id].id_hlp = hasil.id_hlp;
                                         window.dataInputRow[id].id_stock = id;
+                                        window.dataInputRow[id].key = keyPerRow;
                                         console.log(dataInputRow);
+                                        console.log(dataMainPerRow);
                                     }
                                 } else {
                                     span.text(oldVal); // Kembalikan ke value default jika tidak valid
