@@ -202,6 +202,8 @@
             dataRak: {},
             dataKol: {}
         };
+
+
         var checkedRows = {};
         let totalData = 0;
         var dataCHecked = {};
@@ -345,7 +347,7 @@
                     kolRak,
                     getHelperName(item.id_hlp)
                 ];
-                console.log(columns);
+                // console.log(columns);
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
                     cell.className = 'px-4 py-1 border border-gray-400';
@@ -538,6 +540,8 @@
                 }
             })
         }
+
+
 /*
         function checkAndFixDuplicates(tgl, callback) {
             // Ambil data dari Firebase
@@ -851,11 +855,11 @@ function getDataMainOnFbs(tgl) {
                                 span.show();
                                 input.remove();
                                 // Optional: auto-advance ke kolom lokasi (col 8)
-                                const tdLokasi = row.find('td').eq(8);
-                                const spanLokasi = tdLokasi.find('span.edit-inline');
-                                if (spanLokasi.length && !spanLokasi.data('editing')) {
-                                    spanLokasi.trigger('click');
-                                }
+                                // const tdLokasi = row.find('td').eq(8);
+                                // const spanLokasi = tdLokasi.find('span.edit-inline');
+                                // if (spanLokasi.length && !spanLokasi.data('editing')) {
+                                //     spanLokasi.trigger('click');
+                                // }
                             } else {
                                 span.text(oldVal); // Kembalikan ke value default jika tidak valid
                                 span.data('editing', false);
@@ -881,11 +885,11 @@ function getDataMainOnFbs(tgl) {
                                     span.show();
                                     input.remove();
                                     // Auto-advance to HELPER (col 9)
-                                    const tdHelper = span.closest('tr').find('td').eq(9);
-                                    const spanHelper = tdHelper.find('span.edit-inline');
-                                    if (spanHelper.length && !spanHelper.data('editing')) {
-                                        spanHelper.trigger('click');
-                                    }
+                                    // const tdHelper = span.closest('tr').find('td').eq(9);
+                                    // const spanHelper = tdHelper.find('span.edit-inline');
+                                    // if (spanHelper.length && !spanHelper.data('editing')) {
+                                    //     spanHelper.trigger('click');
+                                    // }
                                 } else {
                                     span.text(oldVal); // Kembalikan ke value default jika tidak valid
                                     span.data('editing', false);
