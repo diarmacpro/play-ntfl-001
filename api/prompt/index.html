@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSONBin Interface</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+  <!-- Tambahkan Bootstrap Icons CDN di <head> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-4">Data Viewer</h1>
+    <input id="search" type="text" placeholder="Cari data..." class="w-full p-2 mb-4 border border-gray-300 rounded" />
+
+    <div class="flex gap-2 mb-4">
+      <button id="add-entry" class="px-4 py-2 bg-green-600 text-white rounded">Tambah Data</button>
+      <!-- Toolbar update/hapus dihapus, pindah ke card -->
+    </div>
+
+    <div id="data-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+  </div>
+
+  <!-- Modal Value Viewer -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 flex hidden">
+    <div class="bg-white py-4 px-1 rounded-lg shadow-lg w-[98%] max-w-lg h-[98%]">
+      <h2 class="text-xl font-semibold mb-2">Detail Value</h2>
+      <textarea id="modal-content" class="text-xs w-full h-[82%] p-2 border border-gray-300 rounded"></textarea>
+      <div class="text-right mt-4 flex justify-end gap-2">
+        <button id="copy-modal-content" class="px-4 py-2 bg-blue-500 text-white rounded">Salin</button>
+        <button id="close-modal" class="px-4 py-2 bg-red-500 text-white rounded">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Form Tambah/Edit -->
+  <div id="form-modal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 flex hidden">
+    <div class="bg-white py-4 px-1 rounded-lg shadow-lg w-[98%] max-w-lg h-[98%]">
+      <h2 id="form-title" class="text-xl font-semibold mb-4">Form Data</h2>
+      <form id="entry-form" class="space-y-4 text-xs h-[90%]">
+        <input type="text" id="form-title-input" placeholder="Title" class="w-full p-2 border border-gray-300 rounded" required />
+        <input type="text" id="form-kategori-input" placeholder="Kategori (pisahkan dengan koma)" class="w-full p-2 border border-gray-300 rounded" required />
+        <textarea id="form-deskripsi-input" placeholder="Deskripsi" class="w-full h-[21%] p-2 border border-gray-300 rounded" required></textarea>
+        <textarea id="form-value-input" placeholder="Value" class="w-full h-[51%] p-2 border border-gray-300 rounded" required></textarea>
+        <div class="text-right">
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+          <button type="button" id="close-form-modal" class="px-4 py-2 bg-gray-400 text-white rounded ml-2">Batal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const binId = "6831512e8960c979a5a06cdf";
+    const masterKey = "$2a$10$faa3jiqzSN4x7/PlWtRzCuXiySRNJKaEdUwOph3UfdZec1Ud4Ed3C";
+    const accessKey = "$2a$10$YGVCMMmNw858HgIiMPPnpuvRRh7cGZjbEFNMpYg0BIszIv5KRhm3S";
+
+    let globalData = [];
+
+    const fetchData = () => {
+      $.ajax({
+        url: `https://api.jsonbin.io/v3/b/${binId}`,
+        method: "GET",
+        headers: {
+          "X-Master-Key": masterKey,
+          "X-Access-Key": accessKey
+        },
+        success: function(response) {
+          globalData = response.record;
+          renderData(globalData);
+        },
+        error: function(err) {
+          console.error("Error fetching data", err);
+        }
+      });
+    };
+
+    const renderData = (data) => {
+      const container = $("#data-container");
+      container.empty();
+      const query = $("#search").val().toLowerCase();
+      const filtered = _.filter(data, item => {
+        return item.title.toLowerCase().includes(query) ||
+               item.kategori.toLowerCase().includes(query) ||
+               item.deskripsi.toLowerCase().includes(query);
+      });
+
+      filtered.forEach((item, idx) => {
+        const kategoriBadges = item.kategori.split(',').map(k => `<span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded mr-1">${k.trim()}</span>`).join('');
+        const timestamp = new Date(item.timestamp).toLocaleString("id-ID", { hour12: false, timeZone: "Asia/Jakarta" });
+        const card = $(`
+          <div class="bg-white p-5 rounded-xl shadow hover:shadow-xl relative transition-all flex flex-col h-full">
+            <div class="text-sm font-bold text-blue-700 hover:underline cursor-pointer title-click mb-1" tabindex="0" role="button">${item.title}</div>
+            <div class="text-xs flex flex-wrap gap-1 mb-2">${kategoriBadges}</div>
+            <div class="text-xs text-gray-400 mb-2">${timestamp}</div>
+            <div class="text-sm text-gray-700 line-clamp-2 mb-4">${item.deskripsi}</div>
+            <div class="flex justify-end gap-2 mt-auto">
+              <button class="view-btn btn-view flex items-center gap-1 px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition" title="Lihat"><i class="bi bi-eye"></i><span class="hidden md:inline">View</span></button>
+              <button class="edit-btn btn-edit flex items-center gap-1 px-3 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition" title="Edit"><i class="bi bi-pencil-square"></i><span class="hidden md:inline">Edit</span></button>
+              <button class="delete-btn btn-delete flex items-center gap-1 px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 transition" title="Hapus"><i class="bi bi-trash"></i><span class="hidden md:inline">Delete</span></button>
+            </div>
+          </div>
+        `);
+        card.find('.view-btn').click(() => {
+          $("#modal-content").val(item.value);
+          $("#modal").removeClass("hidden").addClass("flex");
+        });
+        card.find('.edit-btn').click(() => {
+          $("#form-title").text("Edit Data");
+          $("#form-title-input").val(item.title);
+          $("#form-kategori-input").val(item.kategori);
+          $("#form-deskripsi-input").val(item.deskripsi);
+          $("#form-value-input").val(item.value);
+          $("#form-modal").removeClass("hidden").addClass("flex");
+          $("#entry-form").data('edit-idx', idx);
+        });
+        card.find('.delete-btn').click(() => {
+          if (confirm("Yakin ingin menghapus data ini?")) {
+            const updatedData = globalData.filter((_, i) => i !== idx);
+            $.ajax({
+              url: `https://api.jsonbin.io/v3/b/${binId}`,
+              method: "PUT",
+              contentType: "application/json",
+              data: JSON.stringify(updatedData),
+              headers: {
+                "X-Master-Key": masterKey,
+                "X-Access-Key": accessKey
+              },
+              success: () => fetchData(),
+              error: err => alert("Gagal menghapus data")
+            });
+          }
+        });
+        card.find('.title-click').off('click').on('click', () => {
+          $("#modal-content").val(item.value);
+          $("#modal").removeClass("hidden").addClass("flex");
+        });
+        card.find('.title-click').off('keydown').on('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            $("#modal-content").val(item.value);
+            $("#modal").removeClass("hidden").addClass("flex");
+          }
+        });
+        container.append(card);
+      });
+    };
+
+    const createData = () => {
+      $("#form-title").text("Tambah Data");
+      $("#entry-form")[0].reset();
+      $("#form-modal").removeClass("hidden").addClass("flex");
+    };
+
+    const saveFormData = (e) => {
+      e.preventDefault();
+      const title = $("#form-title-input").val().trim();
+      const kategori = $("#form-kategori-input").val().trim();
+      const deskripsi = $("#form-deskripsi-input").val().trim();
+      const value = $("#form-value-input").val().trim();
+      const timestamp = new Date().toISOString();
+      const editIdx = $("#entry-form").data('edit-idx');
+
+      if (!title || !kategori || !deskripsi || !value) {
+        alert("Semua field harus diisi.");
+        return;
+      }
+
+      let updatedData;
+      if (editIdx !== undefined && editIdx !== null) {
+        updatedData = globalData.map((item, i) => i === editIdx ? { title, kategori, deskripsi, timestamp, value } : item);
+      } else {
+        updatedData = [...globalData, { title, kategori, deskripsi, timestamp, value }];
+      }
+
+      $.ajax({
+        url: `https://api.jsonbin.io/v3/b/${binId}`,
+        method: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify(updatedData),
+        headers: {
+          "X-Master-Key": masterKey,
+          "X-Access-Key": accessKey
+        },
+        success: () => {
+          fetchData();
+          $("#form-modal").addClass("hidden");
+          $("#entry-form")[0].reset();
+          $("#entry-form").removeData('edit-idx');
+        },
+        error: err => alert("Gagal menyimpan data")
+      });
+    };
+
+    const updateData = () => {
+      const updated = prompt("Masukkan data JSON lengkap untuk update:");
+      try {
+        const parsed = JSON.parse(updated);
+        $.ajax({
+          url: `https://api.jsonbin.io/v3/b/${binId}`,
+          method: "PUT",
+          contentType: "application/json",
+          data: JSON.stringify(parsed),
+          headers: {
+            "X-Master-Key": masterKey,
+            "X-Access-Key": accessKey
+          },
+          success: () => fetchData(),
+          error: err => alert("Gagal memperbarui data")
+        });
+      } catch (e) {
+        alert("Format JSON tidak valid.");
+      }
+    };
+
+    const deleteData = () => {
+      if (confirm("Yakin ingin menghapus bin ini?")) {
+        $.ajax({
+          url: `https://api.jsonbin.io/v3/b/${binId}`,
+          method: "DELETE",
+          headers: {
+            "X-Master-Key": masterKey,
+            "X-Access-Key": accessKey
+          },
+          success: () => alert("Data berhasil dihapus."),
+          error: err => alert("Gagal menghapus data")
+        });
+      }
+    };
+
+    $("#search").on("input", () => renderData(globalData));
+    $("#close-modal").click(() => $("#modal").addClass("hidden"));
+    $("#add-entry").click(createData);
+    $("#entry-form").submit(saveFormData);
+    $("#close-form-modal").click(() => $("#form-modal").addClass("hidden"));
+
+    $("#copy-modal-content").click(() => {
+      const text = $("#modal-content").val();
+      navigator.clipboard.writeText(text)
+        .then(() => alert("Berhasil disalin ke clipboard"))
+        .catch(err => alert("Gagal menyalin: " + err));
+    });
+
+    $(document).ready(fetchData);
+  </script>
+</body>
+</html>

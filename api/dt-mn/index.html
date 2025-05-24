@@ -41,6 +41,9 @@
                         <button id="btnProses" class="flex items-center bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
                             <i class="bi-play-fill mr-2"></i>Proses Data
                         </button>
+                        <button id="btnProses" class="flex items-center bg-gray-700 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
+                            <i class="bi bi-chevron-double-down"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -529,6 +532,7 @@
 
         function generateDataMainOnFbs(tgl){
             callDataMain(tgl,(err_data,data)=>{
+                console.log("Data Ini Baru");
                 if (err_data) {
                     console.error(err_data);
                 } else if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'object' && Object.keys(data).length === 0)) {
@@ -1114,7 +1118,37 @@ function getDataMainOnFbs(tgl) {
 
         document.addEventListener('DOMContentLoaded', function() {
             const btnRenew = document.getElementById('btnRenew');
-            if (btnRenew) btnRenew.onclick = () => console.log('renew');
+            if (btnRenew) btnRenew.onclick = function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tgl = urlParams.get('tgl');
+                if (!tgl) {
+                    alert('Tanggal tidak ditemukan di URL!');
+                    return;
+                }
+                if (!confirm('Perbaharui seluruh data pada tanggal ini dengan data terbaru? Data lama akan dihapus dan diganti!')) return;
+                // Hapus semua data lama di path firebase
+                fbsSvc.delDt(`/app/verif-data-masuk/${tgl}`, function() {
+                    // Ambil data terbaru dari API
+                    callDataMain(tgl, function(err, data) {
+                        if (err) {
+                            alert('Gagal mengambil data baru dari API!');
+                            return;
+                        }
+                        if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'object' && Object.keys(data).length === 0)) {
+                            alert('Data tidak tersedia untuk tanggal tersebut!');
+                            window.location.href = './';
+                            return;
+                        }
+                        // Simpan data baru ke firebase
+                        _.forEach(data, function(item) {
+                            fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, item, function(){});
+                        });
+                        setTimeout(function() {
+                            getDataMainOnFbs(tgl);
+                        }, 1200);
+                    });
+                });
+            };
             const btnProses = document.getElementById('btnProses');
             const modalProses = document.getElementById('modalProses');
             // --- Tambahan: Set default disabled pada tombol Proses Data ---
