@@ -1,0 +1,8 @@
+cek tabel so apakah sudah terdaftar
+jika belum ---> {ubah data di tabel main : kd_rak, kd_kol, qty_nett, id_hlp} dan insert tb_so
+jika sudah --->  cek tabel so_hst apakah ada data {
+    jika ada ---> insert data baru ke tabel so_hst dengan acuan data terakhir
+    jika tidak ada ---> insert data baru ke tabel so_hst denagn acuan data so
+}
+
+perbaiki sajian data pada verifikasi data masuk, libatkan data so juga

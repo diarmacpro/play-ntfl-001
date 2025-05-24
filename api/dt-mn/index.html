@@ -111,7 +111,7 @@
                 </div>
             </div>
         </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" integrity="sha256-xxU8WD/MI8uoZ1geRPVqbSvo6MuHLOUHfu/0Vg8Bewg=" crossorigin="anonymous"></script>
@@ -917,6 +917,21 @@ function getDataMainOnFbs(tgl) {
                                         window.dataInputRow[id].key = keyPerRow;
                                         console.log(dataInputRow);
                                         console.log(dataMainPerRow);
+                                        pR('https://cdn.weva.my.id/apix/dtSo',{id},(e,d)=>{
+                                            const dtSo = d.data[0];
+                                            // console.log(dtSo);
+                                            if (dtSo) {
+                                                // cek tabel so_hst apakah ada data
+                                                pR('https://cdn.weva.my.id/apix/dtSoHst',{id},(e2,d2)=>{
+                                                    console.log("data so : ",dtSo);
+                                                    console.log("data hst so : ",d2.data[0]);
+                                                })
+                                            }else{
+                                                // ubah data di tabel main : kd_rak, kd_kol, qty_nett, id_hlp} dan insert tb_so
+                                                console.log(dtSo);
+                                                console.log("data so tidak ada, ubah data di tabel main");
+                                            }
+                                        })
                                     }
                                 } else {
                                     span.text(oldVal); // Kembalikan ke value default jika tidak valid
