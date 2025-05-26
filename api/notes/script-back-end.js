@@ -59,3 +59,19 @@ pR('https://cdn.weva.my.id/apix/iDtSoHst', {
 });
 
 
+// insert tb so
+pR('https://cdn.weva.my.id/apix/iDtSo', {
+    tgl_so : '2025-05-23 11:20:07',
+    pic : 15,
+    hlp : 2,
+    ge : 'g',
+    id_stock : 51497,
+    kd_rak : 73,
+    kd_kol : 1,
+    q_so : 100.25,
+    q_so_sup : 102.17,
+    q_so_nett : 100.25
+}, (e, d) => {
+    console.log(d.data);
+});
+
