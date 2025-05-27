@@ -1,0 +1,16 @@
+const dtUpdtSo = {
+    "id_stock": 51497,
+    "tgl_so": "2025-05-27 13:01:49",
+    "pic": 15,
+    "hlp": 11,
+    "ge": "g",
+    "kd_rak": 7,
+    "kd_kol": 12,
+    "q_so": "12.55",
+    "q_so_sup": "12.00",
+    "q_so_nett": "12.55"
+};
+console.log("dtUpdtSo",dtUpdtSo);
+pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
+    console.log(uDtSo);
+})

@@ -30,6 +30,9 @@
                     </div>
                     <!-- Right group: Data count, checked badge, check/uncheck, proses -->
                     <div class="flex items-center gap-2 ml-auto flex-none">
+                        <button onclick="printSelected()" class="flex items-center bg-violet-700 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
+                            <i class="bi bi-printer-fill"></i>
+                        </button>
                         <span id="dataCount" class="text-xs text-gray-600">0 of 0</span>
                         <span id="checkedCount" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300 ml-2">Checked: 0</span>
                         <button id="btnClearChecked" title="Clear Checked" class="flex items-center bg-red-600 text-white px-3 py-1 rounded hover:bg-red-800 focus:outline-none">
@@ -41,7 +44,7 @@
                         <button id="btnProses" class="flex items-center bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
                             <i class="bi-play-fill mr-2"></i>Proses Data
                         </button>
-                        <button id="btnProses" class="flex items-center bg-gray-700 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
+                        <button class="flex items-center bg-gray-700 text-white px-3 py-1 rounded hover:bg-blue-800 ml-2">
                             <i class="bi bi-chevron-double-down"></i>
                         </button>
                     </div>
@@ -1341,6 +1344,14 @@ function getDataMainOnFbs(tgl) {
                 }, 10);
             });
         });
+
+        
+        function printSelected(){
+            const selectedData = getSelectedDataMain().jumlah == 0 ? null : getSelectedDataMain().dataKeys.join(',');
+            if (selectedData) {
+                window.open(`https://stock.weva.my.id/label/?i=${selectedData}`, '_blank');
+            }
+        }
     </script>
     </body>
 </html>
