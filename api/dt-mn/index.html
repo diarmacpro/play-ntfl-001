@@ -927,6 +927,47 @@ function getDataMainOnFbs(tgl) {
                                             const dtSo = d.data[0];
 
                                             if (dtSo) { // jika ada di tabel so
+                                                // insert data baru ke tabel so_hst dengan acuan data so
+                                                // update tb so
+                                                const dtUpdtSo = {
+                                                    id_stock: parseInt(id,10),
+                                                    tgl_so: stm(),
+                                                    pic: 15,
+                                                    hlp: dataInputRow[id].id_hlp,
+                                                    ge: "g",
+                                                    kd_rak: dataInputRow[id].kode_rak,
+                                                    kd_kol: dataInputRow[id].kode_kol,
+                                                    q_so: parseFloat(dataInputRow[id].nett).toFixed(2),
+                                                    q_so_sup: parseFloat(dataMainPerRow.q_sup).toFixed(2),
+                                                    q_so_nett: parseFloat(dataInputRow[id].nett).toFixed(2)
+                                                };
+                                                console.log("dtUpdtSo",dtUpdtSo);
+
+                                                pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
+                                                    const dtSoHstA = {
+                                                        tgl_hst: stm(),
+                                                        pic_hst: 15,
+                                                        id_so: dtSo.id_so,
+                                                        tgl_so: stm(dtSo.tgl_so),
+                                                        pic: dtSo.pic,
+                                                        hlp: dtSo.hlp,
+                                                        ge: 'g',
+                                                        id_stock: dtSo.id_stock,
+                                                        kd_rak: dtSo.kd_rak,
+                                                        kd_kol: dtSo.kd_kol,
+                                                        q_so: dtSo.q_so,
+                                                    };
+                                                    console.log(dtSoHstA);
+                                                    
+                                                    pR('https://cdn.weva.my.id/apix/iDtSoHst', dtSoHstA, (e, d) => {
+                                                        console.log(d.data);
+                                                    });
+                                                })
+
+
+
+
+                                                /*
                                                 pR('https://cdn.weva.my.id/apix/dtSoHst',{id},(e2,d2)=>{ // cek tabel so_hst apakah ada data
                                                     
                                                     console.log("data so : ",dtSo);
@@ -935,39 +976,12 @@ function getDataMainOnFbs(tgl) {
                                                     if (d2.data[0]) {
                                                         // insert data baru ke tabel so_hst dengan acuan data terakhir
                                                     } else {
-                                                        // insert data baru ke tabel so_hst dengan acuan data so
-                                                        // update tb so
-                                                        pR('https://cdn.weva.my.id/apix/updDtSo',{
-                                                            id_stock: parseInt(id,10),
-                                                            tgl_so: stm(),
-                                                            pic: 15,
-                                                            hlp: dataInputRow[id].id_hlp,
-                                                            ge: "g",
-                                                            kd_rak: dataInputRow[id].kode_rak,
-                                                            kd_kol: dataInputRow[id].kode_kol,
-                                                            q_so: parseFloat(dataInputRow[id].nett).toFixed(2),
-                                                            q_so_sup: parseFloat(dataMainPerRow.q_sup).toFixed(2),
-                                                            q_so_nett: parseFloat(dataInputRow[id].nett).toFixed(2)
-                                                        },(uDtSo)=>{
-                                                            pR('https://cdn.weva.my.id/apix/iDtSoHst', {
-                                                                tgl_hst: stm(),
-                                                                pic_hst: 15,
-                                                                id_so: dtSo.id_so,
-                                                                tgl_so: dtSo.tgl_so,
-                                                                pic: dtSo.pic,
-                                                                hlp: dtSo.hlp,
-                                                                ge: 'g',
-                                                                id_stock: dtSo.id_stock,
-                                                                kd_rak: dtSo.kd_rak,
-                                                                kd_kol: dtSo.kd_kol,
-                                                                q_so: dtSo.q_so,
-                                                            }, (e, d) => {
-                                                                console.log(d.data);
-                                                            });
-                                                        })
                                                         // insert data baru ke tabel so_hst denagn acuan data so
                                                     }
                                                 })
+                                                */
+
+
                                             }else{ // jika tidak ada di tabel so
                                                 // ubah data di tabel main : kd_rak, kd_kol, qty_nett, id_hlp} dan insert tb_so
                                                 const payloadDtMain = {
@@ -1307,6 +1321,18 @@ function getDataMainOnFbs(tgl) {
                     filterAndRenderTable();
                     updateBtnProsesState();
                 };
+            }
+
+            // --- Tambahan: Scroll ke bawah saat tombol chevron double down diklik ---
+            const btnScrollDown = Array.from(document.querySelectorAll('button')).find(btn => btn.querySelector('i.bi-chevron-double-down'));
+            if (btnScrollDown) {
+                btnScrollDown.addEventListener('click', function() {
+                    // Cari parent yang overflow scroll
+                    const tableDiv = btnScrollDown.closest('.mx-auto').querySelector('div[style*="overflow"]');
+                    if (tableDiv) {
+                        tableDiv.scrollTo({ top: tableDiv.scrollHeight, behavior: 'smooth' });
+                    }
+                });
             }
 
             $(document).on('click', '#dataTable td.hover\\:bg-gray-50', function() {
