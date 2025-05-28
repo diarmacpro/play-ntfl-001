@@ -64,6 +64,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[60px] border border-gray-400">%</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">LOC</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[100px] border border-gray-400">HLP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[20px] border border-gray-400">#</th>
                                 </tr>
                             </thead>
                             <tbody id="dataTable" class="divide-y divide-gray-100 bg-white text-sm text-gray-700">
@@ -296,14 +297,15 @@
                     selisih.toFixed(2),
                     persentase,
                     kolRak,
-                    getHelperName(item.id_hlp)
+                    getHelperName(item.id_hlp),
+                    ""
                 ];
                 // console.log(columns);
                 columns.forEach((val, idx) => {
                     const cell = document.createElement('td');
                     cell.className = 'px-4 py-1 border border-gray-400';
                     
-                    if (idx == 5) {
+                    if (idx == 5 || idx == 10) {
                         cell.className = 'px-1 py-0 border border-gray-400 text-center';
                     }
                     
@@ -313,6 +315,16 @@
                         span.className = 'edit-inline w-full inline-block min-h-[1rem] cursor-pointer';
                         span.textContent = val;
                         cell.appendChild(span);
+                    } else if (idx === 10) {
+                        const button = document.createElement('button');
+                        button.setAttribute('onclick', 'printSelected()');
+                        button.className = 'flex items-center bg-violet-700 text-white px-3 py-1 rounded hover:bg-blue-800';
+
+                        const icon = document.createElement('i');
+                        icon.className = 'bi bi-printer-fill';
+
+                        button.appendChild(icon);
+                        cell.appendChild(button);
                     } else {
                         cell.textContent = val;
                     }
@@ -323,7 +335,7 @@
                     }
                     // Hanya kolom 0-4 yang bisa select
                     if (idx <= 4) {
-                        cell.classList.add('hover:bg-gray-50', 'cursor-pointer');
+                        cell.classList.add('hover:bg-amber-300', 'cursor-pointer');
                         cell.onclick = function(e) {
                             e.stopPropagation();
                             checkedRows[item.id_stock] = !checkedRows[item.id_stock];
