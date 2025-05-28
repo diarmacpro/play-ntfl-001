@@ -134,6 +134,7 @@
 
     <script src="./script.js"></script>
     <script>
+        /*
         (function() {
             // Nilai hash base64 yang valid (gabungan 5 hash SHA-256 huruf dipisah '+', lalu base64)
             const kodeHashBase64 = "YTFmY2U0MzYzODU0ZmY4ODhjZmY0YjhlNzg3NWQ2MDBjMjY4MjM5MDQxMmE4Y2Y3OWIzN2QwYjExMTQ4YjBmYStjYTk3ODExMmNhMWJiZGNhZmFjMjMxYjM5YTIzZGM0ZGE3ODZlZmY4MTQ3YzRlNzJiOTgwNzc4NWFmZWU0OGJiKzUwZTcyMWU0OWMwMTNmMDBjNjJjZjU5ZjIxNjM1NDJhOWQ4ZGYwMjQ2NGVmZWI2MTVkMzEwNTFiMGZkZGMzMjYrZGU3ZDFiNzIxYTFlMDYzMmI3Y2YwNGVkZjUwMzJjOGVjZmZhOWY5YTA4NDkyMTUyYjkyNmYxYTVhN2U3NjVkNyswNDNhNzE4Nzc0YzU3MmJkOGEyNWFkYmViMWJmY2Q1YzAyNTZhZTExY2VjZjlmOWMzZjkyNWQwZTUyYmVhZjg5";
@@ -200,6 +201,7 @@
 
             cekAkses();
         })();
+        */
 
 
 
@@ -935,7 +937,7 @@ function getDataMainOnFbs(tgl) {
                                                 const dtUpdtSo = {
                                                     id_stock: parseInt(id,10),
                                                     tgl_so: stm(),
-                                                    pic: 15,
+                                                    pic: 1,
                                                     hlp: dataInputRow[id].id_hlp,
                                                     ge: "g",
                                                     kd_rak: dataInputRow[id].kode_rak,
@@ -949,7 +951,7 @@ function getDataMainOnFbs(tgl) {
                                                 pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
                                                     const dtSoHstA = {
                                                         tgl_hst: stm(),
-                                                        pic_hst: 15,
+                                                        pic_hst: 1,
                                                         id_so: dtSo.id_so,
                                                         tgl_so: stm(dtSo.tgl_so),
                                                         pic: dtSo.pic,
@@ -999,13 +1001,13 @@ function getDataMainOnFbs(tgl) {
                                                 pR('https://cdn.weva.my.id/apix/updDtMain', payloadDtMain,(dMn)=>{ // insert tb so
                                                     const payloadDtSo = { 
                                                         tgl_so : stm(),
-                                                        pic : 15,
+                                                        pic : 1,
                                                         hlp : dataInputRow[id].id_hlp,
                                                         ge : 'g',
                                                         id_stock : parseInt(dataInputRow[id].id_stock,10),
                                                         kd_rak : dataInputRow[id].kode_rak,
                                                         kd_kol : dataInputRow[id].kode_kol,
-                                                        q_so : parseFloat(dataInputRow[id].nett).toFixed(2),
+                                                        q_so : 0,
                                                         q_so_sup : parseFloat(dataMainPerRow.q_sup).toFixed(2),
                                                         q_so_nett : parseFloat(dataInputRow[id].nett).toFixed(2)
                                                     };
