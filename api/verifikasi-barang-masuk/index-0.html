@@ -148,19 +148,6 @@
         const dataCount = document.getElementById('dataCount');
         const checkedCount = document.getElementById('checkedCount');
 
-
-        function getCheckedRowsKeys() {
-            if (typeof checkedRows !== 'undefined') {
-                return Object.keys(checkedRows)
-                    .filter(key => checkedRows[key]) // Filter hanya yang bernilai true
-                    .join(','); // Gabungkan dengan koma
-            } else {
-                console.warn('Variabel checkedRows tidak ditemukan.');
-                return '';
-            }
-        }
-
-
         // Load reference data
         function loadReferenceData(callback) {
             let loadCount = 0;
@@ -368,22 +355,17 @@
 
         function getSelectedDataKeys() {
             // Clear pencarian
-            // console.log("select data key");
-            // if ($('#searchInput').length) $('#searchInput').val('');
+            if ($('#searchInput').length) $('#searchInput').val('');
             // Reset query pencarian global
-            // window._searchQuery = '';
+            window._searchQuery = '';
             // Render ulang semua data (tanpa filter)
-            // filterAndRenderTable();
+            filterAndRenderTable();
             // Ambil hanya <tr> yang memiliki data-select="true" di dalam #dataTable
-            // const $rows = $('#dataTable tr[data-select="true"]');
-            // const jumlahDipilih = $rows.length;
-            // const dataKeys = $rows.map(function() {
-            //     return $(this).data('key');
-            // }).get(); // Konversi ke array JavaScript biasa
-            const dataKeys = getCheckedRowsKeys().split(',')
-                                .filter(x => x !== '') // Tambahan supaya jika string kosong tidak diproses
-                                .map(Number); // Konversi ke integer;
-            const jumlahDipilih = dataKeys.length
+            const $rows = $('#dataTable tr[data-select="true"]');
+            const jumlahDipilih = $rows.length;
+            const dataKeys = $rows.map(function() {
+                return $(this).data('key');
+            }).get(); // Konversi ke array JavaScript biasa
             return {
                 jumlah: jumlahDipilih,
                 dataKeys: dataKeys
@@ -392,19 +374,15 @@
 
         function getSelectedDataMain() {
             // Clear pencarian
-            // console.log("select data main");
-            // if ($('#searchInput').length) $('#searchInput').val('');
-            // window._searchQuery = '';
-            // filterAndRenderTable();
+            if ($('#searchInput').length) $('#searchInput').val('');
+            window._searchQuery = '';
+            filterAndRenderTable();
             // Ambil hanya <tr> yang memiliki data-select="true" di dalam #dataTable
-            // const $rows = $('#dataTable tr[data-select="true"]');
-            // const dataKeys = $rows.map(function() {
-            //     return $(this).data('id');
-            // }).get();
+            const $rows = $('#dataTable tr[data-select="true"]');
+            const dataKeys = $rows.map(function() {
+                return $(this).data('id');
+            }).get();
             // Ambil data dari dataMainOnFbs sesuai urutan dataKeys
-            const dataKeys = getCheckedRowsKeys().split(',')
-                                .filter(x => x !== '') // Tambahan supaya jika string kosong tidak diproses
-                                .map(Number); // Konversi ke integer;
             let mainData = [];
             if (window.dataMainOnFbs && Array.isArray(window.dataMainOnFbs)) {
                 mainData = window.dataMainOnFbs.filter(item => dataKeys.includes(item.id_stock));
@@ -1090,7 +1068,6 @@ function getDataMainOnFbs(tgl) {
             const btnProses = document.getElementById('btnProses');
             if (!btnProses) return;
             const enable = getSelectedDataKeys().jumlah > 0;
-            // getSelectedDataKeys()
             btnProses.disabled = !enable;
             if (enable) {
                 btnProses.classList.remove('opacity-50', 'cursor-not-allowed');
