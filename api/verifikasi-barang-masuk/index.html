@@ -192,7 +192,8 @@
             dataKol: {}
         };
 
-
+        var tgl;
+        
         var checkedRows = {};
         let totalData = 0;
         var dataCHecked = {};
@@ -942,6 +943,20 @@ function getDataMainOnFbs(tgl) {
                                         console.log("A", dataInputRow);
                                         console.log("B", dataMainPerRow);
                                         
+                                        const kirimFirebase = {
+                                            id_hlp:parseInt(dataInputRow[id].id_hlp,10),
+                                            kd_rak:parseInt(dataInputRow[id].kode_rak,10),
+                                            kd_kol:parseInt(dataInputRow[id].kode_kol,10),
+                                            q_nett:parseFloat(dataInputRow[id].nett).toFixed(2)
+                                        }
+                                        // keyPerRow
+
+                                        fbsSvc.upd(`/app/verif-data-masuk/${tgl}/${keyPerRow}`,'',kirimFirebase,(e,d)=>{
+                                            console.log(d);
+                                        })
+
+                                        console.log("kirimFirebase",kirimFirebase);
+                                        
                                         pR('https://cdn.weva.my.id/apix/dtSo',{id},(e,d)=>{ // cek apakah ada di tabel so
                                             const dtSo = d.data[0];
 
@@ -1166,7 +1181,7 @@ function getDataMainOnFbs(tgl) {
 
         $(()=>{
             const urlParams = new URLSearchParams(window.location.search);
-            const tgl = urlParams.get('tgl');
+            tgl = urlParams.get('tgl');
             fbsSvc = new Fbs(db);
             if (!tgl) {
                 // Remove all body content
