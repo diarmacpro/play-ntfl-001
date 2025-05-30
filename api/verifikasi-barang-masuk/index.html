@@ -944,10 +944,10 @@ function getDataMainOnFbs(tgl) {
                                         console.log("B", dataMainPerRow);
                                         
                                         const kirimFirebase = {
-                                            id_hlp:parseInt(dataInputRow[id].id_hlp,10),
-                                            kd_rak:parseInt(dataInputRow[id].kode_rak,10),
-                                            kd_kol:parseInt(dataInputRow[id].kode_kol,10),
-                                            q_nett:parseFloat(dataInputRow[id].nett).toFixed(2)
+                                            id_hlp:dataInputRow[id].id_hlp ? parseInt(dataInputRow[id].id_hlp,10) : null,
+                                            kd_rak:dataInputRow[id].kode_rak ? parseInt(dataInputRow[id].kode_rak,10) : null,
+                                            kd_kol:dataInputRow[id].kode_kol ? parseInt(dataInputRow[id].kode_kol,10) : null,
+                                            q_nett:dataInputRow[id].nett ? parseFloat(dataInputRow[id].nett).toFixed(2) : null
                                         }
                                         // keyPerRow
 
