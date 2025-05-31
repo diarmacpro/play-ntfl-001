@@ -1179,6 +1179,26 @@ function getDataMainOnFbs(tgl) {
             }
         }
 
+        const cekSo = async (dtX) => {
+            const ids = dtX.id.split(',').map(v => v.trim());
+
+            const promises = ids.map(id => {
+                return new Promise((resolve) => {
+                pR('https://cdn.weva.my.id/apix/dtSo', { id }, (e, d) => {
+                    resolve({
+                        id,
+                        so: !e && d.data.length > 0,
+                        data: d.data
+                    });
+                });
+                });
+            });
+
+            const res = await Promise.all(promises);
+            return res;
+        };
+        
+        var dtX = {};
         $(()=>{
             const urlParams = new URLSearchParams(window.location.search);
             tgl = urlParams.get('tgl');
@@ -1246,12 +1266,14 @@ function getDataMainOnFbs(tgl) {
             };
             const btnProses = document.getElementById('btnProses');
             const modalProses = document.getElementById('modalProses');
+
             // --- Tambahan: Set default disabled pada tombol Proses Data ---
             if (btnProses) {
                 btnProses.disabled = true;
                 btnProses.classList.add('opacity-50', 'cursor-not-allowed');
                 btnProses.classList.remove('cursor-pointer');
             }
+
             // ---
             if (btnProses) btnProses.onclick = () => {
                 if (btnProses.disabled) return;
@@ -1261,37 +1283,93 @@ function getDataMainOnFbs(tgl) {
                 // console.log(idSelected);
                 listenerModalProses();
             };
+
             if (modalProses) {
                 document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
                 document.getElementById('btnProsesModal').onclick = () => {
-                    const qtyRaw = $('#inputQtyNett').val().trim();
-                    const locRaw = $('#inputLokasi').val().trim();
-                    const hlpRaw = $('#inputHelper').val().trim();
-                    const id = $('#textAreaMenampungIdStock').val().trim();
+                    const isValQty = $('#inputLokasi').data('has-val');
+                    const qtyRaw = $('#inputQtyNett').data('qty');
+                    
+                    const isValLoc = $('#inputLokasi').data('has-val');
+                    const locRakRaw = $('#inputLokasi').data('k-rak');
+                    const locKolRaw = $('#inputLokasi').data('k-kol');
+                    
+                    const isValHlp = $('#inputLokasi').data('has-val');
+                    const hlpRaw = $('#inputHelper').data('id-hlp');
+                    
+                    const id = $('#textAreaMenampungIdStock').val();
 
                     // Validasi: ID wajib diisi
-                    if (!id) {
-                        alert('ID stok wajib diisi.');
-                        return;
-                    }
+                    if (!id) { alert('ID stok wajib diisi.'); return; }
 
                     // Validasi: minimal salah satu dari qty, loc, hlp diisi
-                    if (!qtyRaw && !locRaw && !hlpRaw) {
-                        alert('Minimal salah satu input (Qty, Lokasi, atau Helper) harus diisi.');
-                        return;
-                    }
+                    if (!qtyRaw && !locRaw && !hlpRaw) { alert('Minimal salah satu input (Qty, Lokasi, atau Helper) harus diisi.'); return; }
 
                     // Masukkan null jika kosong
                     const dataBulk = {
-                        qty: qtyRaw || null,
-                        loc: locRaw || null,
-                        hlp: hlpRaw || null,
-                        id: id  // tidak akan null karena sudah divalidasi
+                        qty: isValQty ? qtyRaw : null,
+                        rak: isValLoc ? locRakRaw : null,
+                        kol: isValLoc ? locKolRaw : null,
+                        hlp: isValHlp ? hlpRaw : null,
+                        id: id
                     };
+                    
+                    cekSo({ id: dataBulk.id }).then(hasilCekSo => {                        
+                        console.log(hasilCekSo);
+                        
+                        _.map(hasilCekSo,(v,k)=>{
+                            if(v.so){
+                                console.log(`${v.id} ${v.so} Ada`);
+                                const dtSoIdIni = v.data[0];
+                                console.log("dataSo Id ini",dtSoIdIni);
 
-                    console.log(dataBulk);
+                                
+                                  // console.log("test Output",dataBulk);
+                                const dtUpdtSo = {
+                                    id_stock: parseInt(v.id,10),
+                                    tgl_so: stm(),
+                                    pic: 1,
+                                    hlp: dataBulk.hlp,
+                                    ge: "g",
+                                    kd_rak: dataBulk.rak,
+                                    kd_kol: dataBulk.kol,
+                                    q_so: parseFloat(dataBulk.qty).toFixed(2),
+                                    q_so_sup: parseFloat(dtSoIdIni.q_so_sup).toFixed(2),
+                                    q_so_nett: parseFloat(dtSoIdIni.q_so_nett).toFixed(2)
+                                };
+
+                                pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
+                                    
+                                    const dtSoHstA = {
+                                        tgl_hst: stm(),
+                                        pic_hst: 1,
+                                        id_so: dtSoIdIni.id_so,
+                                        tgl_so: stm(dtSoIdIni.tgl_so),
+                                        pic: dtSoIdIni.pic,
+                                        hlp: dtSoIdIni.hlp,
+                                        ge: 'g',
+                                        id_stock: dtSoIdIni.id_stock,
+                                        kd_rak: dtSoIdIni.kd_rak,
+                                        kd_kol: dtSoIdIni.kd_kol,
+                                        q_so: dtSoIdIni.q_so,
+                                    };
+                                    console.log(dtSoHstA);
+                                    pR('https://cdn.weva.my.id/apix/iDtSoHst', dtSoHstA, (e, d) => {
+                                        console.log(d.data);
+                                        console.log("tabel so berhasil di update ✔✔");
+                                        console.log("tabel history berhasil di insert ✔✔");
+                                    });
+                                })
+                            }else{
+                                console.log(`${v.id} ${v.so} Tidak Ada`);
+                            }
+                        });
+                        
+                        modalProses.classList.add('hidden');
+                    });
+                    
+                    // dtX = ;
                     // alert('Proses!');
-                    modalProses.classList.add('hidden');
                 };
 
 
