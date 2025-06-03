@@ -1286,6 +1286,11 @@ function getDataMainOnFbs(tgl) {
 
             if (modalProses) {
                 document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
+<<<<<<< HEAD
+                document.getElementById('btnProsesModal').onclick = () => {
+                    alert('Proses!'); modalProses.classList.add('hidden'); 
+                };
+=======
                 document.getElementById('btnProsesModal').onclick = () => {
                     const isValQty = $('#inputLokasi').data('has-val');
                     const qtyRaw = $('#inputQtyNett').data('qty');
@@ -1373,6 +1378,7 @@ function getDataMainOnFbs(tgl) {
                 };
 
 
+>>>>>>> a42dcf4d1b173ea92bcf12f3e0edb121c587cf3d
             }
             // Search
             const searchInput = document.getElementById('searchInput');
