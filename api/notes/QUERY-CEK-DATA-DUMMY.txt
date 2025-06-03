@@ -1,0 +1,18 @@
+SELECT
+*
+FROM
+tb_main
+WHERE
+id_stock IN (51497, 51498, 51499);
+SELECT
+*
+FROM
+tb_so
+WHERE
+id_stock IN (51497, 51498, 51499);
+SELECT
+*
+FROM
+tb_so_hst
+WHERE
+id_stock IN (51497, 51498, 51499);
