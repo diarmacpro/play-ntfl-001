@@ -982,7 +982,7 @@ function getDataMainOnFbs(tgl) {
                                                         tgl_hst: stm(),
                                                         pic_hst: 1,
                                                         id_so: dtSo.id_so,
-                                                        tgl_so: stm(dtSo.tgl_so),
+                                                        tgl_so: formatDateTime(dtSo.tgl_so),
                                                         pic: dtSo.pic,
                                                         hlp: dtSo.hlp,
                                                         ge: 'g',
@@ -1315,8 +1315,10 @@ function getDataMainOnFbs(tgl) {
                     };
                     
                     cekSo({ id: dataBulk.id }).then(hasilCekSo => {                        
-                        console.log(hasilCekSo);
-                        
+                        console.log("hasilCekSo",hasilCekSo);                
+                        console.log("dataBulk",dataBulk);
+                        let idNonSo = [];
+
                         _.map(hasilCekSo,(v,k)=>{
                             if(v.so){
                                 console.log(`${v.id} ${v.so} Ada`);
@@ -1344,7 +1346,7 @@ function getDataMainOnFbs(tgl) {
                                         tgl_hst: stm(),
                                         pic_hst: 1,
                                         id_so: dtSoIdIni.id_so,
-                                        tgl_so: stm(dtSoIdIni.tgl_so),
+                                        tgl_so: formatDateTime(dtSoIdIni.tgl_so),
                                         pic: dtSoIdIni.pic,
                                         hlp: dtSoIdIni.hlp,
                                         ge: 'g',
@@ -1362,16 +1364,58 @@ function getDataMainOnFbs(tgl) {
                                 })
                             }else{
                                 console.log(`${v.id} ${v.so} Tidak Ada`);
+                                idNonSo.push(v.id);
                             }
                         });
+
+                       
+                        console.log("hasilCekSo",hasilCekSo);                
+                        console.log("dataBulk",dataBulk);
+
+                        console.log("idNonSo",idNonSo);
                         
                         modalProses.classList.add('hidden');
+
+                        const payloadDtMain = {
+                            id_stock : idNonSo,
+                            kd_rak : dataBulk.rak,
+                            kd_kol : dataBulk.kol,
+                            q_nett : parseFloat(dataBulk.qty).toFixed(2),
+                            id_hlp : parseInt(dataBulk.hlp,10),
+                            tgl_wh : stm()
+                        };
+
+                        const payloadDtSo = { 
+                            tgl_so : stm(),
+                            pic : 1,
+                            hlp : dataBulk.hlp,
+                            ge : 'g',
+                            id_stock : idNonSo,
+                            kd_rak : dataBulk.rak,
+                            kd_kol : dataBulk.kol,
+                            q_so : 0,
+                            q_so_nett : parseFloat(dataBulk.qty).toFixed(2)
+                        };
+
+                        pR('https://cdn.weva.my.id/apix/updDtMain', payloadDtMain,()=>{
+                            pR('https://cdn.weva.my.id/apix/iDtSo', payloadDtSo, (e, dSo) => {
+                                console.log([payloadDtMain,payloadDtSo,dSo]);
+                            });
+                        })
+
+                            
+
+                        
+
+                            // console.log("payloadDtSo",payloadDtSo);
+
+                        // })
+
                     });
                     
                     // dtX = ;
                     // alert('Proses!');
                 };
-
 
             }
             // Search
