@@ -1403,9 +1403,36 @@ function getDataMainOnFbs(tgl) {
                             });
                         })
 
-                            
+                const urlParams = new URLSearchParams(window.location.search);
+                const tgl = urlParams.get('tgl');
+                if (!tgl) {
+                    alert('Tanggal tidak ditemukan di URL!');
+                    return;
+                }
 
-                        
+                if (!confirm('Perbaharui seluruh data pada tanggal ini dengan data terbaru? Data lama akan dihapus dan diganti!')) return;
+                // Hapus semua data lama di path firebase
+                fbsSvc.delDt(`/app/verif-data-masuk/${tgl}`, function() {
+                    // Ambil data terbaru dari API
+                    callDataMain(tgl, function(err, data) {
+                        if (err) {
+                            alert('Gagal mengambil data baru dari API!');
+                            return;
+                        }
+                        if (!data || (Array.isArray(data) && data.length === 0) || (typeof data === 'object' && Object.keys(data).length === 0)) {
+                            alert('Data tidak tersedia untuk tanggal tersebut!');
+                            window.location.href = './';
+                            return;
+                        }
+                        // Simpan data baru ke firebase
+                        _.forEach(data, function(item) {
+                            fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, item, function(){});
+                        });
+                        setTimeout(function() {
+                            getDataMainOnFbs(tgl);
+                        }, 1200);
+                    });
+                });
 
                             // console.log("payloadDtSo",payloadDtSo);
 
