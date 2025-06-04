@@ -1303,7 +1303,7 @@ function getDataMainOnFbs(tgl) {
                     if (!id) { alert('ID stok wajib diisi.'); return; }
 
                     // Validasi: minimal salah satu dari qty, loc, hlp diisi
-                    if (!qtyRaw && !locRaw && !hlpRaw) { alert('Minimal salah satu input (Qty, Lokasi, atau Helper) harus diisi.'); return; }
+                    if (!qtyRaw && !isValLoc && !hlpRaw) { alert('Minimal salah satu input (Qty, Lokasi, atau Helper) harus diisi.'); return; }
 
                     // Masukkan null jika kosong
                     const dataBulk = {
