@@ -949,13 +949,36 @@ function getDataMainOnFbs(tgl) {
                                             kd_kol:dataInputRow[id].kode_kol ? parseInt(dataInputRow[id].kode_kol,10) : null,
                                             q_nett:dataInputRow[id].nett ? parseFloat(dataInputRow[id].nett).toFixed(2) : null
                                         }
-                                        // keyPerRow
 
-                                        fbsSvc.upd(`/app/verif-data-masuk/${tgl}/${keyPerRow}`,'',kirimFirebase,(e,d)=>{
-                                            console.log(d);
-                                        })
+                                        // ------ DEBUG Untuk Search
+                                        // _.find(dataMainOnFbs, { key: "-ORu13UpgYixiA8r0kRn" });
+                                     
+                                        // fbsSvc.upd(`/app/verif-data-masuk/${tgl}/${keyPerRow}`,'',kirimFirebase,(e,d)=>{
+                                        //     console.log(d);
+                                        // })
 
-                                        console.log("kirimFirebase",kirimFirebase);
+                                        fbsSvc.upd(`/app/verif-data-masuk/${tgl}/${keyPerRow}`,
+                                            '',
+                                            kirimFirebase,
+                                        (d)=>{
+                                            // console.log(d);
+                                            updateItemByKey(dataMainOnFbs, keyPerRow, kirimFirebase, (err, updated) => {
+                                                if (err) return console.error(err.message);
+                                                console.log(`${keyPerRow} Berhasil update, datanya : ${updated}`);
+                                                filterAndRenderTable();
+                                            });
+                                        });
+
+                                        /* DEBUG
+                                        console.log(
+                                            "kirimFirebase",
+                                            [
+                                                `/app/verif-data-masuk/${tgl}/${keyPerRow}`,
+                                                keyPerRow,
+                                                kirimFirebase
+                                            ]
+                                        );
+                                        */
                                         
                                         pR('https://cdn.weva.my.id/apix/dtSo',{id},(e,d)=>{ // cek apakah ada di tabel so
                                             const dtSo = d.data[0];
@@ -975,7 +998,7 @@ function getDataMainOnFbs(tgl) {
                                                     q_so_sup: parseFloat(dataMainPerRow.q_sup).toFixed(2),
                                                     q_so_nett: parseFloat(dataInputRow[id].nett).toFixed(2)
                                                 };
-                                                console.log("dtUpdtSo",dtUpdtSo);
+                                                // console.log("dtUpdtSo",dtUpdtSo);
 
                                                 pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
                                                     const dtSoHstA = {
@@ -991,10 +1014,10 @@ function getDataMainOnFbs(tgl) {
                                                         kd_kol: dtSo.kd_kol,
                                                         q_so: dtSo.q_so,
                                                     };
-                                                    console.log(dtSoHstA);
+                                                    // console.log(dtSoHstA);
                                                     
                                                     pR('https://cdn.weva.my.id/apix/iDtSoHst', dtSoHstA, (e, d) => {
-                                                        console.log(d.data);
+                                                        console.log("so Baru",d.data);
                                                     });
                                                 })
                                             }else{ // jika tidak ada di tabel so
@@ -1007,7 +1030,7 @@ function getDataMainOnFbs(tgl) {
                                                     id_hlp : parseInt(dataInputRow[id].id_hlp,10),
                                                     tgl_wh : stm()
                                                 };
-                                                console.log("payloadDtMain",payloadDtMain);
+                                                // console.log("payloadDtMain",payloadDtMain);
                                                 pR('https://cdn.weva.my.id/apix/updDtMain', payloadDtMain,(dMn)=>{ // insert tb so
                                                     const payloadDtSo = { 
                                                         tgl_so : stm(),
@@ -1021,13 +1044,14 @@ function getDataMainOnFbs(tgl) {
                                                         q_so_sup : parseFloat(dataMainPerRow.q_sup).toFixed(2),
                                                         q_so_nett : parseFloat(dataInputRow[id].nett).toFixed(2)
                                                     };
-                                                    console.log("payloadDtSo",payloadDtSo);
+                                                    // console.log("payloadDtSo",payloadDtSo);
                                                     pR('https://cdn.weva.my.id/apix/iDtSo', payloadDtSo, (e, dSo) => {
                                                         console.log(dSo.data);
+                                                        console.log("payloadDtSo",payloadDtSo);
                                                     });
                                                 })
-                                                console.log(dtSo);
-                                                console.log("data so tidak ada, ubah data di tabel main");
+                                                // console.log(dtSo);
+                                                // console.log("data so tidak ada, ubah data di tabel main");
                                             }
                                         })
                                     }
@@ -1231,6 +1255,36 @@ function getDataMainOnFbs(tgl) {
             });
         });
 
+        function resetModalProsesForm() {
+            // Reset input lokasi
+            const lokasiInput = $('#inputLokasi');
+            lokasiInput
+                .val('')
+                .prop('disabled', false)
+                .removeAttr('data-k-rak data-k-kol data-has-val data-loc');
+
+            $('#btnResetLokasi').remove();
+
+            // Reset input helper
+            const helperInput = $('#inputHelper');
+            helperInput
+                .val('')
+                .prop('disabled', false)
+                .removeAttr('data-id-hlp data-hlp data-has-val');
+
+            $('#btnResetHelper').remove();
+
+            // Reset input qty nett
+            const qtyInput = $('#inputQtyNett');
+            qtyInput
+                .val('')
+                .prop('disabled', false)
+                .removeAttr('data-has-val data-qty');
+
+            $('#btnResetQty').remove();
+        }
+
+
         document.addEventListener('DOMContentLoaded', function() {
             const btnRenew = document.getElementById('btnRenew');
             if (btnRenew) btnRenew.onclick = function() {
@@ -1276,25 +1330,33 @@ function getDataMainOnFbs(tgl) {
 
             // ---
             if (btnProses) btnProses.onclick = () => {
+                console.log("open proses bulk");
+                resetModalProsesForm();
+
                 if (btnProses.disabled) return;
                 modalProses.classList.remove('hidden');
-                const idSelected = getSelectedDataMain().jumlah == 0 ? null : getSelectedDataMain().dataKeys.join(', ');
+                const idSelected = getSelectedDataMain().jumlah == 0
+                                 ? null
+                                 : getSelectedDataMain().dataKeys.join(', ');
                 $('#textAreaMenampungIdStock').val(idSelected);
                 // console.log(idSelected);
                 listenerModalProses();
             };
 
             if (modalProses) {
-                document.getElementById('btnBatal').onclick = () => modalProses.classList.add('hidden');
+                document.getElementById('btnBatal').onclick = () => {
+                    modalProses.classList.add('hidden')
+                    resetModalProsesForm();
+                };
                 document.getElementById('btnProsesModal').onclick = () => {
-                    const isValQty = $('#inputLokasi').data('has-val');
+                    const isValQty = $('#inputQtyNett').data('has-val');
                     const qtyRaw = $('#inputQtyNett').data('qty');
                     
                     const isValLoc = $('#inputLokasi').data('has-val');
                     const locRakRaw = $('#inputLokasi').data('k-rak');
                     const locKolRaw = $('#inputLokasi').data('k-kol');
                     
-                    const isValHlp = $('#inputLokasi').data('has-val');
+                    const isValHlp = $('#inputHelper').data('has-val');
                     const hlpRaw = $('#inputHelper').data('id-hlp');
                     
                     const id = $('#textAreaMenampungIdStock').val();

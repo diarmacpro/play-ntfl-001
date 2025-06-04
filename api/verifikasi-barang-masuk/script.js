@@ -1,3 +1,30 @@
+function updateItemByKey(arr, targetKey, updates, callback) {
+  const item = _.find(arr, { key: targetKey });
+  if (item) {
+    Object.assign(item, updates);
+    if (typeof callback === 'function') {
+      callback(null, item); // callback(error, result)
+    }
+    return true;
+  } else {
+    if (typeof callback === 'function') {
+      callback(new Error('Item not found'), null);
+    }
+    return false;
+  }
+}
+
+/*
+function updateItemByKey(arr, targetKey, updates) {
+  const item = _.find(arr, { key: targetKey });
+  if (item) {
+    Object.assign(item, updates);
+    return true; // sukses
+  }
+  return false; // tidak ditemukan
+}
+*/
+
 function formatDateTime(isoString) {
     const date = new Date(isoString);
 
