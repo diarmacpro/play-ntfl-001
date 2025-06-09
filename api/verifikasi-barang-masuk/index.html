@@ -989,7 +989,7 @@ function getDataMainOnFbs(tgl) {
                                                 const dtUpdtSo = {
                                                     id_stock: parseInt(id,10),
                                                     tgl_so: stm(),
-                                                    pic: 1,
+                                                    pic: parseInt(getCookie('usr'),10),
                                                     hlp: dataInputRow[id].id_hlp,
                                                     ge: "g",
                                                     kd_rak: dataInputRow[id].kode_rak,
@@ -1003,7 +1003,7 @@ function getDataMainOnFbs(tgl) {
                                                 pR('https://cdn.weva.my.id/apix/updDtSo',dtUpdtSo,(uDtSo)=>{
                                                     const dtSoHstA = {
                                                         tgl_hst: stm(),
-                                                        pic_hst: 1,
+                                                        pic_hst: parseInt(getCookie('usr'),10),
                                                         id_so: dtSo.id_so,
                                                         tgl_so: formatDateTime(dtSo.tgl_so),
                                                         pic: dtSo.pic,
@@ -1034,7 +1034,7 @@ function getDataMainOnFbs(tgl) {
                                                 pR('https://cdn.weva.my.id/apix/updDtMain', payloadDtMain,(dMn)=>{ // insert tb so
                                                     const payloadDtSo = { 
                                                         tgl_so : stm(),
-                                                        pic : 1,
+                                                        pic : parseInt(getCookie('usr'),10),
                                                         hlp : dataInputRow[id].id_hlp,
                                                         ge : 'g',
                                                         id_stock : parseInt(dataInputRow[id].id_stock,10),
@@ -1392,7 +1392,7 @@ function getDataMainOnFbs(tgl) {
                                 const dtUpdtSo = {
                                     id_stock: parseInt(v.id,10),
                                     tgl_so: stm(),
-                                    pic: 1,
+                                    pic: parseInt(getCookie('usr'),10),
                                     hlp: dataBulk.hlp,
                                     ge: "g",
                                     kd_rak: dataBulk.rak,
@@ -1406,7 +1406,7 @@ function getDataMainOnFbs(tgl) {
                                     
                                     const dtSoHstA = {
                                         tgl_hst: stm(),
-                                        pic_hst: 1,
+                                        pic_hst: parseInt(getCookie('usr'),10),
                                         id_so: dtSoIdIni.id_so,
                                         tgl_so: formatDateTime(dtSoIdIni.tgl_so),
                                         pic: dtSoIdIni.pic,
@@ -1449,7 +1449,7 @@ function getDataMainOnFbs(tgl) {
 
                         const payloadDtSo = { 
                             tgl_so : stm(),
-                            pic : 1,
+                            pic : parseInt(getCookie('usr'),10),
                             hlp : dataBulk.hlp,
                             ge : 'g',
                             id_stock : idNonSo,
