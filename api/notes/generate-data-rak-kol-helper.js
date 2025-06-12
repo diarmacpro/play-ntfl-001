@@ -16,7 +16,13 @@ callData('https://cdn.weva.my.id/apix/data/dtKol',{},(e,d)=>{
     })
 })
 
-callData('https://cdn.weva.my.id/apix/data/dtkain',{},(e,d)=>{
+// callData('https://cdn.weva.my.id/apix/data/dtkain',{},(e,d)=>{
+//     _.map(d,(v,k)=>{
+//         fbsSvc.iDtKy('/app/data/kain',v,()=>{})
+//     })
+// })
+
+callData('https://cdn.weva.my.id/dtNmKn',{},(e,d)=>{
     _.map(d,(v,k)=>{
         fbsSvc.iDtKy('/app/data/kain',v,()=>{})
     })
