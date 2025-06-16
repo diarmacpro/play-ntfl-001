@@ -9,3 +9,16 @@ menangani lonjakan trafik anonim, menyebabkan 503
 melakukan prosedur bangunkan ulang pm2
 source /home/wevagarm/nodevenv/public_z_sub_cdn/apix/18/bin/activate && cd /home/wevagarm/public_z_sub_cdn/apix
 pm2 reset all && pm2 kill && pm2 delete all && pm2 flush && pm2 start app.js --watch && pm2 save
+
+
+
+properti yang digunakan pada payload
+
+id_stock,
+id_sj,
+id_mkt,
+bulanTahun,
+tanggalAcuan,
+debug = false
+
+untuk laporan tanggal 14

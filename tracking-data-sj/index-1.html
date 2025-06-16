@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>𓆩⚝𓆪</title>
+    <link rel="icon" href="https://www.gstatic.com/mobilesdk/240501_mobilesdk/firebase_28dp.png" />
+    <script>
+      const originalWarn = console.warn;
+      console.warn = function (...args) {
+        if (typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+        originalWarn.apply(console, args);
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@e2d156cb584c37407c93ab334bce4b5121e2650e/firebase-olah-data/core.js" integrity="sha256-i6LauffDEkYoIANok1hHCoxkI85EOpWq0haHhD641Y8=" crossorigin="anonymous"></script>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md" x-data="dtDeepSearchSJ()" x-init="init()">
+      <h2 class="text-xl font-semibold mb-4 text-gray-800">Filter Data SJ</h2>
+
+      <form @submit.prevent class="space-y-4">
+        <!-- Input Group -->
+        <template x-for="field in fields" :key="field.name">
+          <div class="relative">
+            <input
+              :type="field.type"
+              :name="field.name"
+              :id="field.name"
+              x-model="form[field.name]"
+              class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
+              :placeholder="field.label"
+            />
+            <label
+              :for="field.name"
+              class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
+                peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500"
+              x-text="field.label"
+            ></label>
+          </div>
+        </template>
+
+        <!-- Debug Switch -->
+        <div class="flex items-center justify-between">
+          <label class="text-gray-700 font-medium">Debug</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" class="sr-only peer" x-model="form.debug" />
+            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all"></div>
+            <span class="ml-3 text-sm text-gray-600" x-text="form.debug ? 'ON' : 'OFF'"></span>
+          </label>
+        </div>
+
+        <button
+          type="button"
+          @click="generate()"
+          :disabled="loading"
+          class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span x-show="!loading">Generate Filter</span>
+          <span x-show="loading" class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            Loading...
+          </span>
+        </button>
+      </form>
+
+      <!-- Output -->
+      <div class="mt-6 bg-gray-100 p-4 rounded-lg text-sm">
+        <strong>Output JSON:</strong>
+        <pre class="mt-2 text-xs text-gray-800 whitespace-pre-wrap" x-text="output"></pre>
+      </div>
+
+      <!-- Spinner Backdrop -->
+      <div
+        x-show="loading"
+        x-transition.opacity
+        class="fixed inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50"
+        style="display: none;"
+      >
+        <div class="flex flex-col items-center space-y-2">
+          <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+               viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10"
+                    stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <p class="text-sm text-gray-700">Memuat data... mohon tunggu</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase & Logic -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
+      import {
+        getDatabase, ref, set, get, update, push, query, remove,
+        orderByChild, equalTo, onValue, off
+      } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js';
+
+      // Firebase init
+      const app = initializeApp({
+        databaseURL: "https://absen-weva-default-rtdb.asia-southeast1.firebasedatabase.app"
+      });
+      const db = getDatabase(app);
+
+      // Global expose (optional)
+      Object.assign(window, {
+        db, ref, set, get, update, push, query, remove,
+        orderByChild, equalTo, onValue, off
+      });
+    </script>
+
+    <script type="module">
+      import { utility } from './utility.js';
+      window.u = new utility();
+    </script>
+
+    <!-- Alpine Logic -->
+    <script>
+      function dtDeepSearchSJ() {
+        return {
+          form: {
+            id_stock: '',
+            id_sj: '',
+            id_mkt: '',
+            bulanTahun: '',
+            tanggalAcuan: '',
+            debug: false
+          },
+          output: '',
+          loading: false,
+          initialized: false,
+          hasUrlParams: false,
+          fields: [
+            { name: 'id_stock', label: 'Id Stock', type: 'text' },
+            { name: 'id_sj', label: 'Id SJ', type: 'text' },
+            { name: 'id_mkt', label: 'Marketing', type: 'text' },
+            { name: 'bulanTahun', label: 'Bulan Tahun', type: 'month' },
+            { name: 'tanggalAcuan', label: 'Tanggal Acuan', type: 'date' }
+          ],
+
+          init() {
+            // Cegah double initialization
+            if (this.initialized) return;
+            
+            // Wait for utility to be ready
+            this.waitForUtility();
+          },
+
+          waitForUtility() {
+            if (!window.u) {
+              console.warn("u belum siap, tunggu 100ms...");
+              setTimeout(() => this.waitForUtility(), 100);
+              return;
+            }
+
+            this.setupFormFromUrl();
+            this.initialized = true;
+          },
+
+          setupFormFromUrl() {
+            const urlParams = u.gtParam();
+            this.hasUrlParams = Object.keys(urlParams).length > 0;
+            
+            // Parse URL parameters
+            for (const key in this.form) {
+              if (urlParams[key]) {
+                if (['id_stock', 'id_sj', 'id_mkt'].includes(key)) {
+                  this.form[key] = urlParams[key];
+                } else if (key === 'debug') {
+                  this.form[key] = urlParams[key] === 'true';
+                } else {
+                  this.form[key] = urlParams[key];
+                }
+              }
+            }
+
+            // Hanya auto-generate jika ada URL params
+            if (this.hasUrlParams) {
+              this.generate();
+            } else {
+              // Jika tidak ada params, set output kosong
+              this.output = JSON.stringify({}, null, 2);
+            }
+          },
+
+          parseCommaSeparated(str) {
+            if (!str || typeof str !== 'string') return [];
+            return str.split(',').map(s => s.trim()).filter(s => s);
+          },
+
+          generate() {
+            // Prevent double fetch
+            if (this.loading) return;
+            
+            this.loading = true;
+
+            const raw = {
+              id_stock: this.parseCommaSeparated(this.form.id_stock),
+              id_sj: this.parseCommaSeparated(this.form.id_sj),
+              id_mkt: this.parseCommaSeparated(this.form.id_mkt),
+              bulanTahun: this.form.bulanTahun,
+              tanggalAcuan: this.form.tanggalAcuan,
+              debug: this.form.debug
+            };
+
+            const filter = {};
+            for (const key in raw) {
+              const val = raw[key];
+              if (Array.isArray(val) && val.length) {
+                filter[key] = val.join(',');
+              } else if (typeof val === 'string' && val.trim() !== '') {
+                filter[key] = val;
+              } else if (key === 'debug' && val === true) {
+                filter.debug = true;
+              }
+            }
+
+            this.output = JSON.stringify(filter, null, 2);
+
+            // Update URL params
+            if (window.u && typeof u.stParam === 'function') {
+              u.stParam(filter);
+            }
+
+            // Fetch data
+            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter }, (e, d) => {
+              console.log('API Response:', d);
+              this.loading = false;
+            });
+          }
+        };
+      }
+    </script>
+  </body>
+</html>

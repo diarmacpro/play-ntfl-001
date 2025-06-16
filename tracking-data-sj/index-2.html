@@ -110,49 +110,69 @@
               <thead class="bg-gray-50 border-b">
                 <tr>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">MKT</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Cart</th>
+									<th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">SJ</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Stamp</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Stamp SJ</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">SJ</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">MKT</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">HLP</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Barang</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">ID Stock</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">K</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Lot+Rol</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Rak Kol</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">GE</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">QTY</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Q BS</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">STTS</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">NM WH</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">NM FN</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Habis</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">NM Del</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">NM Add</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">On/Off</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">C O</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Detail</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">D Create</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">D MG</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">D WH</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">D Finish</th>
+									<th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Detail</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
                 <template x-for="(row, index) in tableData" :key="index">
                   <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="row.mkt || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="row.stamp ? cvDtTm(row.stamp) : '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="cvDtTm(row.stamp) || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="cvDtTm(row.stamp_sj) || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.mkt || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.hlp || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="'(' + (row.id_stock || '-') + ')' + (row.k ? ' ' + row.k : '') || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="(row.lot || '') + (row.rol ? '#' + row.rol : '') || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.id_stock || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.k || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="(row.lot || '') + (row.rol ? '+' + row.rol : '') || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="(row.rak || '') + (row.kol ? ' ' + row.kol : '') || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.ge || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="(row.qty || '-') + (row.q_bs ? ' + ' + row.q_bs : '') || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" x-text="row.dlt || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.qty || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.q_bs || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.stts || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.nm_wh || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.nm_fn || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.habis || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.nm_del || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.nm_add || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.onOff || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.c_o || '-'"></td>
-                    <td class="px-3 py-3">
-                      <button
-                        class="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors"
-                        @click="showDetail(row)"
-                      >
-                        <i class="bi bi-eye mr-1"></i>Detail
-                      </button>
-                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.d_create || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.d_mgr || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.d_wh || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.d_finish || '-'"></td>
+										<td class="px-3 py-3">
+											<button
+												class="text-blue-600 hover:underline text-sm"
+												@click="showDetail(row)"
+											>
+												Detail
+											</button>
+										</td>
                   </tr>
                 </template>
               </tbody>
@@ -163,115 +183,6 @@
           <div x-show="tableData.length === 0" class="text-center py-12">
             <i class="bi bi-inbox text-4xl text-gray-400 mb-4"></i>
             <p class="text-gray-500">No data found</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Detail -->
-      <div
-        x-show="showingModal"
-        x-transition.opacity
-        @keydown.escape.window="closeModal"
-        @click.self="closeModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        style="display: none;"
-      >
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b">
-            <h2 class="text-xl font-semibold text-gray-800">
-              Detail SJ: <span x-text="selectedRow?.id_sj || '-'" class="text-blue-600"></span>
-            </h2>
-            <button 
-              @click="closeModal" 
-              class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
-            >
-              <i class="bi bi-x-lg text-lg"></i>
-            </button>
-          </div>
-
-          <!-- Modal Body -->
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Timeline Section -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">Timeline</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D Create:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_create) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D MG:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_mgr) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D WH:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_wh) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D Finish:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_finish) || '-'"></span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Personnel Section -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">Personnel & Status</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM WH:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_wh || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM FN:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_fn || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">Habis:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.habis || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM Del:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_del || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM Add:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_add || '-'"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="mt-6 pt-6 border-t">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">Additional Information</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                <div class="bg-blue-50 p-3 rounded-lg">
-                  <div class="font-medium text-blue-800">Stock ID</div>
-                  <div class="text-blue-600" x-text="selectedRow?.id_stock || '-'"></div>
-                </div>
-                <div class="bg-green-50 p-3 rounded-lg">
-                  <div class="font-medium text-green-800">QTY</div>
-                  <div class="text-green-600" x-text="selectedRow?.qty || '-'"></div>
-                </div>
-                <div class="bg-yellow-50 p-3 rounded-lg">
-                  <div class="font-medium text-yellow-800">Status</div>
-                  <div class="text-yellow-600" x-text="selectedRow?.stts || '-'"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex justify-end p-6 border-t bg-gray-50">
-            <button 
-              @click="closeModal"
-              class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
@@ -295,6 +206,33 @@
         </div>
       </div>
     </div>
+
+
+<!-- Modal Detail -->
+<div
+  x-show="showingModal"
+  x-transition
+  @keydown.escape.window="closeModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+
+  <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6 relative">
+    <button @click="closeModal" class="absolute top-2 right-3 text-gray-500 hover:text-red-500 text-lg">&times;</button>
+    <h2 class="text-xl font-semibold mb-4" x-text="selectedRow?.id_sj || 'Detail SJ'"></h2>
+    <div class="space-y-2 text-sm text-gray-700">
+      <div><strong>D Create:</strong> <span x-text="selectedRow?.d_create || '-'"></span></div>
+      <div><strong>D MG:</strong> <span x-text="selectedRow?.d_mgr || '-'"></span></div>
+      <div><strong>D WH:</strong> <span x-text="selectedRow?.d_wh || '-'"></span></div>
+      <div><strong>D Finish:</strong> <span x-text="selectedRow?.d_finish || '-'"></span></div>
+      <div><strong>NM WH:</strong> <span x-text="selectedRow?.nm_wh || '-'"></span></div>
+      <div><strong>NM FN:</strong> <span x-text="selectedRow?.nm_fn || '-'"></span></div>
+      <div><strong>Habis:</strong> <span x-text="selectedRow?.habis || '-'"></span></div>
+      <div><strong>NM Del:</strong> <span x-text="selectedRow?.nm_del || '-'"></span></div>
+      <div><strong>NM Add:</strong> <span x-text="selectedRow?.nm_add || '-'"></span></div>
+    </div>
+  </div>
+</div>
+
 
     <!-- Firebase & Logic -->
     <script type="module">
@@ -326,19 +264,18 @@
     <script>
       function dtDeepSearchSJ() {
         return {
-          selectedRow: null,
-          showingModal: false,
+					selectedRow: null,
+					showingModal: false,
 
-          showDetail(row) {
-            this.selectedRow = row;
-            this.showingModal = true;
-          },
+					showDetail(row) {
+						this.selectedRow = row;
+						this.showingModal = true;
+					},
 
-          closeModal() {
-            this.showingModal = false;
-            this.selectedRow = null;
-          },
-
+					closeModal() {
+						this.showingModal = false;
+						this.selectedRow = null;
+					},
           form: {
             id_stock: '',
             id_sj: '',
@@ -469,9 +406,9 @@
             this.tableData = [];
           },
 
-          cvDtTm(dt) {
-            return window.u ? window.u.cvDtTm(dt) : dt;
-          }
+					cvDtTm(dt) {
+						return window.u.cvDtTm(dt);
+					}
         };
       }
     </script>
