@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@e2d156cb584c37407c93ab334bce4b5121e2650e/firebase-olah-data/core.js" integrity="sha256-i6LauffDEkYoIANok1hHCoxkI85EOpWq0haHhD641Y8=" crossorigin="anonymous"></script>
   </head>
@@ -102,7 +102,7 @@
         <div class="bg-white shadow-sm rounded-lg p-4 mb-4 flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-800">Data SJ Results</h1>
-            <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
+            <p class="text-sm text-gray-600" x-text="`Total: ${tableData.length} records`"></p>
           </div>
           <button
             @click="backToFilter()"
@@ -113,34 +113,6 @@
           </button>
         </div>
 
-        <!-- Search Bar -->
-        <div class="bg-white shadow-sm rounded-lg p-4 mb-4">
-          <div class="relative">
-            <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="text"
-              x-model="searchQuery"
-              @input="performSearch()"
-              placeholder="Search in all columns... (keywords can be in any order)"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              x-show="searchQuery"
-              @click="clearSearch()"
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <i class="bi bi-x-circle"></i>
-            </button>
-          </div>
-          <!-- Search Info -->
-          <div x-show="searchQuery" class="mt-2 text-sm text-gray-600">
-            <span x-text="`Found ${filteredData.length} results for '${searchQuery}'`"></span>
-            <span x-show="searchQuery && filteredData.length !== tableData.length" class="ml-2 text-blue-600 cursor-pointer hover:underline" @click="clearSearch()">
-              Clear search
-            </span>
-          </div>
-        </div>
-
         <!-- Tabel -->
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
           <div class="overflow-x-auto">
@@ -148,112 +120,49 @@
               <thead class="bg-gray-50 border-b">
                 <tr>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('mkt')">
-                    <div class="flex items-center gap-1">
-                      MKT
-                      <i class="bi" :class="getSortIcon('mkt')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp')">
-                    <div class="flex items-center gap-1">
-                      Cart
-                      <i class="bi" :class="getSortIcon('stamp')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp_sj')">
-                    <div class="flex items-center gap-1">
-                      Stamp SJ
-                      <i class="bi" :class="getSortIcon('stamp_sj')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_sj')">
-                    <div class="flex items-center gap-1">
-                      SJ
-                      <i class="bi" :class="getSortIcon('id_sj')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('hlp')">
-                    <div class="flex items-center gap-1">
-                      HLP
-                      <i class="bi" :class="getSortIcon('hlp')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_stock')">
-                    <div class="flex items-center gap-1">
-                      Barang
-                      <i class="bi" :class="getSortIcon('id_stock')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('lot')">
-                    <div class="flex items-center gap-1">
-                      Lot+Rol
-                      <i class="bi" :class="getSortIcon('lot')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('rak')">
-                    <div class="flex items-center gap-1">
-                      Rak Kol
-                      <i class="bi" :class="getSortIcon('rak')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('qty')">
-                    <div class="flex items-center gap-1">
-                      QTY
-                      <i class="bi" :class="getSortIcon('qty')"></i>
-                    </div>
-                  </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('habis')">
-                    <div class="flex items-center gap-1">
-                      Habis
-                      <i class="bi" :class="getSortIcon('habis')"></i>
-                    </div>
-                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">MKT</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Cart</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Stamp SJ</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">SJ</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">HLP</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Barang</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Lot+Rol</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Rak Kol</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">GE</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">QTY</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">STTS</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Habis</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">On/Off</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">C O</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">Detail</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
-                <template x-for="(row, index) in filteredData" :key="index">
-                  <tr class="hover:bg-gray-50 transition-colors" @click="showDetail(row)">
+                <template x-for="(row, index) in tableData" :key="index">
+                  <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
-                    <td class="px-3 py-3 text-gray-900 flex items-center gap-2">
-                      <span
-                          x-html="(() => {
-                            if (row.dlt == 1) {
-                              return `<i class='bi bi-x-square-fill text-red-600'></i>`;
-                            } else if (row.dlt == 2) {
-                              return `<i class='bi bi-check-square-fill text-green-500'></i>`;
-                            } else {
-                              return `<i class='bi bi-square-fill text-stone-200'></i>`;
-                            }
-                          })()">
-                      </span>
-                      <span class="bi bi-circle-fill" :class="row.onOff == 1 ? 'text-green-500' : 'text-stone-200'"></span>
-                      <span x-text="row.mkt || '-'"></span>
-                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.mkt || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.stamp ? cvDtTm(row.stamp) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.hlp || '-'"></td>
-                    <td class="px-3 py-3 text-gray-900" 
-                        x-html="`<strong>[${row.id_stock || '-'}]</strong> ${row.k ? ' ' + row.k : ''}`">
-                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="'(' + (row.id_stock || '-') + ')' + (row.k ? ' ' + row.k : '') || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="(row.lot || '') + (row.rol ? '#' + row.rol : '') || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="(row.rak || '') + (row.kol ? ' ' + row.kol : '') || '-'"></td>
-                    
+                    <td class="px-3 py-3 text-gray-900" x-text="row.ge || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="(row.qty || '-') + (row.q_bs ? ' + ' + row.q_bs : '') || '-'"></td>
-
-      <!-- Habis + GE -->
-      <td class="px-3 py-3 text-gray-900">
-        <div class="flex items-center gap-2">
-          <span class="capitalize" x-text="row.ge || '-'"></span>
-          <span x-html="(() => {
-            if (row.habis == 1) {
-              return `<i class='bi bi-x-square-fill text-red-600'></i>`;
-            } else {
-              return `<i class='bi bi-square-fill text-stone-200'></i>`;
-            }
-          })()"></span>
-        </div>
-      </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.dlt || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.habis || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.onOff || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.c_o || '-'"></td>
+                    <td class="px-3 py-3">
+                      <button
+                        class="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors"
+                        @click="showDetail(row)"
+                      >
+                        <i class="bi bi-eye mr-1"></i>Detail
+                      </button>
+                    </td>
                   </tr>
                 </template>
               </tbody>
@@ -261,16 +170,9 @@
           </div>
 
           <!-- Empty State -->
-          <div x-show="filteredData.length === 0 && !loading" class="text-center py-12">
+          <div x-show="tableData.length === 0" class="text-center py-12">
             <i class="bi bi-inbox text-4xl text-gray-400 mb-4"></i>
-            <p class="text-gray-500" x-text="searchQuery ? 'No data found matching your search' : 'No data found'"></p>
-            <button
-              x-show="searchQuery"
-              @click="clearSearch()"
-              class="mt-2 text-blue-600 hover:text-blue-800 hover:underline text-sm"
-            >
-              Clear search to see all data
-            </button>
+            <p class="text-gray-500">No data found</p>
           </div>
         </div>
       </div>
@@ -372,10 +274,6 @@
             </div>
           </div>
 
-          <div>
-            Count Out : <div class="px-3 py-3 text-gray-900" x-text="selectedRow?.c_o || '-'"></div>
-          </div>
-
           <!-- Modal Footer -->
           <div class="flex justify-end p-6 border-t bg-gray-50">
             <button 
@@ -440,14 +338,6 @@
         return {
           selectedRow: null,
           showingModal: false,
-          
-          // Search functionality
-          searchQuery: '',
-          filteredData: [],
-          
-          // Sorting functionality
-          sortField: null,
-          sortDirection: 'asc',
 
           showDetail(row) {
             this.selectedRow = row;
@@ -457,123 +347,6 @@
           closeModal() {
             this.showingModal = false;
             this.selectedRow = null;
-          },
-
-          // Search functionality
-          performSearch() {
-            if (!this.searchQuery.trim()) {
-              this.filteredData = [...this.tableData];
-              return;
-            }
-
-            const keywords = this.searchQuery.toLowerCase().split(' ').filter(k => k.trim());
-            
-            this.filteredData = this.tableData.filter(row => {
-              // Create searchable text from all relevant fields
-              const searchableText = [
-                row.mkt,
-                row.id_sj,
-                row.hlp,
-                row.id_stock,
-                row.k,
-                row.lot,
-                row.rol,
-                row.rak,
-                row.kol,
-                row.ge,
-                row.qty,
-                row.q_bs,
-                row.dlt,
-                row.habis,
-                row.onOff,
-                row.c_o,
-                row.nm_wh,
-                row.nm_fn,
-                row.nm_del,
-                row.nm_add,
-                this.cvDtTm(row.stamp),
-                this.cvDtTm(row.stamp_sj),
-                this.cvDtTm(row.d_create),
-                this.cvDtTm(row.d_mgr),
-                this.cvDtTm(row.d_wh),
-                this.cvDtTm(row.d_finish)
-              ].filter(field => field != null && field !== '').join(' ').toLowerCase();
-
-              // Check if all keywords are present (order doesn't matter)
-              return keywords.every(keyword => searchableText.includes(keyword));
-            });
-
-            // Re-apply current sorting after search
-            if (this.sortField) {
-              this.applySorting();
-            }
-          },
-
-          clearSearch() {
-            this.searchQuery = '';
-            this.filteredData = [...this.tableData];
-            if (this.sortField) {
-              this.applySorting();
-            }
-          },
-
-          // Sorting functionality
-          sortBy(field) {
-            if (this.sortField === field) {
-              // Toggle direction if same field
-              this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-              // New field, start with ascending
-              this.sortField = field;
-              this.sortDirection = 'asc';
-            }
-            
-            this.applySorting();
-          },
-
-          applySorting() {
-            if (!this.sortField) return;
-
-            this.filteredData.sort((a, b) => {
-              let aVal = this.getSortValue(a, this.sortField);
-              let bVal = this.getSortValue(b, this.sortField);
-
-              // Handle null/undefined values
-              if (aVal == null && bVal == null) return 0;
-              if (aVal == null) return 1;
-              if (bVal == null) return -1;
-
-              // Convert to string for comparison if needed
-              if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-              if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-
-              let result;
-              if (aVal < bVal) result = -1;
-              else if (aVal > bVal) result = 1;
-              else result = 0;
-
-              return this.sortDirection === 'desc' ? -result : result;
-            });
-          },
-
-          getSortValue(row, field) {
-            // Handle special cases for sorting
-            switch (field) {
-              case 'stamp':
-              case 'stamp_sj':
-                return row[field] ? new Date(row[field]) : null;
-              case 'qty':
-                return parseInt(row[field]) || 0;
-              default:
-                return row[field] || '';
-            }
-          },
-
-          getSortIcon(field) {
-            if (this.sortField !== field) {
-              return 'bi-arrow-down-up text-gray-400';
-            }
-            return this.sortDirection === 'asc' ? 'bi-arrow-up text-blue-600' : 'bi-arrow-down text-blue-600';
           },
 
           // Initial form state untuk reset
@@ -701,22 +474,14 @@
               // Handle response data
               if (d && d.data && Array.isArray(d.data)) {
                 this.tableData = d.data;
-                this.filteredData = [...d.data];
                 this.showTable = true;
               } else if (d && Array.isArray(d)) {
                 this.tableData = d;
-                this.filteredData = [...d];
                 this.showTable = true;
               } else {
                 this.tableData = [];
-                this.filteredData = [];
                 this.showTable = true;
               }
-
-              // Reset search and sort when new data arrives
-              this.searchQuery = '';
-              this.sortField = null;
-              this.sortDirection = 'asc';
             });
           },
 
@@ -724,11 +489,7 @@
             // Reset semua state ke kondisi awal
             this.showTable = false;
             this.tableData = [];
-            this.filteredData = [];
             this.loading = false;
-            this.searchQuery = '';
-            this.sortField = null;
-            this.sortDirection = 'asc';
             
             // Reset form ke kondisi awal
             this.form = { ...this.initialForm };

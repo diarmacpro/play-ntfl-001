@@ -1,74 +1,62 @@
 export class utility {
-    /**
-     * Ambil parameter URL
-     * @param  {...string} keys - Parameter yang ingin diambil. Jika tidak diisi, akan mengembalikan semua.
-     * @returns {object|string|null}
-     */
-    gtParam(...keys) {
-    const params = new URLSearchParams(window.location.search);
+  constructor() {
+    // Initialize utility
+  }
 
-    if (keys.length === 0) {
-        return Object.fromEntries(params.entries());
+  // Get URL parameters
+  gtParam() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const params = {};
+    for (const [key, value] of urlParams) {
+      params[key] = value;
     }
+    return params;
+  }
 
-    if (keys.length === 1) {
-        return params.get(keys[0]);
+  // Set URL parameters
+  stParam(params) {
+    const url = new URL(window.location);
+    // Clear existing params
+    url.search = '';
+    
+    // Add new params
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== '' && value !== null && value !== undefined) {
+        url.searchParams.set(key, value);
+      }
     }
+    
+    window.history.pushState({}, '', url);
+  }
 
-    const result = {};
-    for (const key of keys) {
-        result[key] = params.get(key);
+  // Convert date time (placeholder implementation)
+
+  // cvDtTm(dt) {
+  //   if (!dt) return '-';
+  //   try {
+  //     const date = new Date(dt);
+  //     return date.toLocaleString('id-ID');
+  //   } catch (e) {
+  //     return dt;
+  //   }
+  // }
+
+  cvDtTm(dt) {
+    if (!dt) return '-';
+    try {
+      const date = new Date(dt);
+      return date.toLocaleString('id-ID', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+    } catch (e) {
+      return dt;
     }
-    return result;
-    }
+  }
 
-    /**
-     * Set parameter URL (overwrite atau tambah)
-     * @param {object} paramObj - Objek key-value pasangan yang ingin disetel
-     */
-    stParam(paramObj = {}) {
-    const params = new URLSearchParams(window.location.search);
-    for (const key in paramObj) {
-        if (paramObj[key] != null) {
-        params.set(key, paramObj[key]);
-        }
-    }
-
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    history.pushState(null, '', newUrl);
-    }
-
-    /**
-     * Hapus parameter URL
-     * @param  {...string} keys - Nama parameter yang ingin dihapus
-     */
-    dlParam(...keys) {
-    const params = new URLSearchParams(window.location.search);
-    for (const key of keys) {
-        params.delete(key);
-    }
-
-    const newQuery = params.toString();
-    const newUrl = newQuery
-        ? `${window.location.pathname}?${newQuery}`
-        : window.location.pathname;
-
-    history.pushState(null, '', newUrl);
-    }
-
-    cvDtTm(isoString) {
-    const d = new Date(isoString);
-
-    const pad = n => String(n).padStart(2, '0');
-
-    const year = d.getFullYear();
-    const month = pad(d.getMonth() + 1); // bulan dimulai dari 0
-    const date = pad(d.getDate());
-    const hours = pad(d.getHours());
-    const minutes = pad(d.getMinutes());
-    const seconds = pad(d.getSeconds());
-
-    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`;
-    }
 
 }
