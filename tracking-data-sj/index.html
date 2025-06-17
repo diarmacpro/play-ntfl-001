@@ -60,6 +60,19 @@
               </div>
             </template>
 
+            <!-- Del Switch (Default ON) -->
+            <div class="flex items-center justify-between">
+              <label class="text-gray-700 font-medium">Tampilkan Data Terhapus</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" x-model="form.del" />
+                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
+                  <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <span class="ml-3 text-sm text-gray-600" x-text="form.del ? 'ON' : 'OFF'"></span>
+              </label>
+            </div>
+
+
             <!-- Debug Switch -->
             <div class="flex items-center justify-between">
               <label class="text-gray-700 font-medium">Debug</label>
@@ -144,9 +157,9 @@
 
         <!-- Tabel -->
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div class="overflow-x-auto">
+          <div class="relative max-h-[540px] overflow-y-auto">
             <table class="w-full text-sm">
-              <thead class="bg-gray-50 border-b">
+              <thead class="bg-gray-50 border-b sticky top-0 z-10">
                 <tr>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('mkt')">
@@ -583,8 +596,9 @@
             id_sj: '',
             id_mkt: '',
             bulanTahun: '',
-            tanggalAcuan: '',
-            debug: false
+            tanggalAcuan: new Date().toISOString().slice(0, 10), // ⬅️ default hari ini
+            debug: false,
+            del: true
           },
 
           form: {
@@ -592,8 +606,9 @@
             id_sj: '',
             id_mkt: '',
             bulanTahun: '',
-            tanggalAcuan: '',
-            debug: false
+            tanggalAcuan: new Date().toISOString().slice(0, 10), // ⬅️ default hari ini
+            debug: false,
+            del: true
           },
           output: '',
           loading: false,
@@ -639,6 +654,8 @@
                   this.form[key] = urlParams[key];
                 } else if (key === 'debug') {
                   this.form[key] = urlParams[key] === 'true';
+                } else if (key === 'del') {
+                  this.form[key] = urlParams[key] === 'true'; // ✅ konversi string ke boolean
                 } else {
                   this.form[key] = urlParams[key];
                 }
@@ -672,7 +689,8 @@
               id_mkt: this.parseCommaSeparated(this.form.id_mkt),
               bulanTahun: this.form.bulanTahun,
               tanggalAcuan: this.form.tanggalAcuan,
-              debug: this.form.debug
+              debug: this.form.debug,
+              del: this.form.del // ✅ Tambahkan ini
             };
 
             const filter = {};
@@ -682,12 +700,13 @@
                 filter[key] = val.join(',');
               } else if (typeof val === 'string' && val.trim() !== '') {
                 filter[key] = val;
-              } else if (key === 'debug' && val === true) {
-                filter.debug = true;
+              } else if ((key === 'debug' || key === 'del') && typeof val === 'boolean') {
+                filter[key] = val;
               }
             }
 
             this.output = JSON.stringify(filter, null, 2);
+
 
             // Update URL params
             if (window.u && typeof u.stParam === 'function') {
