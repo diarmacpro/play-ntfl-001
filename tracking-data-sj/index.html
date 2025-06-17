@@ -164,14 +164,14 @@
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('mkt')">
                     <div class="flex items-center gap-1">
-                      MKT
+                      Marketing
                       <i class="bi" :class="getSortIcon('mkt')"></i>
                     </div>
                   </th>
-                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp')">
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('dlt')">
                     <div class="flex items-center gap-1">
-                      Cart
-                      <i class="bi" :class="getSortIcon('stamp')"></i>
+                      Del
+                      <i class="bi" :class="getSortIcon('dlt')"></i>
                     </div>
                   </th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp_sj')">
@@ -184,6 +184,12 @@
                     <div class="flex items-center gap-1">
                       SJ
                       <i class="bi" :class="getSortIcon('id_sj')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('onOff')">
+                    <div class="flex items-center gap-1">
+                      On/Off
+                      <i class="bi" :class="getSortIcon('onOff')"></i>
                     </div>
                   </th>
                   <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('hlp')">
@@ -229,6 +235,9 @@
                   <tr class="hover:bg-gray-50 transition-colors" @click="showDetail(row)">
                     <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
                     <td class="px-3 py-3 text-gray-900 flex items-center gap-2">
+                      <span x-text="row.mkt || '-'"></span>
+                    </td>
+                    <td class="px-3 py-3 text-gray-900">
                       <span
                           x-html="(() => {
                             if (row.dlt == 1) {
@@ -240,12 +249,12 @@
                             }
                           })()">
                       </span>
-                      <span class="bi bi-circle-fill" :class="row.onOff == 1 ? 'text-green-500' : 'text-stone-200'"></span>
-                      <span x-text="row.mkt || '-'"></span>
                     </td>
-                    <td class="px-3 py-3 text-gray-900" x-text="row.stamp ? cvDtTm(row.stamp) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900">
+                      <span class="bi bi-circle-fill" :class="row.onOff == 1 ? 'text-green-500' : 'text-stone-200'"></span>
+                    </td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.hlp || '-'"></td>
                     <td class="px-3 py-3 text-gray-900" 
                         x-html="`<strong>[${row.id_stock || '-'}]</strong> ${row.k ? ' ' + row.k : ''}`">
@@ -255,19 +264,19 @@
                     
                     <td class="px-3 py-3 text-gray-900" x-text="(row.qty || '-') + (row.q_bs ? ' + ' + row.q_bs : '') || '-'"></td>
 
-      <!-- Habis + GE -->
-      <td class="px-3 py-3 text-gray-900">
-        <div class="flex items-center gap-2">
-          <span class="capitalize" x-text="row.ge || '-'"></span>
-          <span x-html="(() => {
-            if (row.habis == 1) {
-              return `<i class='bi bi-x-square-fill text-red-600'></i>`;
-            } else {
-              return `<i class='bi bi-square-fill text-stone-200'></i>`;
-            }
-          })()"></span>
-        </div>
-      </td>
+                    <!-- Habis + GE -->
+                    <td class="px-3 py-3 text-gray-900">
+                      <div class="flex items-center gap-2">
+                        <span class="capitalize" x-text="row.ge || '-'"></span>
+                        <span x-html="(() => {
+                          if (row.habis == 1) {
+                            return `<i class='bi bi-x-square-fill text-red-600'></i>`;
+                          } else {
+                            return `<i class='bi bi-square-fill text-stone-200'></i>`;
+                          }
+                        })()"></span>
+                      </div>
+                    </td>
                   </tr>
                 </template>
               </tbody>
@@ -289,118 +298,121 @@
         </div>
       </div>
 
-      <!-- Modal Detail -->
-      <div
-        x-show="showingModal"
-        x-transition.opacity
-        @keydown.escape.window="closeModal"
-        @click.self="closeModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-        style="display: none;"
+<!-- Modal Detail -->
+<div
+  x-show="showingModal"
+  x-transition.opacity
+  @keydown.escape.window="closeModal"
+  @click.self="closeModal"
+  class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+  style="display: none;"
+>
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-6 border-b">
+      <h2 class="text-2xl font-semibold text-gray-800">
+        Detail SJ: <span x-text="selectedRow?.id_sj || '-'" class="text-blue-600 font-bold tracking-wide"></span>
+      </h2>
+      <button 
+        @click="closeModal" 
+        class="text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full p-2 transition"
       >
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <!-- Modal Header -->
-          <div class="flex items-center justify-between p-6 border-b">
-            <h2 class="text-xl font-semibold text-gray-800">
-              Detail SJ: <span x-text="selectedRow?.id_sj || '-'" class="text-blue-600"></span>
-            </h2>
-            <button 
-              @click="closeModal" 
-              class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
-            >
-              <i class="bi bi-x-lg text-lg"></i>
-            </button>
+        <i class="bi bi-x-lg text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Timeline Section -->
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <i class="bi bi-clock-history text-blue-500"></i> Timeline
+          </h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'D Create', value: cvDtTm(selectedRow?.d_create) },
+              { label: 'D MG', value: cvDtTm(selectedRow?.d_mgr) },
+              { label: 'D WH', value: cvDtTm(selectedRow?.d_wh) },
+              { label: 'D Finish', value: cvDtTm(selectedRow?.d_finish) },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm">
+                <span class="font-medium text-gray-600" x-text="item.label"></span>
+                <span class="text-gray-900 font-semibold" x-text="item.value || '-'"></span>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <!-- Personnel & Status Section -->
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <i class="bi bi-person-lines-fill text-green-500"></i> Personnel & Status
+          </h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'NM WH', value: selectedRow?.nm_wh },
+              { label: 'NM FN', value: selectedRow?.nm_fn },
+              { label: 'Habis', value: selectedRow?.habis },
+              { label: 'NM Del', value: selectedRow?.nm_del },
+              { label: 'NM Add', value: selectedRow?.nm_add },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm">
+                <span class="font-medium text-gray-600" x-text="item.label"></span>
+                <span class="text-gray-900 font-semibold" x-text="item.value || '-'"></span>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- Additional Info Section -->
+      <section>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Additional Information</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div class="bg-blue-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-blue-800">Stock ID</div>
+            <div class="text-blue-600 text-base font-bold" x-text="selectedRow?.id_stock || '-'"></div>
           </div>
-
-          <!-- Modal Body -->
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Timeline Section -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">Timeline</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D Create:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_create) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D MG:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_mgr) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D WH:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_wh) || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">D Finish:</span>
-                    <span class="text-gray-900" x-text="cvDtTm(selectedRow?.d_finish) || '-'"></span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Personnel Section -->
-              <div class="space-y-4">
-                <h3 class="text-lg font-medium text-gray-800 border-b pb-2">Personnel & Status</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM WH:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_wh || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM FN:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_fn || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">Habis:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.habis || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM Del:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_del || '-'"></span>
-                  </div>
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span class="font-medium text-gray-700">NM Add:</span>
-                    <span class="text-gray-900" x-text="selectedRow?.nm_add || '-'"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="mt-6 pt-6 border-t">
-              <h3 class="text-lg font-medium text-gray-800 mb-4">Additional Information</h3>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                <div class="bg-blue-50 p-3 rounded-lg">
-                  <div class="font-medium text-blue-800">Stock ID</div>
-                  <div class="text-blue-600" x-text="selectedRow?.id_stock || '-'"></div>
-                </div>
-                <div class="bg-green-50 p-3 rounded-lg">
-                  <div class="font-medium text-green-800">QTY</div>
-                  <div class="text-green-600" x-text="selectedRow?.qty || '-'"></div>
-                </div>
-                <div class="bg-yellow-50 p-3 rounded-lg">
-                  <div class="font-medium text-yellow-800">Status</div>
-                  <div class="text-yellow-600" x-text="selectedRow?.stts || '-'"></div>
-                </div>
-              </div>
-            </div>
+          <div class="bg-green-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-green-800">QTY</div>
+            <div class="text-green-600 text-base font-bold" x-text="selectedRow?.qty || '-'"></div>
           </div>
-
-          <div>
-            Count Out : <div class="px-3 py-3 text-gray-900" x-text="selectedRow?.c_o || '-'"></div>
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="flex justify-end p-6 border-t bg-gray-50">
-            <button 
-              @click="closeModal"
-              class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
+          <div class="bg-yellow-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-yellow-800">Status</div>
+            <div class="text-yellow-600 text-base font-bold" x-text="selectedRow?.stts || '-'"></div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <!-- Count Info Section -->
+      <section class="grid grid-cols-2 gap-6 text-sm">
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner">
+          <div class="text-gray-700 font-semibold">Count Out</div>
+          <div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.c_o || '-'"></div>
+        </div>
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner">
+          <div class="text-gray-700 font-semibold">Cart</div>
+          <div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.stamp ? cvDtTm(selectedRow.stamp) : '-'"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end items-center p-6 border-t bg-gray-50 rounded-b-lg">
+      <button 
+        @click="closeModal"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
 
       <!-- Spinner Backdrop -->
       <div
