@@ -35,53 +35,6 @@
 
   </script>
   <script type="module">
-const dbCacheName = "turso_cache_db";
-const dbStoreName = "sj_monitor";
-
-function openCacheDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbCacheName, 1);
-    request.onerror = (e) => reject("IndexedDB open failed");
-
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(dbStoreName)) {
-        db.createObjectStore(dbStoreName, { keyPath: "key" });
-      }
-    };
-
-    request.onsuccess = (e) => resolve(e.target.result);
-  });
-}
-
-async function getCachedData(key) {
-  const db = await openCacheDb();
-  return new Promise((resolve) => {
-    const tx = db.transaction(dbStoreName, "readonly");
-    const store = tx.objectStore(dbStoreName);
-    const req = store.get(key);
-    req.onsuccess = () => resolve(req.result?.data || null);
-    req.onerror = () => resolve(null);
-  });
-}
-
-async function setCachedData(key, data) {
-  const db = await openCacheDb();
-  return new Promise((resolve) => {
-    const tx = db.transaction(dbStoreName, "readwrite");
-    const store = tx.objectStore(dbStoreName);
-    store.put({ key, data });
-    tx.oncomplete = () => resolve(true);
-  });
-}
-
-
-
-// --------------------------------------------
-
-
-
-
     import { createClient } from "https://esm.sh/@libsql/client/web";
 
     const db = createClient({
@@ -170,14 +123,6 @@ function parseToIntArray(val) {
 }
 
 async function queryDeepSj(filter = {}) {
-    const filterKey = "q:" + JSON.stringify(filter);
-    const cached = await getCachedData(filterKey);
-    if (cached) {
-    dt.hasil = cached;
-    console.log("[cache] dipakai dari IndexedDB");
-    return cached;
-    }
-
   const {
     id_stock,
     id_sj,
@@ -251,30 +196,25 @@ async function queryDeepSj(filter = {}) {
     const result = await db.execute(query, values);
     const rows = result.rows || [];
 
-		if (rows.length > 0) {
-			dt["hasil"] = rows;
-			await setCachedData(filterKey, rows); // ✅ simpan ke IndexedDB
-			return rows;
-		} else {
+    if (rows.length > 0) {
+      dt["hasil"] = rows;
+      return rows;
+    } else {
       // fallback ke API jika kosong
       console.warn("[queryDeepSj] Kosong, fallback ke fetchDataDeepSj()");
-        
-			const apiData = await fetchDataDeepSj(filter);
-			if (Array.isArray(apiData) && apiData.length > 0) {
-				await insertData(apiData); // ⬅️ simpan ke Turso
-				await setCachedData(filterKey, apiData); // ⬅️ simpan ke IndexedDB
-			}
-
+      const apiData = await fetchDataDeepSj(filter);
+      if (Array.isArray(apiData) && apiData.length > 0) {
+        await insertData(apiData); // ⬅️ simpan ke Turso
+      }
       dt["hasil"] = apiData || [];
       return dt.hasil;
     }
   } catch (err) {
     console.error("[queryDeepSj] Query error, fallback ke fetchDataDeepSj():", err);
-		const apiData = await fetchDataDeepSj(filter);
-		if (Array.isArray(apiData) && apiData.length > 0) {
-			await insertData(apiData); // ⬅️ simpan ke Turso
-			await setCachedData(filterKey, apiData); // ⬅️ simpan ke IndexedDB
-		}
+    const apiData = await fetchDataDeepSj(filter);
+    if (Array.isArray(apiData) && apiData.length > 0) {
+      await insertData(apiData); // ⬅️ simpan ke Turso
+    }
     dt["hasil"] = apiData || [];
     return dt.hasil;
   }

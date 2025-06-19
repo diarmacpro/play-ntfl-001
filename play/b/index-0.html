@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Turso Client Demo</title>
+</head>
+<body>
+  <script>
+    var dt = {};
+    async function fetchDataDeepSj(filter) {
+      const url = "https://cdn.weva.my.id/apix/dataDeepSj";
+
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ filter })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        dt.a = data;
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.error("Gagal fetch dataDeepSj:", error);
+        return null;
+      }
+    }
+
+  </script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@libsql/client/web";
+
+    const db = createClient({
+      url: "https://dmonit-diarmacpro-turso001.aws-ap-south-1.turso.io",  // Ganti dengan milikmu
+      authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJnaWQiOiI0NGJjMGVjMy1mZGQ2LTQ2Y2UtYjVhMC04MGE0OGUwODdkYTkiLCJpYXQiOjE3NTAyMTI1MDQsInJpZCI6ImI2YzI5Zjc3LTYxZjItNGJlOC1hZTU5LTJhNTUxZDE5Y2ZhOCJ9.ToqNi4hhICYEPJ4sRaCFJHUCTuV17FN65tmkCoibL4jYmkp7iUYq-Ml5_VnR4H2LE7BH8rr1G98yoa8Bg2dkBg"           // Pastikan token benar dan scoped untuk web access
+    });
+
+    async function loadData(tgl) {
+			try {
+				const result = await db.execute(`SELECT * FROM tb_sj_monitor WHERE DATE(stamp) = '${tgl}'`);
+
+				// console.log("Hasil query:");
+				console.log(result.rows); // langsung pakai, sudah array of object
+			} catch (err) {
+				console.error("Query failed:", err);
+			}
+    }
+
+    // loadData();
+
+async function insertData(input) {
+  const records = Array.isArray(input) ? input : [input];
+
+  if (records.length === 0) return;
+
+  const placeholders = [];
+  const values = [];
+
+  const fields = [
+    "ky", "d_create", "d_mgr", "d_wh", "d_finish",
+    "id_sj", "id_mkt", "mkt", "id_hlp", "hlp",
+    "id_kain", "k", "id_stock", "lot", "rol",
+    "rak", "kol", "qty", "ge", "bayar",
+    "dlt", "id_m", "nm_m", "id_w", "nm_wh",
+    "id_f", "nm_fn", "q_bs", "habis", "notes",
+    "dlt_pic", "nm_del", "ad_item", "nm_add", "ekspedisi",
+    "onOff", "c_o", "erw", "rtr", "stamp",
+    "stamp_sj"
+  ];
+
+  for (const record of records) {
+    placeholders.push(`(${fields.map(() => '?').join(',')})`);
+    values.push(...fields.map(f => record[f]));
+  }
+
+  const sql = `
+    INSERT INTO tb_sj_monitor (${fields.join(', ')})
+    VALUES ${placeholders.join(', ')}
+  `;
+
+  try {
+    await db.execute(sql, values);
+    console.log(`✅ Selesai: ${records.length} berhasil, 0 gagal.`);
+  } catch (err) {
+    console.error(`❌ Gagal insert batch:`, err.message);
+    console.log(`➡️ Coba fallback ke insert per baris.`);
+
+    // fallback ke individual insert jika batch gagal
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const [i, row] of records.entries()) {
+      try {
+        await db.execute(
+          `INSERT INTO tb_sj_monitor (${fields.join(', ')})
+          VALUES (${fields.map(f => ':' + f).join(', ')})`,
+          row
+        );
+        successCount++;
+      } catch (err) {
+        console.error(`❌ Gagal insert record ke-${i + 1}:`, err.message);
+        failCount++;
+      }
+    }
+
+    console.log(`✅ Selesai (fallback): ${successCount} berhasil, ${failCount} gagal.`);
+  }
+}
+
+
+
+      Object.assign(window, {
+        loadData, insertData
+      });
+  </script>
+</body>
+</html>

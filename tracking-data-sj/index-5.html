@@ -72,6 +72,19 @@
               </label>
             </div>
 
+
+            <!-- Debug Switch -->
+            <div class="flex items-center justify-between">
+              <label class="text-gray-700 font-medium">Debug</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" x-model="form.debug" />
+                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
+                  <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <span class="ml-3 text-sm text-gray-600" x-text="form.debug ? 'ON' : 'OFF'"></span>
+              </label>
+            </div>
+
             <button
               type="button"
               @click="generate()"
@@ -88,40 +101,30 @@
               </span>
             </button>
           </form>
+
+          <!-- Output -->
+          <div class="mt-6 bg-gray-100 p-4 rounded-lg text-sm">
+            <strong>Output JSON:</strong>
+            <pre class="mt-2 text-xs text-gray-800 whitespace-pre-wrap" x-text="output"></pre>
+          </div>
         </div>
       </div>
 
       <!-- Tabel Data (ditampilkan setelah data di-fetch) -->
       <div x-show="showTable" class="w-full" style="display: none;">
-        <!-- Header dengan tombol kembali dan sync serta select marketing -->
+        <!-- Header dengan tombol kembali -->
         <div class="bg-white shadow-sm rounded-lg p-4 mb-4 flex items-center justify-between">
           <div>
             <h1 class="text-2xl font-bold text-gray-800">Data SJ Results</h1>
             <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
           </div>
-          <div class="flex gap-2 items-center">
-            <select multiple x-model="selectedMarketing" @change="onMarketingChange()" class="border rounded px-2 py-1 text-sm min-w-[120px]" style="min-width:120px;max-width:200px;">
-              <template x-for="m in marketingOptions" :key="m.id_mkt">
-                <option :value="m.id_mkt" x-text="m.mkt"></option>
-              </template>
-            </select>
-            <button
-              @click="syncTanggalAcuan()"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-              :disabled="loading"
-            >
-              <i class="bi bi-cloud-download"></i>
-              <span x-show="!loading">Sync</span>
-              <span x-show="loading">Syncing...</span>
-            </button>
-            <button
-              @click="backToFilter()"
-              class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
-            >
-              <i class="bi bi-arrow-left"></i>
-              Back to Filter
-            </button>
-          </div>
+          <button
+            @click="backToFilter()"
+            class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+          >
+            <i class="bi bi-arrow-left"></i>
+            Back to Filter
+          </button>
         </div>
 
         <!-- Search Bar -->
@@ -232,7 +235,7 @@
                   <tr class="hover:bg-gray-50 transition-colors" @click="showDetail(row)">
                     <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
                     <td class="px-3 py-3 text-gray-900 flex items-center gap-2">
-                      <span x-text="row.mkt || '-'"/>
+                      <span x-text="row.mkt || '-'"></span>
                     </td>
                     <td class="px-3 py-3 text-gray-900">
                       <span
@@ -244,8 +247,8 @@
                             } else {
                               return `<i class='bi bi-square-fill text-stone-200'></i>`;
                             }
-                          })()"
-                      ></span>
+                          })()">
+                      </span>
                     </td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'"></td>
                     <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'"></td>
@@ -459,91 +462,6 @@
 
     <!-- Alpine Logic -->
     <script>
-      // IndexedDB helpers
-      async function openDB() {
-        return new Promise((resolve, reject) => {
-          const request = indexedDB.open('trackingDataSJ', 1);
-          request.onupgradeneeded = function(e) {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains('perTanggal')) {
-              db.createObjectStore('perTanggal', { keyPath: 'tanggalAcuan' });
-            }
-          };
-          request.onsuccess = e => resolve(e.target.result);
-          request.onerror = e => reject(e.target.error);
-        });
-      }
-      async function getDataByTanggal(tanggalAcuan) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction('perTanggal', 'readonly');
-          const store = tx.objectStore('perTanggal');
-          const req = store.get(tanggalAcuan);
-          req.onsuccess = () => resolve(req.result ? req.result.payload : null);
-          req.onerror = () => reject(req.error);
-        });
-      }
-      async function saveDataByTanggal(tanggalAcuan, payload) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction('perTanggal', 'readwrite');
-          const store = tx.objectStore('perTanggal');
-          store.put({ tanggalAcuan, payload });
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => reject(tx.error);
-        });
-      }
-      async function getDataByTanggalWithFilter(tanggalAcuan, filter) {
-        const db = await openDB();
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction('perTanggal', 'readonly');
-          const store = tx.objectStore('perTanggal');
-          const req = store.get(tanggalAcuan);
-          req.onsuccess = () => {
-            if (!req.result || !req.result.payload || !req.result.payload.data) return resolve(null);
-            let data = req.result.payload.data;
-            // Filter ulang sesuai parameter (id_stock, id_sj, id_mkt, bulanTahun, del)
-            if (Array.isArray(data)) {
-              data = data.filter(row => {
-                // id_stock
-                if (filter.id_stock) {
-                  const arr = filter.id_stock.split(',').map(s => s.trim());
-                  if (!arr.includes(String(row.id_stock))) return false;
-                }
-                // id_sj
-                if (filter.id_sj) {
-                  const arr = filter.id_sj.split(',').map(s => s.trim());
-                  if (!arr.includes(String(row.id_sj))) return false;
-                }
-                // id_mkt
-                if (filter.id_mkt) {
-                  const arr = filter.id_mkt.split(',').map(s => s.trim());
-                  if (!arr.includes(String(row.id_mkt))) return false;
-                }
-                // bulanTahun
-                if (filter.bulanTahun) {
-                  const yyyymm = String(row.stamp).slice(0, 7);
-                  if (yyyymm !== filter.bulanTahun) return false;
-                }
-                // tanggalAcuan
-                if (filter.tanggalAcuan) {
-                  const yyyymmdd = String(row.stamp).slice(0, 10);
-                  if (yyyymmdd !== filter.tanggalAcuan) return false;
-                }
-                // del/dlt
-                if (typeof filter.del === 'boolean') {
-                  if (filter.del && String(row.dlt) !== '1') return false;
-                  // jika del=false, tampilkan semua (tidak filter dlt)
-                }
-                return true;
-              });
-            }
-            resolve({ data });
-          };
-          req.onerror = () => reject(req.error);
-        });
-      }
-
       function dtDeepSearchSJ() {
         return {
           selectedRow: null,
@@ -688,18 +606,23 @@
           initialForm: {
             id_stock: '',
             id_sj: '',
+            id_mkt: '',
             bulanTahun: '',
-            tanggalAcuan: new Date().toISOString().slice(0, 10),
+            tanggalAcuan: new Date().toISOString().slice(0, 10), // ⬅️ default hari ini
+            debug: false,
             del: true
           },
 
           form: {
             id_stock: '',
             id_sj: '',
+            id_mkt: '',
             bulanTahun: '',
-            tanggalAcuan: new Date().toISOString().slice(0, 10),
+            tanggalAcuan: new Date().toISOString().slice(0, 10), // ⬅️ default hari ini
+            debug: false,
             del: true
           },
+          output: '',
           loading: false,
           initialized: false,
           hasUrlParams: false,
@@ -708,12 +631,10 @@
           fields: [
             { name: 'id_stock', label: 'Id Stock', type: 'text' },
             { name: 'id_sj', label: 'Id SJ', type: 'text' },
+            { name: 'id_mkt', label: 'Marketing', type: 'text' },
             { name: 'bulanTahun', label: 'Bulan Tahun', type: 'month' },
             { name: 'tanggalAcuan', label: 'Tanggal Acuan', type: 'date' }
           ],
-
-          selectedMarketing: [],
-          marketingOptions: [],
 
           init() {
             // Cegah double initialization
@@ -737,22 +658,28 @@
           setupFormFromUrl() {
             const urlParams = u.gtParam();
             this.hasUrlParams = Object.keys(urlParams).length > 0;
+            
             // Parse URL parameters
             for (const key in this.form) {
               if (urlParams[key]) {
-                this.form[key] = urlParams[key];
+                if (['id_stock', 'id_sj', 'id_mkt'].includes(key)) {
+                  this.form[key] = urlParams[key];
+                } else if (key === 'debug') {
+                  this.form[key] = urlParams[key] === 'true';
+                } else if (key === 'del') {
+                  this.form[key] = urlParams[key] === 'true'; // ✅ konversi string ke boolean
+                } else {
+                  this.form[key] = urlParams[key];
+                }
               }
             }
-            // Multiple select marketing from url
-            if (urlParams.marketing) {
-              this.selectedMarketing = urlParams.marketing.split(',');
-            } else {
-              this.selectedMarketing = [];
-            }
+
             // Hanya auto-generate jika ada URL params
             if (this.hasUrlParams) {
               this.generate();
             } else {
+              // Jika tidak ada params, set output kosong dan pastikan showTable false
+              this.output = JSON.stringify({}, null, 2);
               this.showTable = false;
             }
           },
@@ -762,16 +689,19 @@
             return str.split(',').map(s => s.trim()).filter(s => s);
           },
 
-          async generate() {
+          generate() {
             // Prevent double fetch
             if (this.loading) return;
+            
             this.loading = true;
 
             const raw = {
               id_stock: this.parseCommaSeparated(this.form.id_stock),
               id_sj: this.parseCommaSeparated(this.form.id_sj),
+              id_mkt: this.parseCommaSeparated(this.form.id_mkt),
               bulanTahun: this.form.bulanTahun,
               tanggalAcuan: this.form.tanggalAcuan,
+              debug: this.form.debug,
               del: this.form.del // ✅ Tambahkan ini
             };
 
@@ -787,181 +717,38 @@
               }
             }
 
+            this.output = JSON.stringify(filter, null, 2);
+
+
             // Update URL params
             if (window.u && typeof u.stParam === 'function') {
               u.stParam(filter);
             }
 
-            // Cek IndexedDB untuk tanggalAcuan + filter
-            let indexedData = null;
-            let indexedDataChecked = false;
-            if (filter.tanggalAcuan) {
-              try {
-                indexedData = await getDataByTanggalWithFilter(filter.tanggalAcuan, filter);
-                // Cek data mentah di IndexedDB, bukan hasil filter
-                const dbRaw = await openDB();
-                const tx = dbRaw.transaction('perTanggal', 'readonly');
-                const store = tx.objectStore('perTanggal');
-                const req = store.get(filter.tanggalAcuan);
-                await new Promise((resolve, reject) => {
-                  req.onsuccess = () => {
-                    if (req.result && req.result.payload && Array.isArray(req.result.payload.data)) {
-                      indexedDataChecked = true;
-                    }
-                    resolve();
-                  };
-                  req.onerror = () => reject(req.error);
-                });
-              } catch (e) {
-                indexedData = null;
-              }
-            }
-            if (indexedDataChecked) {
-              // Selalu filter ulang hasil dari IndexedDB sesuai parameter URL
-              let filtered = [];
-              if (indexedData && indexedData.data && Array.isArray(indexedData.data)) {
-                filtered = indexedData.data.filter(row => {
-                  // id_stock
-                  if (filter.id_stock) {
-                    const arr = filter.id_stock.split(',').map(s => s.trim());
-                    if (!arr.includes(String(row.id_stock))) return false;
-                  }
-                  // id_sj
-                  if (filter.id_sj) {
-                    const arr = filter.id_sj.split(',').map(s => s.trim());
-                    if (!arr.includes(String(row.id_sj))) return false;
-                  }
-                  // bulanTahun
-                  if (filter.bulanTahun) {
-                    const yyyymm = String(row.stamp).slice(0, 7);
-                    if (yyyymm !== filter.bulanTahun) return false;
-                  }
-                  // tanggalAcuan
-                  if (filter.tanggalAcuan) {
-                    const yyyymmdd = String(row.stamp).slice(0, 10);
-                    if (yyyymmdd !== filter.tanggalAcuan) return false;
-                  }
-                  // del/dlt
-                  if (typeof filter.del === 'boolean') {
-                    if (filter.del && String(row.dlt) !== '1') return false;
-                    // jika del=false, tampilkan semua (tidak filter dlt)
-                  }
-                  return true;
-                });
-              }
-              this.tableData = filtered;
-              this.filteredData = [...filtered];
-              this.showTable = true;
-              this.loading = false;
-              return;
-            }
-
-            // Jika data tanggalAcuan belum ada di IndexedDB, fetch seluruh data tanggalAcuan (del=false, debug=false, filter lain null)
-            if (!indexedDataChecked && filter.tanggalAcuan) {
-              const fullPayload = {
-                tanggalAcuan: filter.tanggalAcuan,
-                del: false,
-                debug: false,
-                id_stock: null,
-                id_sj: null,
-                bulanTahun: null
-              };
-              pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter: fullPayload }, async (e, d) => {
-                if (filter.tanggalAcuan && d && d.data) await saveDataByTanggal(filter.tanggalAcuan, d);
-                // Filter di client sesuai filter asli
-                let filtered = [];
-                if (d && d.data && Array.isArray(d.data)) {
-                  filtered = d.data.filter(row => {
-                    // id_stock
-                    if (filter.id_stock) {
-                      const arr = filter.id_stock.split(',').map(s => s.trim());
-                      if (!arr.includes(String(row.id_stock))) return false;
-                    }
-                    // id_sj
-                    if (filter.id_sj) {
-                      const arr = filter.id_sj.split(',').map(s => s.trim());
-                      if (!arr.includes(String(row.id_sj))) return false;
-                    }
-                    // bulanTahun
-                    if (filter.bulanTahun) {
-                      const yyyymm = String(row.stamp).slice(0, 7);
-                      if (yyyymm !== filter.bulanTahun) return false;
-                    }
-                    // tanggalAcuan
-                    if (filter.tanggalAcuan) {
-                      const yyyymmdd = String(row.stamp).slice(0, 10);
-                      if (yyyymmdd !== filter.tanggalAcuan) return false;
-                    }
-                    // del/dlt
-                    if (typeof filter.del === 'boolean') {
-                      if (filter.del && String(row.dlt) !== '1') return false;
-                      // jika del=false, tampilkan semua (tidak filter dlt)
-                    }
-                    return true;
-                  });
-                }
-                this.tableData = filtered;
-                this.filteredData = [...filtered];
-                this.showTable = true;
-                this.loading = false;
-                // Reset search and sort
-                this.searchQuery = '';
-                this.sortField = null;
-                this.sortDirection = 'asc';
-              });
-              return;
-            }
-
-            // Fetch data jika tidak ada di IndexedDB
-            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter }, async (e, d) => {
+            // Fetch data
+            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter }, (e, d) => {
               console.log('API Response:', d);
               this.loading = false;
+              
               // Handle response data
               if (d && d.data && Array.isArray(d.data)) {
                 this.tableData = d.data;
                 this.filteredData = [...d.data];
                 this.showTable = true;
-                // Simpan ke IndexedDB
-                if (filter.tanggalAcuan) await saveDataByTanggal(filter.tanggalAcuan, d);
               } else if (d && Array.isArray(d)) {
                 this.tableData = d;
                 this.filteredData = [...d];
                 this.showTable = true;
-                if (filter.tanggalAcuan) await saveDataByTanggal(filter.tanggalAcuan, { data: d });
               } else {
                 this.tableData = [];
                 this.filteredData = [];
                 this.showTable = true;
               }
+
               // Reset search and sort when new data arrives
               this.searchQuery = '';
               this.sortField = null;
               this.sortDirection = 'asc';
-            });
-          },
-
-          async syncTanggalAcuan() {
-            if (this.loading) return;
-            this.loading = true;
-            const tanggalAcuan = this.form.tanggalAcuan;
-            if (!tanggalAcuan) {
-              this.loading = false;
-              return;
-            }
-            // Payload sync: hanya tanggalAcuan, del=false, debug=false, filter lain null
-            const fullPayload = {
-              tanggalAcuan: tanggalAcuan,
-              del: false,
-              debug: false,
-              id_stock: null,
-              id_sj: null,
-              bulanTahun: null
-            };
-            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter: fullPayload }, async (e, d) => {
-              if (tanggalAcuan && d && d.data) await saveDataByTanggal(tanggalAcuan, d);
-              // Setelah sync, lakukan generate ulang agar filter aktif
-              this.loading = false;
-              this.generate();
             });
           },
 
@@ -977,6 +764,7 @@
             
             // Reset form ke kondisi awal
             this.form = { ...this.initialForm };
+            this.output = JSON.stringify({}, null, 2);
             
             // Clear URL parameters
             if (window.u && typeof u.stParam === 'function') {
