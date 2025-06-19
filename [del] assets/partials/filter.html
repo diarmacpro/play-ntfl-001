@@ -1,0 +1,30 @@
+<section class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md mx-auto mb-6" x-show="!showTable">
+  <form @submit.prevent class="space-y-4" autocomplete="off">
+    <template x-for="field in fields" :key="field.name">
+      <div class="relative">
+        <input :type="field.type" :name="field.name" :id="field.name" x-model="form[field.name]" autocomplete="off" class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent" :placeholder="field.label" />
+        <label :for="field.name" class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500" x-text="field.label"></label>
+      </div>
+    </template>
+    <div class="flex items-center justify-between">
+      <label class="text-gray-700 font-medium">Tampilkan Data Terhapus</label>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" class="sr-only peer" :checked="form.del === 'true'" @change="form.del = $event.target.checked ? 'true' : 'false'" />
+        <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
+          <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
+        </div>
+        <span class="ml-3 text-sm text-gray-600" x-text="form.del === 'true' ? 'ON' : 'OFF'"></span>
+      </label>
+    </div>
+    <button type="button" @click="generate()" :disabled="loading" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+      <span x-show="!loading">Generate Filter</span>
+      <span x-show="loading" class="flex items-center justify-center">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        Loading...
+      </span>
+    </button>
+  </form>
+</section>

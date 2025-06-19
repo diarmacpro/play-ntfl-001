@@ -1,0 +1,54 @@
+<div x-show="showingModal" x-transition.opacity @keydown.escape.window="closeModal" @click.self="closeModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" style="display: none;">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200">
+    <div class="flex items-center justify-between p-6 border-b">
+      <h2 class="text-2xl font-semibold text-gray-800">Detail SJ: <span x-text="selectedRow?.id_sj || '-'" class="text-blue-600 font-bold tracking-wide"></span></h2>
+      <button @click="closeModal" class="text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full p-2 transition"><i class="bi bi-x-lg text-xl"></i></button>
+    </div>
+    <div class="p-6 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><i class="bi bi-clock-history text-blue-500"></i> Timeline</h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'D Create', value: cvDtTm(selectedRow?.d_create) },
+              { label: 'D MG', value: cvDtTm(selectedRow?.d_mgr) },
+              { label: 'D WH', value: cvDtTm(selectedRow?.d_wh) },
+              { label: 'D Finish', value: cvDtTm(selectedRow?.d_finish) },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm"><span class="font-medium text-gray-600" x-text="item.label"></span><span class="text-gray-900 font-semibold" x-text="item.value || '-'" ></span></li>
+            </template>
+          </ul>
+        </section>
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2"><i class="bi bi-person-lines-fill text-green-500"></i> Personnel & Status</h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'NM WH', value: selectedRow?.nm_wh },
+              { label: 'NM FN', value: selectedRow?.nm_fn },
+              { label: 'Habis', value: selectedRow?.habis },
+              { label: 'NM Del', value: selectedRow?.nm_del },
+              { label: 'NM Add', value: selectedRow?.nm_add },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm"><span class="font-medium text-gray-600" x-text="item.label"></span><span class="text-gray-900 font-semibold" x-text="item.value || '-'" ></span></li>
+            </template>
+          </ul>
+        </section>
+      </div>
+      <section>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Additional Information</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div class="bg-blue-50 p-4 rounded-xl shadow"><div class="font-semibold text-blue-800">Stock ID</div><div class="text-blue-600 text-base font-bold" x-text="selectedRow?.id_stock || '-'" ></div></div>
+          <div class="bg-green-50 p-4 rounded-xl shadow"><div class="font-semibold text-green-800">QTY</div><div class="text-green-600 text-base font-bold" x-text="selectedRow?.qty || '-'" ></div></div>
+          <div class="bg-yellow-50 p-4 rounded-xl shadow"><div class="font-semibold text-yellow-800">Status</div><div class="text-yellow-600 text-base font-bold" x-text="selectedRow?.stts || '-'" ></div></div>
+        </div>
+      </section>
+      <section class="grid grid-cols-2 gap-6 text-sm">
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner"><div class="text-gray-700 font-semibold">Count Out</div><div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.c_o || '-'" ></div></div>
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner"><div class="text-gray-700 font-semibold">Cart</div><div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.stamp ? cvDtTm(selectedRow.stamp) : '-'" ></div></div>
+      </section>
+    </div>
+    <div class="flex justify-end items-center p-6 border-t bg-gray-50 rounded-b-lg">
+      <button @click="closeModal" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition">Close</button>
+    </div>
+  </div>
+</div>

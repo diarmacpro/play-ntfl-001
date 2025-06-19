@@ -1,0 +1,67 @@
+<section class="bg-white shadow-lg rounded-lg overflow-hidden" x-show="showTable">
+  <div class="relative max-h-[540px] overflow-y-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b sticky top-0 z-10">
+        <tr>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('mkt')">
+            <div class="flex items-center gap-1">Marketing<i class="bi" :class="getSortIcon('mkt')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('dlt')">
+            <div class="flex items-center gap-1">Del<i class="bi" :class="getSortIcon('dlt')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp_sj')">
+            <div class="flex items-center gap-1">Stamp SJ<i class="bi" :class="getSortIcon('stamp_sj')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_sj')">
+            <div class="flex items-center gap-1">SJ<i class="bi" :class="getSortIcon('id_sj')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('onOff')">
+            <div class="flex items-center gap-1">On/Off<i class="bi" :class="getSortIcon('onOff')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('hlp')">
+            <div class="flex items-center gap-1">HLP<i class="bi" :class="getSortIcon('hlp')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_stock')">
+            <div class="flex items-center gap-1">Barang<i class="bi" :class="getSortIcon('id_stock')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('lot')">
+            <div class="flex items-center gap-1">Lot+Rol<i class="bi" :class="getSortIcon('lot')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('rak')">
+            <div class="flex items-center gap-1">Rak Kol<i class="bi" :class="getSortIcon('rak')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('qty')">
+            <div class="flex items-center gap-1">QTY<i class="bi" :class="getSortIcon('qty')"></i></div>
+          </th>
+          <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('habis')">
+            <div class="flex items-center gap-1">Habis<i class="bi" :class="getSortIcon('habis')"></i></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <template x-for="(row, index) in filteredData" :key="index">
+          <tr class="hover:bg-gray-50 transition-colors" @click="showDetail(row)">
+            <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
+            <td class="px-3 py-3 text-gray-900 flex items-center gap-2"><span x-text="row.mkt || '-'"/></td>
+            <td class="px-3 py-3 text-gray-900"><span x-html="(() => {if (row.dlt == 1) {return `<i class='bi bi-x-square-fill text-red-600'></i>`;} else if (row.dlt == 2) {return `<i class='bi bi-check-square-fill text-green-500'></i>`;} else {return `<i class='bi bi-square-fill text-stone-200'></i>`;}})()"></span></td>
+            <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'" ></td>
+            <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'" ></td>
+            <td class="px-3 py-3 text-gray-900"><span class="bi bi-circle-fill" :class="row.onOff == 1 ? 'text-green-500' : 'text-stone-200'"></span></td>
+            <td class="px-3 py-3 text-gray-900" x-text="row.hlp || '-'" ></td>
+            <td class="px-3 py-3 text-gray-900" x-html="`<strong>[${row.id_stock || '-'}]</strong> ${row.k ? ' ' + row.k : ''}`"></td>
+            <td class="px-3 py-3 text-gray-900" x-text="(row.lot || '') + (row.rol ? '#' + row.rol : '') || '-'" ></td>
+            <td class="px-3 py-3 text-gray-900" x-text="(row.rak || '') + (row.kol ? ' ' + row.kol : '') || '-'" ></td>
+            <td class="px-3 py-3 text-gray-900" x-text="(row.qty || '-') + (row.q_bs ? ' + ' + row.q_bs : '') || '-'" ></td>
+            <td class="px-3 py-3 text-gray-900"><div class="flex items-center gap-2"><span class="capitalize" x-text="row.ge || '-'" ></span><span x-html="(() => {if (row.habis == 1) {return `<i class='bi bi-x-square-fill text-red-600'></i>`;} else {return `<i class='bi bi-square-fill text-stone-200'></i>`;}})()"></span></div></td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
+  <div x-show="filteredData.length === 0 && !loading" class="text-center py-12">
+    <i class="bi bi-inbox text-4xl text-gray-400 mb-4"></i>
+    <p class="text-gray-500" x-text="searchQuery ? 'No data found matching your search' : 'No data found'"></p>
+    <button x-show="searchQuery" @click="clearSearch()" class="mt-2 text-blue-600 hover:text-blue-800 hover:underline text-sm">Clear search to see all data</button>
+  </div>
+</section>
