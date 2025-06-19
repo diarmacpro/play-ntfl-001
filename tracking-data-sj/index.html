@@ -39,7 +39,7 @@
       >
         <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-800">Filter Data SJ</h2>
+            <h2 class="text-xl font-semibold text-gray-800">Data SJ</h2>
             <div class="w-6 h-6"></div> <!-- Spacer karena tidak ada tombol close -->
           </div>
 
@@ -74,19 +74,35 @@
             </div>
 
             <!-- Del Switch (Default ON) -->
-            <div class="flex items-center justify-between">
-              <span class="text-gray-700 font-medium" x-text="`Tampilkan Data Terhapus: ${form.del === 'true' ? 'ON' : 'OFF'}`"></span>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" class="sr-only peer" :checked="form.del === 'true'" @change="form.del = $event.target.checked ? 'true' : 'false'">
-                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
-                  <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
-                </div>
-              </label>
-            </div>
+<div class="flex items-center justify-between gap-4">
+  <!-- Label dengan status ON/OFF -->
+  <span class="text-gray-800 font-medium">
+    Tampilkan Data Terhapus (<span x-text="form.del === 'true' ? 'ON' : 'OFF'"></span>)
+  </span>
+
+  <!-- Switch ala Bootstrap -->
+  <label class="relative inline-flex items-center cursor-pointer select-none">
+    <input
+      type="checkbox"
+      class="sr-only peer"
+      :checked="form.del === 'true'"
+      @change="form.del = $event.target.checked ? 'true' : 'false'"
+    />
+    
+    <!-- Switch track -->
+    <div class="w-14 h-7 bg-gray-300 peer-checked:bg-blue-600 rounded-full transition-colors duration-300"></div>
+
+    <!-- Switch knob -->
+    <div
+      class="absolute left-0.5 top-0.5 w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 peer-checked:translate-x-7"
+    ></div>
+  </label>
+</div>
+
 
             <button type="button" @click="generate()" :disabled="loading"
               class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-              <span x-show="!loading">Generate Filter</span>
+              <span x-show="!loading">Terapkan</span>
               <span x-show="loading" class="flex items-center justify-center" style="display: none;">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -102,79 +118,79 @@
       <!-- Tabel Data (ditampilkan setelah data di-fetch) -->
       <div x-show="showTable" class="w-full" style="display: none;">
         <!-- Header dengan judul, total, multiple select marketing, sync, back to filter -->
-<div class="bg-white shadow rounded-xl p-4 mb-6 space-y-4">
-  <!-- Header Section -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <button
-        @click="backToFilter()"
-        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
-      >
-        <i class="bi bi-arrow-left"></i>
-        <span>Kembali</span>
-      </button>
-      <h1 class="text-2xl font-bold text-gray-800">Data SJ</h1>
-      <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
-    </div>
-    <div class="flex items-center gap-3">
-      <!-- Marketing Filter -->
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-medium text-gray-700">Marketing:</label>
-        <select
-          x-model="selectedMarketing"
-          class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
-        >
-          <option value="">-- Semua --</option>
-          <template x-for="m in marketingOptions" :key="m.id_mkt">
-            <option :value="m.id_mkt" x-text="`${m.mkt} (${m.count})`"></option>
-          </template>
-        </select>
-      </div>
+          <div class="bg-white shadow rounded-xl p-4 mb-6 space-y-4">
+            <!-- Header Section -->
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <button
+                  @click="backToFilter()"
+                  class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+                >
+                  <i class="bi bi-arrow-left"></i>
+                  <span>Kembali</span>
+                </button>
+                <h1 class="text-2xl font-bold text-gray-800">Data SJ</h1>
+                <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
+              </div>
+              <div class="flex items-center gap-3">
+                <!-- Marketing Filter -->
+                <div class="flex items-center gap-2">
+                  <label class="text-sm font-medium text-gray-700">Marketing:</label>
+                  <select
+                    x-model="selectedMarketing"
+                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
+                  >
+                    <option value="">-- Semua --</option>
+                    <template x-for="m in marketingOptions" :key="m.id_mkt">
+                      <option :value="m.id_mkt" x-text="`${m.mkt} (${m.count})`"></option>
+                    </template>
+                  </select>
+                </div>
 
-      <!-- Sync Button -->
-      <button
-        @click="syncTanggalAcuan()"
-        :disabled="loading"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
-      >
-        <i class="bi bi-cloud-download"></i>
-        <span x-show="!loading">Sync</span>
-        <span x-show="loading">Syncing...</span>
-      </button>
-    </div>
-  </div>
+                <!-- Sync Button -->
+                <button
+                  @click="syncTanggalAcuan()"
+                  :disabled="loading"
+                  class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
+                >
+                  <i class="bi bi-cloud-download"></i>
+                  <span x-show="!loading">Sync</span>
+                  <span x-show="loading">Syncing...</span>
+                </button>
+              </div>
+            </div>
 
-  <!-- Search Section -->
-  <div class="relative">
-    <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-    <input
-      type="text"
-      x-model="searchQuery"
-      @input="performSearch()"
-      placeholder="Cari di semua kolom... (bebas urutan kata)"
-      class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-    />
-    <button
-      x-show="searchQuery"
-      @click="clearSearch()"
-      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-    >
-      <i class="bi bi-x-circle"></i>
-    </button>
-  </div>
+            <!-- Search Section -->
+            <div class="relative">
+              <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              <input
+                type="text"
+                x-model="searchQuery"
+                @input="performSearch()"
+                placeholder="Cari di semua kolom... (bebas urutan kata)"
+                class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+              <button
+                x-show="searchQuery"
+                @click="clearSearch()"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <i class="bi bi-x-circle"></i>
+              </button>
+            </div>
 
-  <!-- Search Info -->
-  <div x-show="searchQuery" class="text-sm text-gray-600">
-    <span x-text="`Ditemukan ${filteredData.length} hasil untuk '${searchQuery}'`"></span>
-    <span
-      x-show="searchQuery && filteredData.length !== tableData.length"
-      class="ml-2 text-blue-600 cursor-pointer hover:underline"
-      @click="clearSearch()"
-    >
-      Hapus pencarian
-    </span>
-  </div>
-</div>
+            <!-- Search Info -->
+            <div x-show="searchQuery" class="text-sm text-gray-600">
+              <span x-text="`Ditemukan ${filteredData.length} hasil untuk '${searchQuery}'`"></span>
+              <span
+                x-show="searchQuery && filteredData.length !== tableData.length"
+                class="ml-2 text-blue-600 cursor-pointer hover:underline"
+                @click="clearSearch()"
+              >
+                Hapus pencarian
+              </span>
+            </div>
+          </div>
 
 
         <!-- Search Bar -->
