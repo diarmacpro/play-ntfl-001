@@ -43,49 +43,51 @@
             <div class="w-6 h-6"></div> <!-- Spacer karena tidak ada tombol close -->
           </div>
 
-          <form @submit.prevent class="space-y-4" autocomplete="off">
-            <!-- Input Group -->
-            <template x-for="field in fields" :key="field.name">
-              <div class="relative">
-                <input
-                  :type="field.type"
-                  :name="field.name"
-                  :id="field.name"
-                  x-model="form[field.name]"
-                  autocomplete="off"
-                  class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
-                  :placeholder="field.label"
-                />
-                <label
-                  :for="field.name"
-                  class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
-                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
-                    peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500"
-                  x-text="field.label"
-                ></label>
-              </div>
-            </template>
+          <form @submit.prevent="" class="space-y-4" autocomplete="off">
+            <!-- Input Group: urut id_sj, id_stock, tanggalAcuan -->
+            <div class="relative">
+              <input type="text" name="id_sj" id="id_sj" x-model="form.id_sj" autocomplete="off"
+                class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
+                placeholder="Id SJ">
+              <label for="id_sj"
+                class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
+                peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500">Id SJ</label>
+            </div>
+            <div class="relative">
+              <input type="text" name="id_stock" id="id_stock" x-model="form.id_stock" autocomplete="off"
+                class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
+                placeholder="Id Stock">
+              <label for="id_stock"
+                class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
+                peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500">Id Stock</label>
+            </div>
+            <div class="relative">
+              <input type="date" name="tanggalAcuan" id="tanggalAcuan" x-model="form.tanggalAcuan" autocomplete="off"
+                class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
+                placeholder="Tanggal Acuan">
+              <label for="tanggalAcuan"
+                class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
+                peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500">Tanggal Acuan</label>
+            </div>
 
             <!-- Del Switch (Default ON) -->
             <div class="flex items-center justify-between">
-              <label class="text-gray-700 font-medium">Tampilkan Data Terhapus</label>
+              <span class="text-gray-700 font-medium" x-text="`Tampilkan Data Terhapus: ${form.del === 'true' ? 'ON' : 'OFF'}`"></span>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" class="sr-only peer" :checked="form.del === 'true'" @change="form.del = $event.target.checked ? 'true' : 'false'" />
+                <input type="checkbox" class="sr-only peer" :checked="form.del === 'true'" @change="form.del = $event.target.checked ? 'true' : 'false'">
                 <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
                   <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
                 </div>
-                <span class="ml-3 text-sm text-gray-600" x-text="form.del ? 'ON' : 'OFF'"></span>
               </label>
             </div>
 
-            <button
-              type="button"
-              @click="generate()"
-              :disabled="loading"
-              class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <button type="button" @click="generate()" :disabled="loading"
+              class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
               <span x-show="!loading">Generate Filter</span>
-              <span x-show="loading" class="flex items-center justify-center">
+              <span x-show="loading" class="flex items-center justify-center" style="display: none;">
                 <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
@@ -100,68 +102,83 @@
       <!-- Tabel Data (ditampilkan setelah data di-fetch) -->
       <div x-show="showTable" class="w-full" style="display: none;">
         <!-- Header dengan judul, total, multiple select marketing, sync, back to filter -->
-        <div class="bg-white shadow-sm rounded-lg p-4 mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div class="flex flex-col gap-1">
-            <h1 class="text-2xl font-bold text-gray-800">Data SJ Results</h1>
-            <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- Multiple select marketing user friendly -->
-            <div class="flex flex-wrap items-center gap-1">
-              <label class="font-medium text-gray-700 mr-1">Marketing:</label>
-              <select x-model="selectedMarketing" class="border rounded px-2 py-1 text-sm min-w-[120px] outline-none">
-                <option value="">-- Semua --</option>
-                <template x-for="m in marketingOptions" :key="m.id_mkt">
-                  <option :value="m.id_mkt" x-text="m.mkt + ' (' + m.count + ')' "></option>
-                </template>
-              </select>
-            </div>
-            <button
-              @click="syncTanggalAcuan()"
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-              :disabled="loading"
-            >
-              <i class="bi bi-cloud-download"></i>
-              <span x-show="!loading">Sync</span>
-              <span x-show="loading">Syncing...</span>
-            </button>
-            <button
-              @click="backToFilter()"
-              class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
-            >
-              <i class="bi bi-arrow-left"></i>
-              Back to Filter
-            </button>
-          </div>
-        </div>
+<div class="bg-white shadow rounded-xl p-4 mb-6 space-y-4">
+  <!-- Header Section -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <button
+        @click="backToFilter()"
+        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+      >
+        <i class="bi bi-arrow-left"></i>
+        <span>Kembali</span>
+      </button>
+      <h1 class="text-2xl font-bold text-gray-800">Data SJ</h1>
+      <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Marketing Filter -->
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-medium text-gray-700">Marketing:</label>
+        <select
+          x-model="selectedMarketing"
+          class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
+        >
+          <option value="">-- Semua --</option>
+          <template x-for="m in marketingOptions" :key="m.id_mkt">
+            <option :value="m.id_mkt" x-text="`${m.mkt} (${m.count})`"></option>
+          </template>
+        </select>
+      </div>
+
+      <!-- Sync Button -->
+      <button
+        @click="syncTanggalAcuan()"
+        :disabled="loading"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50"
+      >
+        <i class="bi bi-cloud-download"></i>
+        <span x-show="!loading">Sync</span>
+        <span x-show="loading">Syncing...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Section -->
+  <div class="relative">
+    <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+    <input
+      type="text"
+      x-model="searchQuery"
+      @input="performSearch()"
+      placeholder="Cari di semua kolom... (bebas urutan kata)"
+      class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    />
+    <button
+      x-show="searchQuery"
+      @click="clearSearch()"
+      class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+    >
+      <i class="bi bi-x-circle"></i>
+    </button>
+  </div>
+
+  <!-- Search Info -->
+  <div x-show="searchQuery" class="text-sm text-gray-600">
+    <span x-text="`Ditemukan ${filteredData.length} hasil untuk '${searchQuery}'`"></span>
+    <span
+      x-show="searchQuery && filteredData.length !== tableData.length"
+      class="ml-2 text-blue-600 cursor-pointer hover:underline"
+      @click="clearSearch()"
+    >
+      Hapus pencarian
+    </span>
+  </div>
+</div>
+
 
         <!-- Search Bar -->
-        <div class="bg-white shadow-sm rounded-lg p-4 mb-4">
-          <div class="relative">
-            <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="text"
-              x-model="searchQuery"
-              @input="performSearch()"
-              placeholder="Search in all columns... (keywords can be in any order)"
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              x-show="searchQuery"
-              @click="clearSearch()"
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <i class="bi bi-x-circle"></i>
-            </button>
-          </div>
-          <!-- Search Info -->
-          <div x-show="searchQuery" class="mt-2 text-sm text-gray-600">
-            <span x-text="`Found ${filteredData.length} results for '${searchQuery}'`"></span>
-            <span x-show="searchQuery && filteredData.length !== tableData.length" class="ml-2 text-blue-600 cursor-pointer hover:underline" @click="clearSearch()">
-              Clear search
-            </span>
-          </div>
-        </div>
+
 
         <!-- Tabel -->
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -294,13 +311,13 @@
           <!-- Empty State -->
           <div x-show="filteredData.length === 0 && !loading" class="text-center py-12">
             <i class="bi bi-inbox text-4xl text-gray-400 mb-4"></i>
-            <p class="text-gray-500" x-text="searchQuery ? 'No data found matching your search' : 'No data found'"></p>
+            <p class="text-gray-500" x-text="searchQuery ? 'Tidak ditemukan data yang cocok dengan pencarian Anda' : 'Tidak ada data yang ditemukan'"></p>
             <button
               x-show="searchQuery"
               @click="clearSearch()"
               class="mt-2 text-blue-600 hover:text-blue-800 hover:underline text-sm"
             >
-              Clear search to see all data
+              Hapus pencarian untuk melihat semua data
             </button>
           </div>
         </div>
