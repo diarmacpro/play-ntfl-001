@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>𓆩⚝𓆪</title>
+    <link rel="icon" href="https://www.gstatic.com/mobilesdk/240501_mobilesdk/firebase_28dp.png" />
+    <script>
+      const originalWarn = console.warn;
+      console.warn = function (...args) {
+        if (typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+        originalWarn.apply(console, args);
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.9.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@e2d156cb584c37407c93ab334bce4b5121e2650e/firebase-olah-data/core.js" integrity="sha256-i6LauffDEkYoIANok1hHCoxkI85EOpWq0haHhD641Y8=" crossorigin="anonymous"></script>
+  </head>
+
+  <body class="bg-gray-100 min-h-screen p-4">
+    <div x-data="dtDeepSearchSJ()" x-init="init()">
+      
+      <!-- Modal Filter Form (Static Backdrop) -->
+      <div
+        x-show="!showTable"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        style="display: none;"
+      >
+        <div class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Filter Data SJ</h2>
+            <div class="w-6 h-6"></div> <!-- Spacer karena tidak ada tombol close -->
+          </div>
+
+          <form @submit.prevent class="space-y-4" autocomplete="off">
+            <!-- Input Group -->
+            <template x-for="field in fields" :key="field.name">
+              <div class="relative">
+                <input
+                  :type="field.type"
+                  :name="field.name"
+                  :id="field.name"
+                  x-model="form[field.name]"
+                  autocomplete="off"
+                  class="peer w-full p-2 pt-6 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent"
+                  :placeholder="field.label"
+                />
+                <label
+                  :for="field.name"
+                  class="absolute left-3 top-1.5 text-gray-500 text-sm transition-all
+                    peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400
+                    peer-focus:top-1.5 peer-focus:text-sm peer-focus:text-blue-500"
+                  x-text="field.label"
+                ></label>
+              </div>
+            </template>
+
+            <!-- Del Switch (Default ON) -->
+            <div class="flex items-center justify-between">
+              <label class="text-gray-700 font-medium">Tampilkan Data Terhapus</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" :checked="form.del === 'true'" @change="form.del = $event.target.checked ? 'true' : 'false'" />
+                <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-600 transition-all">
+                  <div class="w-5 h-5 bg-white rounded-full shadow-md transform transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <span class="ml-3 text-sm text-gray-600" x-text="form.del ? 'ON' : 'OFF'"></span>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              @click="generate()"
+              :disabled="loading"
+              class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span x-show="!loading">Generate Filter</span>
+              <span x-show="loading" class="flex items-center justify-center">
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Loading...
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tabel Data (ditampilkan setelah data di-fetch) -->
+      <div x-show="showTable" class="w-full" style="display: none;">
+        <!-- Header dengan judul, total, multiple select marketing, sync, back to filter -->
+        <div class="bg-white shadow-sm rounded-lg p-4 mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-col gap-1">
+            <h1 class="text-2xl font-bold text-gray-800">Data SJ Results</h1>
+            <p class="text-sm text-gray-600" x-text="`Total: ${filteredData.length} of ${tableData.length} records`"></p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Multiple select marketing user friendly -->
+            <div class="flex flex-wrap items-center gap-1">
+              <label class="font-medium text-gray-700 mr-1">Marketing:</label>
+              <select x-model="selectedMarketing" class="border rounded px-2 py-1 text-sm min-w-[120px] outline-none">
+                <option value="">-- Semua --</option>
+                <template x-for="m in marketingOptions" :key="m.id_mkt">
+                  <option :value="m.id_mkt" x-text="m.mkt + ' (' + m.count + ')' "></option>
+                </template>
+              </select>
+            </div>
+            <button
+              @click="syncTanggalAcuan()"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              :disabled="loading"
+            >
+              <i class="bi bi-cloud-download"></i>
+              <span x-show="!loading">Sync</span>
+              <span x-show="loading">Syncing...</span>
+            </button>
+            <button
+              @click="backToFilter()"
+              class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+            >
+              <i class="bi bi-arrow-left"></i>
+              Back to Filter
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="bg-white shadow-sm rounded-lg p-4 mb-4">
+          <div class="relative">
+            <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <input
+              type="text"
+              x-model="searchQuery"
+              @input="performSearch()"
+              placeholder="Search in all columns... (keywords can be in any order)"
+              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <button
+              x-show="searchQuery"
+              @click="clearSearch()"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <i class="bi bi-x-circle"></i>
+            </button>
+          </div>
+          <!-- Search Info -->
+          <div x-show="searchQuery" class="mt-2 text-sm text-gray-600">
+            <span x-text="`Found ${filteredData.length} results for '${searchQuery}'`"></span>
+            <span x-show="searchQuery && filteredData.length !== tableData.length" class="ml-2 text-blue-600 cursor-pointer hover:underline" @click="clearSearch()">
+              Clear search
+            </span>
+          </div>
+        </div>
+
+        <!-- Tabel -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div class="relative max-h-[540px] overflow-y-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 border-b sticky top-0 z-10">
+                <tr>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap">No</th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('mkt')">
+                    <div class="flex items-center gap-1">
+                      Marketing
+                      <i class="bi" :class="getSortIcon('mkt')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('dlt')">
+                    <div class="flex items-center gap-1">
+                      Del
+                      <i class="bi" :class="getSortIcon('dlt')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('stamp_sj')">
+                    <div class="flex items-center gap-1">
+                      Stamp SJ
+                      <i class="bi" :class="getSortIcon('stamp_sj')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_sj')">
+                    <div class="flex items-center gap-1">
+                      SJ
+                      <i class="bi" :class="getSortIcon('id_sj')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('onOff')">
+                    <div class="flex items-center gap-1">
+                      On/Off
+                      <i class="bi" :class="getSortIcon('onOff')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('hlp')">
+                    <div class="flex items-center gap-1">
+                      HLP
+                      <i class="bi" :class="getSortIcon('hlp')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('id_stock')">
+                    <div class="flex items-center gap-1">
+                      Barang
+                      <i class="bi" :class="getSortIcon('id_stock')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('lot')">
+                    <div class="flex items-center gap-1">
+                      Lot+Rol
+                      <i class="bi" :class="getSortIcon('lot')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('rak')">
+                    <div class="flex items-center gap-1">
+                      Rak Kol
+                      <i class="bi" :class="getSortIcon('rak')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('qty')">
+                    <div class="flex items-center gap-1">
+                      QTY
+                      <i class="bi" :class="getSortIcon('qty')"></i>
+                    </div>
+                  </th>
+                  <th class="px-3 py-3 text-left font-medium text-gray-700 whitespace-nowrap cursor-pointer hover:bg-gray-100 transition-colors" @click="sortBy('habis')">
+                    <div class="flex items-center gap-1">
+                      Habis
+                      <i class="bi" :class="getSortIcon('habis')"></i>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <template x-for="(row, index) in filteredData" :key="index">
+                  <tr class="hover:bg-gray-50 transition-colors" @click="showDetail(row)">
+                    <td class="px-3 py-3 text-gray-900" x-text="index + 1"></td>
+                    <td class="px-3 py-3 text-gray-900 flex items-center gap-2">
+                      <span x-text="row.mkt || '-'"/>
+                    </td>
+                    <td class="px-3 py-3 text-gray-900">
+                      <span
+                          x-html="(() => {
+                            if (row.dlt == 1) {
+                              return `<i class='bi bi-x-square-fill text-red-600'></i>`;
+                            } else if (row.dlt == 2) {
+                              return `<i class='bi bi-check-square-fill text-green-500'></i>`;
+                            } else {
+                              return `<i class='bi bi-square-fill text-stone-200'></i>`;
+                            }
+                          })()"
+                      ></span>
+                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.stamp_sj ? cvDtTm(row.stamp_sj) : '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.id_sj || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900">
+                      <span class="bi bi-circle-fill" :class="row.onOff == 1 ? 'text-green-500' : 'text-stone-200'"></span>
+                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="row.hlp || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" 
+                        x-html="`<strong>[${row.id_stock || '-'}]</strong> ${row.k ? ' ' + row.k : ''}`">
+                    </td>
+                    <td class="px-3 py-3 text-gray-900" x-text="(row.lot || '') + (row.rol ? '#' + row.rol : '') || '-'"></td>
+                    <td class="px-3 py-3 text-gray-900" x-text="(row.rak || '') + (row.kol ? ' ' + row.kol : '') || '-'"></td>
+                    
+                    <td class="px-3 py-3 text-gray-900" x-text="(row.qty || '-') + (row.q_bs ? ' + ' + row.q_bs : '') || '-'"></td>
+
+                    <!-- Habis + GE -->
+                    <td class="px-3 py-3 text-gray-900">
+                      <div class="flex items-center gap-2">
+                        <span class="capitalize" x-text="row.ge || '-'"></span>
+                        <span x-html="(() => {
+                          if (row.habis == 1) {
+                            return `<i class='bi bi-x-square-fill text-red-600'></i>`;
+                          } else {
+                            return `<i class='bi bi-square-fill text-stone-200'></i>`;
+                          }
+                        })()"></span>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div x-show="filteredData.length === 0 && !loading" class="text-center py-12">
+            <i class="bi bi-inbox text-4xl text-gray-400 mb-4"></i>
+            <p class="text-gray-500" x-text="searchQuery ? 'No data found matching your search' : 'No data found'"></p>
+            <button
+              x-show="searchQuery"
+              @click="clearSearch()"
+              class="mt-2 text-blue-600 hover:text-blue-800 hover:underline text-sm"
+            >
+              Clear search to see all data
+            </button>
+          </div>
+        </div>
+      </div>
+
+<!-- Modal Detail -->
+<div
+  x-show="showingModal"
+  x-transition.opacity
+  @keydown.escape.window="closeModal"
+  @click.self="closeModal"
+  class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4"
+  style="display: none;"
+>
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-6 border-b">
+      <h2 class="text-2xl font-semibold text-gray-800">
+        Detail SJ: <span x-text="selectedRow?.id_sj || '-'" class="text-blue-600 font-bold tracking-wide"></span>
+      </h2>
+      <button 
+        @click="closeModal" 
+        class="text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full p-2 transition"
+      >
+        <i class="bi bi-x-lg text-xl"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="p-6 space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Timeline Section -->
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <i class="bi bi-clock-history text-blue-500"></i> Timeline
+          </h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'D Create', value: cvDtTm(selectedRow?.d_create) },
+              { label: 'D MG', value: cvDtTm(selectedRow?.d_mgr) },
+              { label: 'D WH', value: cvDtTm(selectedRow?.d_wh) },
+              { label: 'D Finish', value: cvDtTm(selectedRow?.d_finish) },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm">
+                <span class="font-medium text-gray-600" x-text="item.label"></span>
+                <span class="text-gray-900 font-semibold" x-text="item.value || '-'"></span>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <!-- Personnel & Status Section -->
+        <section>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <i class="bi bi-person-lines-fill text-green-500"></i> Personnel & Status
+          </h3>
+          <ul class="space-y-3">
+            <template x-for="item in [
+              { label: 'NM WH', value: selectedRow?.nm_wh },
+              { label: 'NM FN', value: selectedRow?.nm_fn },
+              { label: 'Habis', value: selectedRow?.habis },
+              { label: 'NM Del', value: selectedRow?.nm_del },
+              { label: 'NM Add', value: selectedRow?.nm_add },
+            ]">
+              <li class="flex justify-between items-center bg-gray-50 p-3 rounded-lg shadow-sm">
+                <span class="font-medium text-gray-600" x-text="item.label"></span>
+                <span class="text-gray-900 font-semibold" x-text="item.value || '-'"></span>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- Additional Info Section -->
+      <section>
+        <h3 class="text-lg font-semibold text-gray-700 mb-4">Additional Information</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div class="bg-blue-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-blue-800">Stock ID</div>
+            <div class="text-blue-600 text-base font-bold" x-text="selectedRow?.id_stock || '-'"></div>
+          </div>
+          <div class="bg-green-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-green-800">QTY</div>
+            <div class="text-green-600 text-base font-bold" x-text="selectedRow?.qty || '-'"></div>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-xl shadow">
+            <div class="font-semibold text-yellow-800">Status</div>
+            <div class="text-yellow-600 text-base font-bold" x-text="selectedRow?.stts || '-'"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Count Info Section -->
+      <section class="grid grid-cols-2 gap-6 text-sm">
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner">
+          <div class="text-gray-700 font-semibold">Count Out</div>
+          <div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.c_o || '-'"></div>
+        </div>
+        <div class="bg-gray-100 p-4 rounded-xl shadow-inner">
+          <div class="text-gray-700 font-semibold">Cart</div>
+          <div class="text-gray-900 font-bold text-lg" x-text="selectedRow?.stamp ? cvDtTm(selectedRow.stamp) : '-'"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex justify-end items-center p-6 border-t bg-gray-50 rounded-b-lg">
+      <button 
+        @click="closeModal"
+        class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+
+      <!-- Spinner Backdrop -->
+      <div
+        x-show="loading"
+        x-transition.opacity
+        class="fixed inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50"
+        style="display: none;"
+      >
+        <div class="flex flex-col items-center space-y-2">
+          <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+               viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10"
+                    stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <p class="text-sm text-gray-700">Memuat data... mohon tunggu</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase & Logic -->
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js';
+      import {
+        getDatabase, ref, set, get, update, push, query, remove,
+        orderByChild, equalTo, onValue, off
+      } from 'https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js';
+
+      // Firebase init
+      const app = initializeApp({
+        databaseURL: "https://absen-weva-default-rtdb.asia-southeast1.firebasedatabase.app"
+      });
+      const db = getDatabase(app);
+
+      // Global expose (optional)
+      Object.assign(window, {
+        db, ref, set, get, update, push, query, remove,
+        orderByChild, equalTo, onValue, off
+      });
+    </script>
+
+    <script type="module">
+      import { utility } from './utility.js';
+      window.u = new utility();
+    </script>
+
+    <!-- Alpine Logic -->
+    <script>
+      // IndexedDB helpers
+      async function openDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('trackingDataSJ', 1);
+          request.onupgradeneeded = function(e) {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('perTanggal')) {
+              db.createObjectStore('perTanggal', { keyPath: 'tanggalAcuan' });
+            }
+          };
+          request.onsuccess = e => resolve(e.target.result);
+          request.onerror = e => reject(e.target.error);
+        });
+      }
+      async function getDataByTanggal(tanggalAcuan) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('perTanggal', 'readonly');
+          const store = tx.objectStore('perTanggal');
+          const req = store.get(tanggalAcuan);
+          req.onsuccess = () => resolve(req.result ? req.result.payload : null);
+          req.onerror = () => reject(req.error);
+        });
+      }
+      async function saveDataByTanggal(tanggalAcuan, payload) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('perTanggal', 'readwrite');
+          const store = tx.objectStore('perTanggal');
+          store.put({ tanggalAcuan, payload });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+      async function getDataByTanggalWithFilter(tanggalAcuan, filter) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction('perTanggal', 'readonly');
+          const store = tx.objectStore('perTanggal');
+          const req = store.get(tanggalAcuan);
+          req.onsuccess = () => {
+            if (!req.result || !req.result.payload || !req.result.payload.data) return resolve(null);
+            let data = req.result.payload.data;
+            // Filter ulang sesuai parameter (id_stock, id_sj, id_mkt, bulanTahun, del)
+            if (Array.isArray(data)) {
+              data = data.filter(row => {
+                // id_stock
+                if (filter.id_stock) {
+                  const arr = filter.id_stock.split(',').map(s => s.trim());
+                  if (!arr.includes(String(row.id_stock))) return false;
+                }
+                // id_sj
+                if (filter.id_sj) {
+                  const arr = filter.id_sj.split(',').map(s => s.trim());
+                  if (!arr.includes(String(row.id_sj))) return false;
+                }
+                // id_mkt
+                if (filter.id_mkt) {
+                  const arr = filter.id_mkt.split(',').map(s => s.trim());
+                  if (!arr.includes(String(row.id_mkt))) return false;
+                }
+                // bulanTahun
+                if (filter.bulanTahun) {
+                  const yyyymm = String(row.stamp).slice(0, 7);
+                  if (yyyymm !== filter.bulanTahun) return false;
+                }
+                // tanggalAcuan
+                if (filter.tanggalAcuan) {
+                  const yyyymmdd = String(row.stamp).slice(0, 10);
+                  if (yyyymmdd !== filter.tanggalAcuan) return false;
+                }
+                // del/dlt
+                const isDelTrue = filter.del === 'true';
+                const isDelFalse = filter.del === 'false';
+                if (isDelTrue) {
+                  if (String(row.dlt) !== '1') return false;
+                }
+                // jika del='false' atau tidak disebut, tampilkan semua (tidak filter dlt)
+                return true;
+              });
+            }
+            resolve({ data });
+          };
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function dtDeepSearchSJ() {
+        return {
+          selectedRow: null,
+          showingModal: false,
+          
+          // Search functionality
+          searchQuery: '',
+          filteredData: [],
+          
+          // Sorting functionality
+          sortField: null,
+          sortDirection: 'asc',
+
+          showDetail(row) {
+            this.selectedRow = row;
+            this.showingModal = true;
+          },
+
+          closeModal() {
+            this.showingModal = false;
+            this.selectedRow = null;
+          },
+
+          // Search functionality
+          performSearch() {
+            if (!this.searchQuery.trim()) {
+              this.filteredData = [...this.tableData];
+              return;
+            }
+
+            const keywords = this.searchQuery.toLowerCase().split(' ').filter(k => k.trim());
+            
+            this.filteredData = this.tableData.filter(row => {
+              // Create searchable text from all relevant fields
+              const searchableText = [
+                row.mkt,
+                row.id_sj,
+                row.hlp,
+                row.id_stock,
+                row.k,
+                row.lot,
+                row.rol,
+                row.rak,
+                row.kol,
+                row.ge,
+                row.qty,
+                row.q_bs,
+                row.dlt,
+                row.habis,
+                row.onOff,
+                row.c_o,
+                row.nm_wh,
+                row.nm_fn,
+                row.nm_del,
+                row.nm_add,
+                this.cvDtTm(row.stamp),
+                this.cvDtTm(row.stamp_sj),
+                this.cvDtTm(row.d_create),
+                this.cvDtTm(row.d_mgr),
+                this.cvDtTm(row.d_wh),
+                this.cvDtTm(row.d_finish)
+              ].filter(field => field != null && field !== '').join(' ').toLowerCase();
+
+              // Check if all keywords are present (order doesn't matter)
+              return keywords.every(keyword => searchableText.includes(keyword));
+            });
+
+            // Re-apply current sorting after search
+            if (this.sortField) {
+              this.applySorting();
+            }
+          },
+
+          clearSearch() {
+            this.searchQuery = '';
+            this.filteredData = [...this.tableData];
+            if (this.sortField) {
+              this.applySorting();
+            }
+          },
+
+          // Sorting functionality
+          sortBy(field) {
+            if (this.sortField === field) {
+              // Toggle direction if same field
+              this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+              // New field, start with ascending
+              this.sortField = field;
+              this.sortDirection = 'asc';
+            }
+            
+            this.applySorting();
+          },
+
+          applySorting() {
+            if (!this.sortField) return;
+
+            this.filteredData.sort((a, b) => {
+              let aVal = this.getSortValue(a, this.sortField);
+              let bVal = this.getSortValue(b, this.sortField);
+
+              // Handle null/undefined values
+              if (aVal == null && bVal == null) return 0;
+              if (aVal == null) return 1;
+              if (bVal == null) return -1;
+
+              // Convert to string for comparison if needed
+              if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+              if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+
+              let result;
+              if (aVal < bVal) result = -1;
+              else if (aVal > bVal) result = 1;
+              else result = 0;
+
+              return this.sortDirection === 'desc' ? -result : result;
+            });
+          },
+
+          getSortValue(row, field) {
+            // Handle special cases for sorting
+            switch (field) {
+              case 'stamp':
+              case 'stamp_sj':
+                return row[field] ? new Date(row[field]) : null;
+              case 'qty':
+                return parseInt(row[field]) || 0;
+              default:
+                return row[field] || '';
+            }
+          },
+
+          getSortIcon(field) {
+            if (this.sortField !== field) {
+              return 'bi-arrow-down-up text-gray-400';
+            }
+            return this.sortDirection === 'asc' ? 'bi-arrow-up text-blue-600' : 'bi-arrow-down text-blue-600';
+          },
+
+          // Initial form state untuk reset
+          initialForm: {
+            id_stock: '',
+            id_sj: '',
+            tanggalAcuan: new Date().toISOString().slice(0, 10),
+            del: 'true'
+          },
+
+          form: {
+            id_stock: '',
+            id_sj: '',
+            tanggalAcuan: new Date().toISOString().slice(0, 10),
+            del: 'true'
+          },
+          loading: false,
+          initialized: false,
+          hasUrlParams: false,
+          showTable: false,
+          tableData: [],
+          fields: [
+            { name: 'id_stock', label: 'Id Stock', type: 'text' },
+            { name: 'id_sj', label: 'Id SJ', type: 'text' },
+            { name: 'tanggalAcuan', label: 'Tanggal Acuan', type: 'date' }
+          ],
+
+          selectedMarketing: [],
+          marketingOptions: [],
+          marketingInput: '',
+
+          init() {
+            // Cegah double initialization
+            if (this.initialized) return;
+            
+            // Wait for utility to be ready
+            this.waitForUtility();
+          },
+
+          waitForUtility() {
+            if (!window.u) {
+              console.warn("u belum siap, tunggu 100ms...");
+              setTimeout(() => this.waitForUtility(), 100);
+              return;
+            }
+
+            this.setupFormFromUrl();
+            this.initialized = true;
+          },
+
+          setupFormFromUrl() {
+            const urlParams = u.gtParam();
+            this.hasUrlParams = Object.keys(urlParams).length > 0;
+            // Parse URL parameters
+            for (const key in this.form) {
+              if (urlParams[key]) {
+                this.form[key] = urlParams[key]; // del tetap string
+              }
+            }
+            // Multiple select marketing from url
+            if (urlParams.marketing) {
+              this.selectedMarketing = urlParams.marketing.split(',');
+            } else {
+              this.selectedMarketing = [];
+            }
+            // Hanya auto-generate jika ada URL params
+            if (this.hasUrlParams) {
+              this.generate();
+            } else {
+              this.showTable = false;
+            }
+          },
+
+          parseCommaSeparated(str) {
+            if (!str || typeof str !== 'string') return [];
+            return str.split(',').map(s => s.trim()).filter(s => s);
+          },
+
+          async generate() {
+            // Prevent double fetch
+            if (this.loading) return;
+            this.loading = true;
+
+            const raw = {
+              id_stock: this.parseCommaSeparated(this.form.id_stock),
+              id_sj: this.parseCommaSeparated(this.form.id_sj),
+              tanggalAcuan: this.form.tanggalAcuan,
+              del: this.form.del // ✅ Tambahkan ini
+            };
+
+            const filter = {};
+            for (const key in raw) {
+              const val = raw[key];
+              if (Array.isArray(val) && val.length) {
+                filter[key] = val.join(',');
+              } else if (typeof val === 'string' && val.trim() !== '') {
+                filter[key] = val;
+              } else if ((key === 'debug' || key === 'del') && typeof val === 'boolean') {
+                filter[key] = val;
+              }
+            }
+
+            // Update URL params
+            if (window.u && typeof u.stParam === 'function') {
+              u.stParam(filter);
+            }
+
+            // Cek IndexedDB untuk tanggalAcuan + filter
+            let indexedData = null;
+            let indexedDataChecked = false;
+            if (filter.tanggalAcuan) {
+              try {
+                indexedData = await getDataByTanggalWithFilter(filter.tanggalAcuan, filter);
+                // Cek data mentah di IndexedDB, bukan hasil filter
+                const dbRaw = await openDB();
+                const tx = dbRaw.transaction('perTanggal', 'readonly');
+                const store = tx.objectStore('perTanggal');
+                const req = store.get(filter.tanggalAcuan);
+                await new Promise((resolve, reject) => {
+                  req.onsuccess = () => {
+                    if (req.result && req.result.payload && Array.isArray(req.result.payload.data)) {
+                      indexedDataChecked = true;
+                    }
+                    resolve();
+                  };
+                  req.onerror = () => reject(req.error);
+                });
+              } catch (e) {
+                indexedData = null;
+              }
+            }
+            let groupedMarketing = [];
+            if (indexedDataChecked) {
+              // Selalu filter ulang hasil dari IndexedDB sesuai parameter URL
+              let filtered = [];
+              if (indexedData && indexedData.data && Array.isArray(indexedData.data)) {
+                filtered = indexedData.data.filter(row => {
+                  // id_stock
+                  if (filter.id_stock) {
+                    const arr = filter.id_stock.split(',').map(s => s.trim());
+                    if (!arr.includes(String(row.id_stock))) return false;
+                  }
+                  // id_sj
+                  if (filter.id_sj) {
+                    const arr = filter.id_sj.split(',').map(s => s.trim());
+                    if (!arr.includes(String(row.id_sj))) return false;
+                  }
+                  // bulanTahun
+                  if (filter.bulanTahun) {
+                    const yyyymm = String(row.stamp).slice(0, 7);
+                    if (yyyymm !== filter.bulanTahun) return false;
+                  }
+                  // tanggalAcuan
+                  if (filter.tanggalAcuan) {
+                    const yyyymmdd = String(row.stamp).slice(0, 10);
+                    if (yyyymmdd !== filter.tanggalAcuan) return false;
+                  }
+                  // del/dlt
+                  const isDelTrue = filter.del === 'true';
+                  const isDelFalse = filter.del === 'false';
+                  if (isDelTrue) {
+                    if (parseInt(row.dlt) !== 1) return false;
+                  }
+                  // Jika del=false, abaikan ketentuan dlt
+                  return true;
+                });
+              }
+              // Group by mkt & id_mkt
+              const groupedObj = {};
+              filtered.forEach(row => {
+                if (!groupedObj[row.id_mkt]) {
+                  groupedObj[row.id_mkt] = {
+                    id_mkt: row.id_mkt,
+                    mkt: row.mkt,
+                    count: 0
+                  };
+                }
+                groupedObj[row.id_mkt].count += 1;
+              });
+              groupedMarketing = Object.values(groupedObj);
+              this.marketingOptions = groupedMarketing;
+              console.log('[Group by Marketing]', groupedMarketing);
+
+              this.tableData = filtered;
+              this.filteredData = [...filtered];
+              this.showTable = true;
+              this.loading = false;
+              return;
+            }
+            // Jika data tanggalAcuan belum ada di IndexedDB, fetch seluruh data tanggalAcuan (del=false, debug=false, filter lain null)
+            if (!indexedDataChecked && filter.tanggalAcuan) {
+              const fullPayload = {
+                tanggalAcuan: filter.tanggalAcuan,
+                del: false,
+                debug: false,
+                id_stock: null,
+                id_sj: null,
+                bulanTahun: null
+              };
+              pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter: fullPayload }, async (e, d) => {
+                if (filter.tanggalAcuan && d && d.data) await saveDataByTanggal(filter.tanggalAcuan, d);
+                // Filter di client sesuai filter asli
+                let filtered = [];
+                if (d && d.data && Array.isArray(d.data)) {
+                  filtered = d.data.filter(row => {
+                    // id_stock
+                    if (filter.id_stock) {
+                      const arr = filter.id_stock.split(',').map(s => s.trim());
+                      if (!arr.includes(String(row.id_stock))) return false;
+                    }
+                    // id_sj
+                    if (filter.id_sj) {
+                      const arr = filter.id_sj.split(',').map(s => s.trim());
+                      if (!arr.includes(String(row.id_sj))) return false;
+                    }
+                    // bulanTahun
+                    if (filter.bulanTahun) {
+                      const yyyymm = String(row.stamp).slice(0, 7);
+                      if (yyyymm !== filter.bulanTahun) return false;
+                    }
+                    // tanggalAcuan
+                    if (filter.tanggalAcuan) {
+                      const yyyymmdd = String(row.stamp).slice(0, 10);
+                      if (yyyymmdd !== filter.tanggalAcuan) return false;
+                    }
+                    // del/dlt
+                    const isDelTrue = filter.del === 'true';
+                    const isDelFalse = filter.del === 'false';
+                    if (isDelTrue) {
+                      if (String(row.dlt) !== '1') return false;
+                    }
+                    // jika del=false, tampilkan semua (tidak filter dlt)
+                    return true;
+                  });
+                }
+                this.tableData = filtered;
+                this.filteredData = [...filtered];
+                this.showTable = true;
+                this.loading = false;
+                // Reset search and sort
+                this.searchQuery = '';
+                this.sortField = null;
+                this.sortDirection = 'asc';
+              });
+              return;
+            }
+
+            // Fetch data jika tidak ada di IndexedDB
+            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter }, async (e, d) => {
+              console.log('API Response:', d);
+              this.loading = false;
+              // Handle response data
+              if (d && d.data && Array.isArray(d.data)) {
+                this.tableData = d.data;
+                this.filteredData = [...d.data];
+                this.showTable = true;
+                // Simpan ke IndexedDB
+                if (filter.tanggalAcuan) await saveDataByTanggal(filter.tanggalAcuan, d);
+              } else if (d && Array.isArray(d)) {
+                this.tableData = d;
+                this.filteredData = [...d];
+                this.showTable = true;
+                if (filter.tanggalAcuan) await saveDataByTanggal(filter.tanggalAcuan, { data: d });
+              } else {
+                this.tableData = [];
+                this.filteredData = [];
+                this.showTable = true;
+              }
+              // Reset search and sort when new data arrives
+              this.searchQuery = '';
+              this.sortField = null;
+              this.sortDirection = 'asc';
+            });
+          },
+
+          async syncTanggalAcuan() {
+            if (this.loading) return;
+            this.loading = true;
+            const tanggalAcuan = this.form.tanggalAcuan;
+            if (!tanggalAcuan) {
+              this.loading = false;
+              return;
+            }
+            // Payload sync: hanya tanggalAcuan, del=false, debug=false, filter lain null
+            const fullPayload = {
+              tanggalAcuan: tanggalAcuan,
+              del: false,
+              debug: false,
+              id_stock: null,
+              id_sj: null,
+              bulanTahun: null
+            };
+            pR('https://cdn.weva.my.id/apix/dataDeepSj', { filter: fullPayload }, async (e, d) => {
+              if (tanggalAcuan && d && d.data) await saveDataByTanggal(tanggalAcuan, d);
+              // Setelah sync, lakukan generate ulang agar filter aktif
+              this.loading = false;
+              this.generate();
+            });
+          },
+
+          backToFilter() {
+            // Reset semua state ke kondisi awal
+            this.showTable = false;
+            this.tableData = [];
+            this.filteredData = [];
+            this.loading = false;
+            this.searchQuery = '';
+            this.sortField = null;
+            this.sortDirection = 'asc';
+            
+            // Reset form ke kondisi awal
+            this.form = { ...this.initialForm };
+            
+            // Clear URL parameters
+            if (window.u && typeof u.stParam === 'function') {
+              u.stParam({});
+            }
+            
+            // Clear URL completely
+            if (window.history && window.history.pushState) {
+              window.history.pushState({}, document.title, window.location.pathname);
+            }
+          },
+
+          cvDtTm(dt) {
+            return window.u ? window.u.cvDtTm(dt) : dt;
+          },
+
+          // Marketing multiple select logic
+          getMarketingName(id) {
+            const found = this.marketingOptions.find(m => String(m.id_mkt) === String(id));
+            return found ? found.mkt : id;
+          },
+          filteredMarketingOptions() {
+            const input = this.marketingInput.toLowerCase();
+            return this.marketingOptions.filter(m =>
+              input === '' || m.mkt.toLowerCase().includes(input)
+            ).filter(m => !this.selectedMarketing.includes(String(m.id_mkt)));
+          },
+          addMarketingFromInput() {
+            const input = this.marketingInput.trim();
+            if (!input) return;
+            const found = this.marketingOptions.find(m => m.mkt.toLowerCase() === input.toLowerCase());
+            if (found && !this.selectedMarketing.includes(String(found.id_mkt))) {
+              this.selectedMarketing.push(String(found.id_mkt));
+              this.marketingInput = '';
+              this.onMarketingChange();
+            }
+          },
+          onMarketingInput() {
+            // Jika user ketik koma di akhir, langsung add
+            if (this.marketingInput.endsWith(',')) {
+              this.marketingInput = this.marketingInput.replace(/,+$/, '');
+              this.addMarketingFromInput();
+            }
+          },
+          removeMarketing(id) {
+            this.selectedMarketing = this.selectedMarketing.filter(m => m !== id);
+            this.onMarketingChange();
+          },
+          removeLastMarketingIfInputEmpty() {
+            if (!this.marketingInput && this.selectedMarketing.length) {
+              this.selectedMarketing.pop();
+              this.onMarketingChange();
+            }
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
