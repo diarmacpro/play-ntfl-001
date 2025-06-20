@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+<form id="upload-form">
+  <input type="file" name="file" required />
+  <input type="text" name="folder" value="1jH6s7Fh8qGKb2Imr30Wl4rmQ-mLbDFjL" placeholder="Google Drive Folder ID" required />
+  <button type="submit">Upload</button>
+</form>
+
+<pre id="result"></pre>
+
+<script>
+document.getElementById("upload-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const formData = new FormData(form);
+
+  try {
+    const res = await fetch("https://drv-01.diarmacpro-cldflr01.workers.dev/", {
+      method: "POST",
+      body: formData
+    });
+    const json = await res.json();
+    document.getElementById("result").textContent = JSON.stringify(json, null, 2);
+  } catch (err) {
+    document.getElementById("result").textContent = "Gagal: " + err.message;
+  }
+});
+</script>
+</body>
+</html>
