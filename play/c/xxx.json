@@ -1,0 +1,14 @@
+sinuous-axiom-414209-1eb1efb403ee.json
+{
+  "type": "service_account",
+  "project_id": "sinuous-axiom-414209",
+  "private_key_id": "1eb1efb403ee8c16f36353fe434b8d6e02bdde32",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDqgD3qow6EoJwp\ngZKcaP1tFHrol6o9oyU1aMJ+Dcl79jdY6/GZMqzHG4Tdg3nZnTzEz83Ad5yZ07FH\nPxaBOmDQgHEqAcXBVA4Lzv92FwLCsekredJea8pGL73e6elTIwYRpQJ8WceAxxvK\nVirIAmJuZOJZIbGa573K1LYjY7+M76YQxjfu1EL24JQL5JmJdw1SYmTouc3OIfeF\n6h70AjQJ6wi87EZCiw0xXJhApR2Tb0DHezkBLaYibuAhXpQGhQlmzj8lCY9ceXWF\n+4Qr9hmMgjmqFXaBkcdXB9QhxvL/5v3fHZkxgicbGAhEWZ7hUX1ogxjlofdZqRAC\nl+QyJEwTAgMBAAECggEAA5vKmCA/OnJARPE+ANMqxzFv/MFMuNsYWPyONaNfrN0q\nl981ng5mE0BMqJ3704n0Y/DwsRwGGGXmDfseDQoJcFvxodxaHzH8b1kVnEsZW0ai\nmG0s/A/7kl3stY/y67kXwFDCO4ikJcqqllACI4bJ3foGc6mtkn0rcgIY9W11BqWn\n5WC1HXwl4faOWoph4ANBD1kwuNOiQH27mg+U76/syD8+ALJFci6eI9uJSrDC9tQn\nQMLuWhF1WC6Cf5uLkmkpitq8hn2UrOpTRLVR+GQUkhk/POjSkFuh/iHsbkWmtKNv\nHdXkH2ziGawTgijc+By9+IMz6spjTYERlEfE2rj5OQKBgQD4yVxL3EPGN2QpBFKB\nmaC4PDJws7wDTlo+RrRh8HNaHvhTZ4mlk5tltUnU01j2K3l9100iYBi/Y5RVWfCj\nV+3+ECelG8X5CcA/FCCicyEC4gFX5PylGRUmsdIzNBgzwo/wTPfabrMnt/5pTN2L\nkXeOJbdI0Xo1Rjy6PIVfH8iL2QKBgQDxTNhYahK99Q/ybhAlzEQ6R7/92UOT5C2+\noUX8JwEWitzQgqBm8jAs4pSxWLkDVmpBHpYij1xhUNmboTcQjOV+Uyc0D5VIRIIV\nDlOJ1sXeJANl+2djk1YU1nnlao1fVzJO3erdRMY7yZuK2nPK+RxLFlRl2O6/Lx/o\nR3GMsGs/ywKBgQCMy2AZanlMlxJvCAwtXiUPvrmJAJ65fEEkF12EQ9D0Qqykfubu\nNp/uKm+zKzygbDAgYJU9jAbVYWST/QdrWZrNepUFIreiXbtXt2tUpDUdbYv3ExdL\n0+sdb+sWoTfFKynMg7KNArMPGli3fRGwJ83yOzQD2NEBj1NUzmVoVRNo2QKBgQC/\nwqQDz3hJgaFEtfcbMrPd5PtMzwaHV0SLRDsL4itZMM2+3rB+X2Wtpfso3Sta3aff\nTGFf4bI2nDvzFDFgc7hFpet30hJ+tgLynMoCtq3UlaYlu580YPh94txIV182L2OJ\njY6CfY9UICn+NRDkcwfrHDnCHp3NTbP7shspBWKV9QKBgQC1/b5XsQ3LkpFx4Ibn\noo4ecwfjo+GaFxRnAR3lGQn43c2TUI42SAtra2POXPAxAIpGK3ESxsvZ1DKiiVv/\n5a1EAwnDOTEIwKw6kjLZVk6Fh2nsz6UHLdEAe/yNGLCTWFiwF4A9IRfJ0uvA+Qdu\nOlqaM3bWUoC261ZIk1HXQMx78w==\n-----END PRIVATE KEY-----\n",
+  "client_email": "drive-uploader@sinuous-axiom-414209.iam.gserviceaccount.com",
+  "client_id": "118234743273220878235",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/drive-uploader%40sinuous-axiom-414209.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
