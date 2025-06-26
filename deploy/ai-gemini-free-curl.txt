@@ -1,0 +1,14 @@
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyAMcoyICFt9TovKovaMg0mr5R6S64F4SIM" \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{
+    "contents": [
+      {
+        "parts": [
+          {
+            "text": "Jelaskan soal ai, ringkas dan maksimal 50 kata."
+          }
+        ]
+      }
+    ]
+  }'
