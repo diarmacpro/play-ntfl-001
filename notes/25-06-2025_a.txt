@@ -1,0 +1,100 @@
+pR('https://cdn.weva.my.id/apix/dtJ', { }, (e,d) => console.log("Data Jenis",d.data) );
+pR('https://cdn.weva.my.id/apix/dtW', { }, (e,d) => console.log("Data Warna",d.data) );
+pR('https://cdn.weva.my.id/apix/dtS', { }, (e,d) => console.log("Data Satuan",d.data) );
+pR('https://cdn.weva.my.id/apix/dtK', { }, (e,d) => console.log("Data Kain",d.data) );
+
+
+// data satuan
+[
+    {
+        "kd_stn": 1,
+        "stn": "Yard",
+        "s": "yd"
+    },
+    {
+        "kd_stn": 2,
+        "stn": "Meter",
+        "s": "m"
+    },
+    {
+        "kd_stn": ...,
+        "stn": ...,
+        "s": ...
+    },
+    ...
+]
+
+// data jenis
+[
+    {
+        "kd_jns": 1,
+        "jns": "COTTON COMBED 24s"
+    },
+    {
+        "kd_jns": 2,
+        "jns": "COTTON COMBED 30s"
+    },
+    {
+        "kd_jns": ...,
+        "jns": ...
+    },
+    ...
+]
+
+// data warna
+[
+    {
+        "kd_wrn": 1,
+        "wrn": "Abu Misty Muda (M71)"
+    },
+    {
+        "kd_wrn": 2,
+        "wrn": "Abu Misty Tua (M81)"
+    },
+    {
+        "kd_wrn": ...,
+        "wrn": ...
+    },
+    ...
+]
+
+// data kain
+[
+    {
+        "id_kain": 1,
+        "kd_jns": 1,
+        "kd_wrn": 57,
+        "hb": 95321,
+        "hg": 110000,
+        "he_a": 121000,
+        "he_b": 124000,
+        "kd_stn": 3,
+        "ktg": "1",
+        "kd_kat": 0
+    },
+    {
+        "id_kain": 2,
+        "kd_jns": 1,
+        "kd_wrn": 85,
+        "hb": 98853,
+        "hg": 115000,
+        "he_a": 126000,
+        "he_b": 129000,
+        "kd_stn": 3,
+        "ktg": "2",
+        "kd_kat": 0
+    },
+    {
+        "id_kain": ...,
+        "kd_jns": ...,
+        "kd_wrn": ...,
+        "hb": ...,
+        "hg": ...,
+        "he_a": ...,
+        "he_b": ...,
+        "kd_stn": ...,
+        "ktg": ...,
+        "kd_kat": ...
+    },
+    ...
+]
