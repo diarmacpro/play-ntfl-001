@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'btn-jenis', key: 'jenis', label: 'Jenis', global: 'dataJenis' },
     { id: 'btn-warna', key: 'warna', label: 'Warna', global: 'dataWarna' },
     { id: 'btn-satuan', key: 'satuan', label: 'Satuan', global: 'dataSatuan' },
-    { id: 'btn-kain', key: 'kain', label: 'Kain', global: 'dataKain' }
+    { id: 'btn-kain', key: 'kain', label: 'Kain', global: 'dataKain' },
+    { id: 'btn-rak', key: 'rak', label: 'Rak', global: 'dataRak' },
+    { id: 'btn-kol', key: 'kol', label: 'Kolom', global: 'dataKol' }
   ];
 
   // Create button container if not present
@@ -57,63 +59,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // Field width config (by key, in %), per data type
   const FIELD_WIDTHS = {
     jenis: {
-      id: '3%',
-      kd_jns: '5%',
-      jns: '92%',
-      // tambahkan field lain sesuai kebutuhan
+      id: '3%', kd_jns: '5%', jns: '92%', aksi: '16%'
     },
     warna: {
-      id: '3%',
-      kd_wrn: '5%',
-      wrn: '92%',
-      // tambahkan field lain sesuai kebutuhan
+      id: '3%', kd_wrn: '5%', wrn: '92%', aksi: '16%'
     },
     satuan: {
-      id: '3%',
-      kd_stn: '5%',
-      stn: '46%',
-      s: '46%',
-      // tambahkan field lain sesuai kebutuhan
+      id: '3%', kd_stn: '5%', stn: '46%', s: '46%', aksi: '16%'
     },
     kain: {
-      id: '3%',
-      id_kain: '5%',
-      kd_jns: '29%',
-      kd_wrn: '29%',
-      kd_stn: '29%',
-      ktg: '5%',
-      // tambahkan field lain sesuai kebutuhan
+      id: '3%', id_kain: '5%', kd_jns: '29%', kd_wrn: '29%', kd_stn: '29%', ktg: '5%', aksi: '16%'
+    },
+    rak: {
+      kd_rak: '20%', rak: '64%', aksi: '16%'
+    },
+    kol: {
+      kd_kol: '20%', kol: '64%', aksi: '16%'
     }
   };
-  // Field to hide per data type
   const HIDE_FIELDS = {
-    jenis: [],
-    warna: [],
-    satuan: [],
-    kain: ['hb', 'hg', 'he_a', 'he_b','kd_kat']
+    jenis: [], warna: [], satuan: [], kain: ['hb', 'hg', 'he_a', 'he_b','kd_kat'],
+    rak: [], kol: []
   };
-  // Field alias config per data type
   const FIELD_ALIASES = {
-    jenis: {
-      kd_jns: 'ID',
-      jns: 'Jenis',
-    },
-    warna: {
-      kd_wrn: 'ID',
-      wrn: 'Warna',
-    },
-    satuan: {
-      kd_stn: 'ID',
-      stn: 'Satuan',
-      s: 'S',
-    },
-    kain: {
-      id_kain: 'ID',
-      kd_jns: 'Jenis',
-      kd_wrn: 'Warna',
-      kd_stn: 'Satuan',
-      ktg: 'Kode',
-    }
+    jenis: { kd_jns: 'ID', jns: 'Jenis', aksi: 'Aksi' },
+    warna: { kd_wrn: 'ID', wrn: 'Warna', aksi: 'Aksi' },
+    satuan: { kd_stn: 'ID', stn: 'Satuan', s: 'S', aksi: 'Aksi' },
+    kain: { id_kain: 'ID', kd_jns: 'Jenis', kd_wrn: 'Warna', kd_stn: 'Satuan', ktg: 'Kode', aksi: 'Aksi' },
+    rak: { kd_rak: 'ID Rak', rak: 'Rak', aksi: 'Aksi' },
+    kol: { kd_kol: 'ID Kolom', kol: 'Kolom', aksi: 'Aksi' }
   };
 
   // Tambah field aksi pada FIELD_WIDTHS dan FIELD_ALIASES
@@ -159,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return newRow;
     });
     // Pastikan identifier unik ada di depan
-    let idField = key === 'kain' ? 'id_kain' : key === 'jenis' ? 'kd_jns' : key === 'warna' ? 'kd_wrn' : key === 'satuan' ? 'kd_stn' : keys[0];
+    let idField = key === 'kain' ? 'id_kain' : key === 'jenis' ? 'kd_jns' : key === 'warna' ? 'kd_wrn' : key === 'satuan' ? 'kd_stn' : key === 'rak' ? 'kd_rak' : key === 'kol' ? 'kd_kol' : keys[0];
     if (keys.includes(idField)) {
       keys = [idField, ...keys.filter(k => k !== idField)];
     }

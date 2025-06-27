@@ -2,21 +2,25 @@ const urls = {
   jenis: 'https://cdn.weva.my.id/apix/dtJ',
   warna: 'https://cdn.weva.my.id/apix/dtW',
   satuan: 'https://cdn.weva.my.id/apix/dtS',
-  kain: 'https://cdn.weva.my.id/apix/dtK'
+  kain: 'https://cdn.weva.my.id/apix/dtK',
+  rak: 'https://cdn.weva.my.id/apix/data/dtRak',
+  kol: 'https://cdn.weva.my.id/apix/data/dtKol'
 };
 
 const globalKeys = {
   jenis: 'dataJenis',
   warna: 'dataWarna',
   satuan: 'dataSatuan',
-  kain: 'dataKain'
+  kain: 'dataKain',
+  rak: 'dataRak',
+  kol: 'dataKol'
 };
 
 const hash = (data) => CryptoJS.SHA256(JSON.stringify(data)).toString();
 
 export class app {
   constructor() {
-    ['jenis', 'warna', 'satuan', 'kain'].forEach(key => this.loadData(key));
+    ['jenis', 'warna', 'satuan', 'kain', 'rak', 'kol'].forEach(key => this.loadData(key));
   }
 
   async loadData(key) {
@@ -48,7 +52,10 @@ export class app {
         return;
       }
 
-      const data = res?.data || [];
+      let data = res?.data || [];
+      // Mapping khusus untuk rak dan kol
+      if (key === 'rak') data = data.map(x => ({ kd_rak: x.i, rak: x.v }));
+      if (key === 'kol') data = data.map(x => ({ kd_kol: x.i, kol: x.v }));
       const h = hash(data);
       const item = { data, hash: h, lastSync: new Date().toISOString() };
 
@@ -69,7 +76,9 @@ export class app {
         return;
       }
 
-      const remoteData = res?.data || [];
+      let remoteData = res?.data || [];
+      if (key === 'rak') remoteData = remoteData.map(x => ({ kd_rak: x.i, rak: x.v }));
+      if (key === 'kol') remoteData = remoteData.map(x => ({ kd_kol: x.i, kol: x.v }));
       const remoteHash = hash(remoteData);
 
       if (remoteHash !== localItem.hash) {
