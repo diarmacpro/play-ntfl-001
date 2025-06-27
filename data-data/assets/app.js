@@ -35,7 +35,7 @@ export class app {
     if (cached?.data) {
       window[globalKey] = cached.data;
       this.tampilkanA(`[✔] ${key} dari IndexedDB`);
-      this.syncData(key, cached); // lanjut cek hash
+      // Tidak langsung sync, sync hanya lewat tombol
       return;
     }
 
@@ -65,6 +65,22 @@ export class app {
     });
   }
 
+  // Fungsi sync yang bisa dipanggil dari UI
+  async syncDataByKey(key) {
+    const url = urls[key];
+    const globalKey = globalKeys[key];
+    const cached = await localforage.getItem(key);
+    await this.syncData(key, cached); // pastikan syncData selesai sebelum lanjut
+    // Setelah sync, ambil ulang data dari IndexedDB dan update global
+    const refreshed = await localforage.getItem(key);
+    if (refreshed && refreshed.data) {
+      window[globalKey] = refreshed.data;
+      // Trigger custom event agar view.js bisa re-render otomatis
+      const event = new CustomEvent('data-synced', { detail: { key, globalKey } });
+      window.dispatchEvent(event);
+    }
+  }
+
   syncData(key, localItem) {
     const url = urls[key];
     const globalKey = globalKeys[key];
@@ -81,17 +97,14 @@ export class app {
       if (key === 'kol') remoteData = remoteData.map(x => ({ kd_kol: x.i, kol: x.v }));
       const remoteHash = hash(remoteData);
 
-      if (remoteHash !== localItem.hash) {
-        await localforage.setItem(key, {
-          data: remoteData,
-          hash: remoteHash,
-          lastSync: new Date().toISOString()
-        });
-        window[globalKey] = remoteData;
-        this.tampilkanA(`[↻] ${key} diperbarui (hash mismatch)`);
-      } else {
-        this.tampilkanA(`[=] ${key} sinkron`);
-      }
+      // Selalu timpa data lokal dengan data remote hasil fetch
+      await localforage.setItem(key, {
+        data: remoteData,
+        hash: remoteHash,
+        lastSync: new Date().toISOString()
+      });
+      window[globalKey] = remoteData;
+      this.tampilkanA(`[↻] ${key} diperbarui (selalu replace dari server)`);
     });
   }
 

@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'btn-kol', key: 'kol', label: 'Kolom', global: 'dataKol' }
   ];
 
+  // Tambahkan tombol Home di awal btns
+  const btnsWithHome = [
+    { id: 'btn-home', key: 'home', label: '🏠 Home', global: null }
+  ].concat(btns);
+
   // Create button container if not present
   const btnContainer = document.getElementById('data-btns') || (() => {
     const c = document.createElement('div');
@@ -23,13 +28,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return c;
   })();
 
-  // Create buttons
-  btns.forEach(({ id, label }) => {
+  // Create buttons (Home + data)
+  btnsWithHome.forEach(({ id, label }) => {
     if (!document.getElementById(id)) {
       const btn = document.createElement('button');
       btn.id = id;
       btn.textContent = label;
-      btn.className = 'px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600';
+      btn.className = id === 'btn-home'
+        ? 'px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-900 font-bold border border-gray-400'
+        : 'px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600';
       btnContainer.appendChild(btn);
     }
   });
@@ -97,18 +104,31 @@ document.addEventListener('DOMContentLoaded', () => {
     FIELD_ALIASES[key].aksi = 'Aksi';
   });
 
-  function renderPagination(total, page) {
-    const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
-    let html = `<div class='flex items-center gap-2 mt-2'>`;
+  function renderPagination(total, page, filteredTotal, originalTotal) {
+    const totalPages = Math.ceil(filteredTotal / PAGE_SIZE) || 1;
+    let html = `<div class='flex items-center justify-between mt-2'>`;
+    // Kiri: tombol prev/next
+    html += `<div class='flex items-center gap-2'>`;
     html += `<button id='btn-prev' class='px-2 py-1 rounded border bg-gray-200' ${page === 1 ? 'disabled' : ''}>Prev</button>`;
     html += `<span>Halaman ${page} / ${totalPages}</span>`;
     html += `<button id='btn-next' class='px-2 py-1 rounded border bg-gray-200' ${page === totalPages ? 'disabled' : ''}>Next</button>`;
+    html += `</div>`;
+    // Kanan: total data
+    let info = `Total: ${filteredTotal} data`;
+    if (filteredTotal !== originalTotal) {
+      info += ` (dari ${originalTotal})`;
+    }
+    html += `<div class='text-gray-600 text-sm font-medium'>${info}</div>`;
     html += `</div>`;
     return html;
   }
 
   function renderSearchAndSort(keys, showSort = true, keyType = '') {
     let html = `<div class='flex flex-wrap gap-2 mb-2 items-center'>`;
+    // Tombol Sync
+    html += `<button id='btn-sync-data' class='px-3 py-1 rounded bg-purple-500 text-white hover:bg-purple-600'>Sync</button>`;
+    // Tombol Download CSV
+    html += `<button id='btn-download-csv' class='px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-900'>Download</button>`;
     html += `<input id='search-input' type='text' placeholder='Cari...' class='border px-2 py-1 rounded' value='${searchTerm || ''}' style='min-width:180px' />`;
     html += `<button id="btn-tambah-data" class="ml-2 px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600">Tambah Data</button>`;
     if (showSort) {
@@ -234,14 +254,16 @@ document.addEventListener('DOMContentLoaded', () => {
               <button class='btn-hapus px-2 py-1 rounded bg-red-500 text-white text-xs' data-id='${idVal}'>Hapus</button>
             </div>
           </td>`;
-        } else {
+        } else if (k === idField) {
           html += `<td class='border px-2 py-1' style='width:${width}'>${row[k]}</td>`;
+        } else {
+          html += `<td class='border px-2 py-1 editable-cell' data-key='${k}' data-id='${row[idField]}' style='width:${width};cursor:pointer;'>${row[k]}</td>`;
         }
       });
       html += '</tr>';
     });
     html += '</tbody></table>';
-    html += renderPagination(total, page);
+    html += renderPagination(total, page, filteredData.length, data.length);
     dataArea.innerHTML = html;
     // Pagination events
     document.getElementById('btn-prev').onclick = () => {
@@ -291,13 +313,270 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Tambah data pada', key);
       };
     }
+    // Tombol Sync event
+    const btnSync = document.getElementById('btn-sync-data');
+    if (btnSync) {
+      btnSync.onclick = async () => {
+        btnSync.disabled = true;
+        btnSync.textContent = 'Sync...';
+        try {
+          if (window.app && typeof window.app.syncDataByKey === 'function') {
+            await window.app.syncDataByKey(key);
+            // Setelah syncDataByKey selesai, trigger klik tombol data aktif agar render ulang identik dengan klik user
+            const btn = document.getElementById('btn-' + key);
+            if (btn) btn.click();
+          } else {
+            alert('Fungsi syncDataByKey tidak ditemukan!');
+          }
+        } finally {
+          btnSync.disabled = false;
+          btnSync.textContent = 'Sync';
+        }
+      };
+    }
+    // Tombol Download event
+    const btnDownload = document.getElementById('btn-download-csv');
+    if (btnDownload) {
+      btnDownload.onclick = () => {
+        const data = (window[globalKey] || []).map(row => ({ ...row }));
+        if (!data.length) {
+          alert('Data kosong!');
+          return;
+        }
+        // Ambil field yang tidak disembunyikan
+        const hideFields = HIDE_FIELDS[key] || [];
+        const keys = Object.keys(data[0]).filter(k => !hideFields.includes(k));
+        // Header CSV
+        const csvRows = [keys.map(k => '"' + (FIELD_ALIASES[key]?.[k] || k) + '"').join(',')];
+        // Data CSV
+        data.forEach(row => {
+          csvRows.push(keys.map(k => '"' + String(row[k] ?? '').replace(/"/g, '""') + '"').join(','));
+        });
+        const csvContent = csvRows.join('\r\n');
+        // Nama file: nama_data_tanggal-bulan-tahun_jam-menit-detik.csv
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        const nama = key;
+        const tgl = `${pad(now.getDate())}-${pad(now.getMonth()+1)}-${now.getFullYear()}`;
+        const jam = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+        const filename = `${nama}_${tgl}_${jam}.csv`;
+        // Download
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      };
+    }
+    // Inline edit event (harus dipasang setelah innerHTML di-set)
+    setTimeout(() => {
+      document.querySelectorAll('.editable-cell').forEach(td => {
+        td.onclick = function(e) {
+          if (td.querySelector('input')) return; // already editing
+          const oldVal = td.textContent;
+          const keyField = td.getAttribute('data-key');
+          const idVal = td.getAttribute('data-id');
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = oldVal;
+          input.className = 'border px-1 py-1 rounded w-full';
+          td.textContent = '';
+          td.appendChild(input);
+          input.focus();
+          input.select();
+          // Save on blur or enter
+          const save = async () => {
+            const newVal = input.value;
+            td.textContent = newVal;
+            if (newVal !== oldVal) {
+              // Update global and IndexedDB
+              const dataArr = window[globalKey] || [];
+              const idx = dataArr.findIndex(r => String(r[idField]) === String(idVal));
+              if (idx !== -1) {
+                dataArr[idx][keyField] = newVal;
+                window[globalKey] = dataArr;
+                // Simpan ke IndexedDB
+                const cached = await localforage.getItem(key);
+                if (cached && cached.data) {
+                  cached.data = dataArr;
+                  await localforage.setItem(key, cached);
+                } else {
+                  await localforage.setItem(key, { data: dataArr, hash: '', lastSync: new Date().toISOString() });
+                }
+                // Simulasi simpan ke server
+                console.log('direncanakan akan disimpan pada server');
+              }
+            }
+          };
+          input.onblur = save;
+          input.onkeydown = function(ev) {
+            if (ev.key === 'Enter') {
+              input.blur();
+            } else if (ev.key === 'Escape') {
+              td.textContent = oldVal;
+            }
+          };
+        };
+      });
+    }, 0);
   }
 
-  // Button event listeners
-  btns.forEach(({ id, key, global }) => {
-    document.getElementById(id).addEventListener('click', () => renderData(key, global, 1));
+  // Button event listeners (Home + data)
+  btnsWithHome.forEach(({ id, key, global }) => {
+    document.getElementById(id).addEventListener('click', (e) => {
+      e.preventDefault();
+      if (key === 'home') {
+        // SPA style: update URL tanpa reload dan render dashboard
+        const url = new URL(window.location);
+        url.search = '';
+        window.history.replaceState({}, '', url);
+        // Render dashboard tanpa reload
+        let html = `
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Dashboard Data Master</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    `;
+        btns.forEach(({ label, global, key }, i) => {
+          let arr = window[global];
+          let count = 0;
+          if (Array.isArray(arr)) {
+            count = arr.length;
+          } else if (localforage) {
+            localforage.getItem(key).then(item => {
+              const el = document.getElementById('count-'+key);
+              if (el) el.textContent = item && item.data ? item.data.length : 0;
+            });
+          }
+          html += `
+      <div class="rounded-xl shadow-lg bg-gradient-to-br from-blue-50 to-white p-6 flex flex-col items-center border border-blue-100 hover:shadow-2xl transition">
+        <div class="text-4xl font-extrabold text-blue-600 mb-2" id="count-${key}">${count}</div>
+        <div class="text-lg font-semibold text-gray-700 mb-1">${label}</div>
+        <button class="mt-2 px-4 py-1 rounded bg-blue-500 text-white font-medium hover:bg-blue-700 transition btn-lihat-data" data-key="${key}">Lihat Data</button>
+      </div>
+      `;
+        });
+        html += `</div>`;
+        dataArea.innerHTML = html;
+        // Routing SPA untuk tombol Lihat Data
+        document.querySelectorAll('.btn-lihat-data').forEach(btn => {
+          btn.onclick = function(e) {
+            e.preventDefault();
+            const key = btn.getAttribute('data-key');
+            const btnToolbar = document.getElementById('btn-' + key);
+            if (btnToolbar) btnToolbar.click();
+          };
+        });
+      } else {
+        const url = new URL(window.location);
+        url.searchParams.set('data', key);
+        window.history.replaceState({}, '', url);
+        renderData(key, global, 1);
+      }
+    });
   });
 
-  // Optionally, show first data by default
-  // renderData(btns[0].key, btns[0].global);
+  // Routing: update URL saat klik tombol data
+  btns.forEach(({ id, key, global }) => {
+    document.getElementById(id).addEventListener('click', () => {
+      // Update URL tanpa reload
+      const url = new URL(window.location);
+      url.searchParams.set('data', key);
+      window.history.replaceState({}, '', url);
+      renderData(key, global, 1);
+    });
+  });
+
+  // On load: cek URL dan tampilkan data sesuai query param
+  const params = new URLSearchParams(window.location.search);
+  const dataKey = params.get('data');
+  if (dataKey && btns.some(b => b.key === dataKey)) {
+    // Tunggu data global siap, lalu render
+    const btnObj = btns.find(b => b.key === dataKey);
+    const tryRender = () => {
+      if (window[btnObj.global] && Array.isArray(window[btnObj.global]) && window[btnObj.global].length > 0) {
+        renderData(btnObj.key, btnObj.global, 1);
+      } else {
+        if (!tryRender.attempts) tryRender.attempts = 0;
+        if (tryRender.attempts++ < 20) setTimeout(tryRender, 100);
+      }
+    };
+    tryRender();
+  } else {
+    // Dashboard: tampilkan info ringkas semua data master dengan tampilan modern
+    let html = `
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Dashboard Data Master</h2>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    `;
+    btns.forEach(({ label, global, key }, i) => {
+      let arr = window[global];
+      // Jika data belum siap, coba ambil dari IndexedDB secara async
+      let count = 0;
+      if (Array.isArray(arr)) {
+        count = arr.length;
+      } else if (localforage) {
+        // Async fetch count dari IndexedDB
+        localforage.getItem(key).then(item => {
+          const el = document.getElementById('count-'+key);
+          if (el) el.textContent = item && item.data ? item.data.length : 0;
+        });
+      }
+      html += `
+      <div class="rounded-xl shadow-lg bg-gradient-to-br from-blue-50 to-white p-6 flex flex-col items-center border border-blue-100 hover:shadow-2xl transition">
+        <div class="text-4xl font-extrabold text-blue-600 mb-2" id="count-${key}">${count}</div>
+        <div class="text-lg font-semibold text-gray-700 mb-1">${label}</div>
+        <button class="mt-2 px-4 py-1 rounded bg-blue-500 text-white font-medium hover:bg-blue-700 transition btn-lihat-data" data-key="${key}">Lihat Data</button>
+      </div>
+      `;
+    });
+    html += `</div>`;
+    dataArea.innerHTML = html;
+    // Routing SPA untuk tombol Lihat Data
+    document.querySelectorAll('.btn-lihat-data').forEach(btn => {
+      btn.onclick = function(e) {
+        e.preventDefault();
+        const key = btn.getAttribute('data-key');
+        const btnToolbar = document.getElementById('btn-' + key);
+        if (btnToolbar) btnToolbar.click();
+      };
+    });
+  }
+
+  // Listen custom event untuk re-render setelah sync
+  window.addEventListener('data-synced', (e) => {
+    const { key, globalKey } = e.detail;
+    // Render ulang data yang sedang aktif jika sama, atau jika tidak, tetap render ulang jika key sama dengan currentKey
+    if (currentKey === key) {
+      // Simulasikan klik tombol data yang aktif agar aksi dan render sama persis
+      const btn = document.querySelector(`[id^='btn-'][id$='${key}']`);
+      if (btn) btn.click();
+    } else if (currentKeys.includes(key)) {
+      renderData(key, globalKey, currentPage);
+    }
+  });
+
+  // Service worker: daftar event untuk fetch dan sync
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const { type, key, globalKey } = event.data || {};
+      if (type === 'sync' && key && globalKey) {
+        // Cek apakah data yang disinkronisasi adalah yang sedang ditampilkan
+        if (currentKey === key) {
+          // Jika ya, lakukan render ulang
+          renderData(key, globalKey, currentPage);
+        } else if (currentKeys.includes(key)) {
+          // Jika tidak, cukup perbarui data di cache
+          renderData(key, globalKey, 1);
+        }
+      }
+    });
+  }
 });
