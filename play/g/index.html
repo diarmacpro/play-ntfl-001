@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webhook Body Viewer</title>
+  <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+  <style>
+    body { font-family: monospace; padding: 1em; }
+    pre { background: #f7f7f7; padding: 1em; border-radius: 8px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>Webhook Body</h2>
+  <pre id="log">Waiting for data...</pre>
+
+  <script>
+    const ably = new Ably.Realtime('InFkjQ.GQn5QQ:soSjfmlCNEmqs8GB7bpKh_Om8DUvNankTtjwUYLHh7o'); // Ganti dengan API key Anda
+    const channel = ably.channels.get('my-webhook-channel');
+
+    const logEl = document.getElementById('log');
+
+    channel.subscribe('webhook', (msg) => {
+      const dataArray = msg.data;
+
+      // Cari item bertipe 'code' yang berisi seluruh log
+      const fullLogItem = dataArray.find(item => item.type === 'code' && item.content.includes('"body"'));
+
+      if (fullLogItem) {
+        try {
+          const log = JSON.parse(fullLogItem.content);
+          const body = log.body;
+          logEl.textContent = JSON.stringify(body, null, 2);
+        } catch (e) {
+          logEl.textContent = 'Invalid data';
+        }
+      } else {
+        logEl.textContent = 'No data';
+      }
+    });
+  </script>
+</body>
+</html>

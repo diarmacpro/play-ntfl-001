@@ -150,6 +150,24 @@ document.addEventListener('DOMContentLoaded', () => {
     data = data.map(row => {
       const newRow = { ...row };
       hideFields.forEach(f => delete newRow[f]);
+      // JOIN untuk data kain
+      if (key === 'kain') {
+        // Jenis
+        if (window.dataJenis && newRow.kd_jns) {
+          const jenis = window.dataJenis.find(j => String(j.kd_jns) === String(newRow.kd_jns));
+          if (jenis) newRow.kd_jns = jenis.jns;
+        }
+        // Warna
+        if (window.dataWarna && newRow.kd_wrn) {
+          const warna = window.dataWarna.find(w => String(w.kd_wrn) === String(newRow.kd_wrn));
+          if (warna) newRow.kd_wrn = warna.wrn;
+        }
+        // Satuan
+        if (window.dataSatuan && newRow.kd_stn) {
+          const satuan = window.dataSatuan.find(s => String(s.kd_stn) === String(newRow.kd_stn));
+          if (satuan) newRow.kd_stn = satuan.s;
+        }
+      }
       return newRow;
     });
     // Pastikan identifier unik ada di depan
@@ -310,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnTambah = document.getElementById('btn-tambah-data');
     if (btnTambah) {
       btnTambah.onclick = () => {
-        console.log('Tambah data pada', key);
+        showTambahDataModal(keys, key);
       };
     }
     // Tombol Sync event
@@ -425,6 +443,71 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       });
     }, 0);
+  }
+
+  // Modal HTML injection (once)
+  function ensureModal() {
+    if (document.getElementById('modal-tambah-data')) return;
+    const modal = document.createElement('div');
+    modal.id = 'modal-tambah-data';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-lg p-6 min-w-[320px] max-w-[95vw] w-full sm:w-[400px] relative">
+        <h3 class="text-lg font-bold mb-4" id="modal-title">Tambah Data</h3>
+        <form id="form-tambah-data" class="flex flex-col gap-3"></form>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" id="btn-batal-modal" class="px-3 py-1 rounded bg-gray-300 hover:bg-gray-400">Batal</button>
+          <button type="submit" form="form-tambah-data" class="px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600">Simpan</button>
+        </div>
+        <button type="button" id="btn-close-modal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Show modal and generate form fields
+  function showTambahDataModal(keys, keyType) {
+    ensureModal();
+    const modal = document.getElementById('modal-tambah-data');
+    const form = document.getElementById('form-tambah-data');
+    form.innerHTML = '';
+    // Tentukan nama field id untuk setiap tipe data
+    const idField = keyType === 'kain' ? 'id_kain' : keyType === 'jenis' ? 'kd_jns' : keyType === 'warna' ? 'kd_wrn' : keyType === 'satuan' ? 'kd_stn' : keyType === 'rak' ? 'kd_rak' : keyType === 'kol' ? 'kd_kol' : keys[0];
+    // Exclude 'aksi' dan idField dari input
+    const inputKeys = keys.filter(k => k !== 'aksi' && k !== idField);
+    inputKeys.forEach(k => {
+      let label = (FIELD_ALIASES[keyType] && FIELD_ALIASES[keyType][k]) ? FIELD_ALIASES[keyType][k] : k;
+      form.innerHTML += `
+        <label class="flex flex-col gap-1">
+          <span class="font-medium">${label}</span>
+          <input name="${k}" class="border px-2 py-1 rounded" required />
+        </label>
+      `;
+    });
+    modal.classList.remove('hidden');
+    // Focus first input
+    setTimeout(() => {
+      const firstInput = form.querySelector('input');
+      if (firstInput) firstInput.focus();
+    }, 100);
+    // Close modal handlers
+    document.getElementById('btn-batal-modal').onclick = closeModal;
+    document.getElementById('btn-close-modal').onclick = closeModal;
+    function closeModal() {
+      modal.classList.add('hidden');
+    }
+    // Form submit handler
+    form.onsubmit = function(ev) {
+      ev.preventDefault();
+      const formData = {};
+      inputKeys.forEach(k => {
+        formData[k] = form.elements[k].value;
+      });
+      // Tidak ada id/kd di data yang dikirim/log
+      console.log('[Tambah Data] Data baru tanpa id/kd:', JSON.parse(JSON.stringify(formData)), 'Tipe:', keyType);
+      closeModal();
+      // Optional: trigger re-render or callback
+    };
   }
 
   // Button event listeners (Home + data)
