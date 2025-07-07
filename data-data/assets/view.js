@@ -476,13 +476,82 @@ document.addEventListener('DOMContentLoaded', () => {
     // Exclude 'aksi' dan idField dari input
     const inputKeys = keys.filter(k => k !== 'aksi' && k !== idField);
     inputKeys.forEach(k => {
-      let label = (FIELD_ALIASES[keyType] && FIELD_ALIASES[keyType][k]) ? FIELD_ALIASES[keyType][k] : k;
-      form.innerHTML += `
-        <label class="flex flex-col gap-1">
-          <span class="font-medium">${label}</span>
-          <input name="${k}" class="border px-2 py-1 rounded" required />
-        </label>
-      `;
+      // Untuk data kain, kolom kd_jns, kd_wrn, kd_stn pakai searchable select
+      if (keyType === 'kain' && ['kd_jns', 'kd_wrn', 'kd_stn'].includes(k)) {
+        // Ambil data global
+        let options = [];
+        let labelField = '';
+        if (k === 'kd_jns' && Array.isArray(window.dataJenis)) {
+          options = window.dataJenis;
+          labelField = 'jns';
+        } else if (k === 'kd_wrn' && Array.isArray(window.dataWarna)) {
+          options = window.dataWarna;
+          labelField = 'wrn';
+        } else if (k === 'kd_stn' && Array.isArray(window.dataSatuan)) {
+          options = window.dataSatuan;
+          labelField = 's';
+        }
+        // Buat wrapper untuk searchable select
+        form.innerHTML += `
+          <label class="flex flex-col gap-1">
+            <span class="font-medium">${FIELD_ALIASES[keyType][k] || k}</span>
+            <div class="relative">
+              <input type="text" class="search-input border px-2 py-1 rounded w-full" placeholder="Cari..." data-for="${k}" autocomplete="off" />
+              <div class="option-list absolute left-0 right-0 bg-white border rounded shadow z-10 max-h-40 overflow-y-auto mt-1 hidden" data-for="${k}"></div>
+              <input type="hidden" name="${k}" />
+            </div>
+          </label>
+        `;
+        setTimeout(() => {
+          const searchInput = form.querySelector(`.search-input[data-for='${k}']`);
+          const optionList = form.querySelector(`.option-list[data-for='${k}']`);
+          const hiddenInput = form.querySelector(`input[type='hidden'][name='${k}']`);
+          let filtered = [];
+          function renderOptions(list) {
+            // Render semua hasil (tanpa slice), biar scrollable
+            optionList.innerHTML = list.map(opt => `<div class='option-item px-2 py-1 hover:bg-blue-100 cursor-pointer' data-val='${opt[k]}'>${opt[labelField]}</div>`).join('');
+            optionList.classList.toggle('hidden', list.length === 0);
+          }
+          // Saat input fokus, tampilkan semua hasil (atau hasil filter)
+          searchInput.onfocus = function() {
+            const val = searchInput.value.trim().toLowerCase();
+            if (val) {
+              filtered = options.filter(opt => String(opt[labelField]).toLowerCase().includes(val));
+            } else {
+              filtered = options;
+            }
+            renderOptions(filtered);
+          };
+          // Saat input blur, sembunyikan option list
+          searchInput.onblur = function() {
+            setTimeout(() => optionList.classList.add('hidden'), 150);
+          };
+          // Saat input berubah, filter dan tampilkan semua hasil
+          searchInput.oninput = function() {
+            const val = searchInput.value.trim().toLowerCase();
+            filtered = options.filter(opt => String(opt[labelField]).toLowerCase().includes(val));
+            renderOptions(filtered);
+          };
+          // Klik pada option
+          optionList.onclick = function(e) {
+            if (e.target.classList.contains('option-item')) {
+              const val = e.target.getAttribute('data-val');
+              const label = e.target.textContent;
+              hiddenInput.value = val;
+              searchInput.value = label;
+              optionList.classList.add('hidden');
+            }
+          };
+        }, 0);
+      } else {
+        let label = (FIELD_ALIASES[keyType] && FIELD_ALIASES[keyType][k]) ? FIELD_ALIASES[keyType][k] : k;
+        form.innerHTML += `
+          <label class="flex flex-col gap-1">
+            <span class="font-medium">${label}</span>
+            <input name="${k}" class="border px-2 py-1 rounded" required />
+          </label>
+        `;
+      }
     });
     modal.classList.remove('hidden');
     // Focus first input
