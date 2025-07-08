@@ -1,0 +1,16 @@
+pR('https://cdn.weva.my.id/apix/insJn',{q:{jns:"aaa"}},(e,d)=>console.log(d.data))
+pR('https://cdn.weva.my.id/apix/insWr',{q:{wrn:"bbb"}},(e,d)=>console.log(d.data))
+pR('https://cdn.weva.my.id/apix/insSt',{q:{stn:"ccc",s:"c"}},(e,d)=>console.log(d.data))
+pR('https://cdn.weva.my.id/apix/insKn',{q:{kd_jns:1,kd_wrn:2,kd_stn:3,ktg:4}},(e,d)=>console.log(d.data))
+pR('https://cdn.weva.my.id/apix/insRk',{q:{rak:727}},(e,d)=>console.log(d.data))
+pR('https://cdn.weva.my.id/apix/insKl',{q:{kol:"U"}},(e,d)=>console.log(d.data))
+
+SELECT * FROM tb_jns ORDER BY tb_jns.kd_jns DESC LIMIT 5;
+SELECT * FROM tb_wrn ORDER BY tb_wrn.kd_wrn DESC LIMIT 5;
+SELECT * FROM tb_stn ORDER BY tb_stn.kd_stn DESC LIMIT 5;
+
+SELECT * FROM tb_km ORDER BY tb_km.id_kain DESC LIMIT 5;
+SELECT * FROM tb_kain ORDER BY tb_kain.id_kain DESC LIMIT 5;
+
+SELECT * FROM tb_rak ORDER BY tb_rak.kd_rak DESC LIMIT 5;
+SELECT * FROM tb_kol ORDER BY tb_kol.kd_kol DESC LIMIT 5;

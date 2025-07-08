@@ -65,6 +65,44 @@ export class app {
     });
   }
 
+  tambahData(keydata, val) {
+    // Mapping endpoint dan skema ID untuk tiap tipe data
+    const config = {
+      jenis:  { api: 'insJn', id: 'kd_jns' },
+      warna:  { api: 'insWr', id: 'kd_wrn' },
+      satuan: { api: 'insSt', id: 'kd_stn' },
+      kain:   { api: 'insKn', id: 'id_kain' },
+      rak:    { api: 'insRk', id: 'kd_rak' },
+      kol:    { api: 'insKl', id: 'kd_kol' }
+    };
+    const conf = config[keydata];
+    if (!conf) return;
+    pR(`https://cdn.weva.my.id/apix/${conf.api}`, { q: val }, async (e, d) => {
+      if (e || !d || !d.data || !d.data.insertedId) return;
+      const newVal = { [conf.id]: d.data.insertedId, ...val };
+
+      // 1. Tambah ke variabel global
+      const globalKey = globalKeys[keydata];
+      if (!window[globalKey]) window[globalKey] = [];
+      window[globalKey].push(newVal);
+
+      // 2. Tambah ke IndexedDB/localforage
+      let cached = await localforage.getItem(keydata);
+      if (!cached) cached = { data: [], hash: '', lastSync: '' };
+      cached.data.push(newVal);
+      cached.hash = hash(cached.data);
+      cached.lastSync = new Date().toISOString();
+      await localforage.setItem(keydata, cached);
+
+      // 3. Trigger custom event agar view.js bisa re-render otomatis
+      const event = new CustomEvent('data-synced', { detail: { key: keydata, globalKey } });
+      window.dispatchEvent(event);
+
+      // Debug log
+      console.log('[TambahData]', newVal);
+    });
+  }
+
   // Fungsi sync yang bisa dipanggil dari UI
   async syncDataByKey(key) {
     const url = urls[key];

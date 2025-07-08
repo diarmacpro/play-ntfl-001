@@ -66,22 +66,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Field width config (by key, in %), per data type
   const FIELD_WIDTHS = {
     jenis: {
-      id: '3%', kd_jns: '5%', jns: '92%', aksi: '16%'
+      id: '3%', kd_jns: '5%', jns: '92%'
     },
     warna: {
-      id: '3%', kd_wrn: '5%', wrn: '92%', aksi: '16%'
+      id: '3%', kd_wrn: '5%', wrn: '92%'
     },
     satuan: {
-      id: '3%', kd_stn: '5%', stn: '46%', s: '46%', aksi: '16%'
+      id: '3%', kd_stn: '5%', stn: '46%', s: '46%'
     },
     kain: {
-      id: '3%', id_kain: '5%', kd_jns: '29%', kd_wrn: '29%', kd_stn: '29%', ktg: '5%', aksi: '16%'
+      id: '3%', id_kain: '5%', kd_jns: '29%', kd_wrn: '29%', kd_stn: '29%', ktg: '5%'
     },
     rak: {
-      kd_rak: '20%', rak: '64%', aksi: '16%'
+      kd_rak: '20%', rak: '80%'
     },
     kol: {
-      kd_kol: '20%', kol: '64%', aksi: '16%'
+      kd_kol: '20%', kol: '80%'
     }
   };
   const HIDE_FIELDS = {
@@ -89,20 +89,20 @@ document.addEventListener('DOMContentLoaded', () => {
     rak: [], kol: []
   };
   const FIELD_ALIASES = {
-    jenis: { kd_jns: 'ID', jns: 'Jenis', aksi: 'Aksi' },
-    warna: { kd_wrn: 'ID', wrn: 'Warna', aksi: 'Aksi' },
-    satuan: { kd_stn: 'ID', stn: 'Satuan', s: 'S', aksi: 'Aksi' },
-    kain: { id_kain: 'ID', kd_jns: 'Jenis', kd_wrn: 'Warna', kd_stn: 'Satuan', ktg: 'Kode', aksi: 'Aksi' },
-    rak: { kd_rak: 'ID Rak', rak: 'Rak', aksi: 'Aksi' },
-    kol: { kd_kol: 'ID Kolom', kol: 'Kolom', aksi: 'Aksi' }
+    jenis: { kd_jns: 'ID', jns: 'Jenis' },
+    warna: { kd_wrn: 'ID', wrn: 'Warna' },
+    satuan: { kd_stn: 'ID', stn: 'Satuan', s: 'S' },
+    kain: { id_kain: 'ID', kd_jns: 'Jenis', kd_wrn: 'Warna', kd_stn: 'Satuan', ktg: 'Kode' },
+    rak: { kd_rak: 'ID Rak', rak: 'Rak' },
+    kol: { kd_kol: 'ID Kolom', kol: 'Kolom' }
   };
 
-  // Tambah field aksi pada FIELD_WIDTHS dan FIELD_ALIASES
-  Object.keys(FIELD_WIDTHS).forEach(key => {
-    FIELD_WIDTHS[key].aksi = '16%'; // Lebar lebih besar agar tombol muat
-    FIELD_ALIASES[key] = FIELD_ALIASES[key] || {};
-    FIELD_ALIASES[key].aksi = 'Aksi';
-  });
+  // Tidak perlu menambah field aksi pada FIELD_WIDTHS dan FIELD_ALIASES
+  // Object.keys(FIELD_WIDTHS).forEach(key => {
+  //   FIELD_WIDTHS[key].aksi = '16%';
+  //   FIELD_ALIASES[key] = FIELD_ALIASES[key] || {};
+  //   FIELD_ALIASES[key].aksi = 'Aksi';
+  // });
 
   function renderPagination(total, page, filteredTotal, originalTotal) {
     const totalPages = Math.ceil(filteredTotal / PAGE_SIZE) || 1;
@@ -175,8 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (keys.includes(idField)) {
       keys = [idField, ...keys.filter(k => k !== idField)];
     }
-    // Tambahkan field aksi di akhir
-    if (!keys.includes('aksi')) keys.push('aksi');
+    // Hapus field aksi jika ada
+    keys = keys.filter(k => k !== 'aksi');
     currentKeys = keys;
     currentKey = key;
     currentGlobal = globalKey;
@@ -264,15 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
       html += '<tr>';
       keys.forEach(k => {
         const width = (FIELD_WIDTHS[key] && FIELD_WIDTHS[key][k]) ? FIELD_WIDTHS[key][k] : 'auto';
-        if (k === 'aksi') {
-          const idVal = row[idField];
-          html += `<td class='border px-2 py-1 text-center' style='width:${width}'>
-            <div class='flex flex-row gap-1 justify-center'>
-              <button class='btn-edit px-2 py-1 rounded bg-yellow-400 text-xs' data-id='${idVal}'>Edit</button>
-              <button class='btn-hapus px-2 py-1 rounded bg-red-500 text-white text-xs' data-id='${idVal}'>Hapus</button>
-            </div>
-          </td>`;
-        } else if (k === idField) {
+        // Hanya kolom id yang tidak bisa diedit inline
+        if (k === idField) {
           html += `<td class='border px-2 py-1' style='width:${width}'>${row[k]}</td>`;
         } else {
           html += `<td class='border px-2 py-1 editable-cell' data-key='${k}' data-id='${row[idField]}' style='width:${width};cursor:pointer;'>${row[k]}</td>`;
@@ -313,6 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderData(currentKey, currentGlobal, 1, true);
       };
     });
+
+    /*
     // Aksi tombol edit/hapus
     document.querySelectorAll('.btn-edit').forEach(btn => {
       btn.onclick = () => {
@@ -324,6 +319,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Hapus', idField, btn.getAttribute('data-id'));
       };
     });
+    */
+
+
     // Tombol tambah data (semua data)
     const btnTambah = document.getElementById('btn-tambah-data');
     if (btnTambah) {
@@ -572,6 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
       inputKeys.forEach(k => {
         formData[k] = form.elements[k].value;
       });
+
+      window.app.tambahData(keyType,formData);
       // Tidak ada id/kd di data yang dikirim/log
       console.log('[Tambah Data] Data baru tanpa id/kd:', JSON.parse(JSON.stringify(formData)), 'Tipe:', keyType);
       closeModal();

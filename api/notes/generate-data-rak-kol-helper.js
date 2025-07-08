@@ -31,7 +31,9 @@ callData('https://cdn.weva.my.id/apix/data/dtkain',{},(e,d)=>{
 })
 
 
+// ---------------- Ini Fix
 
+fbsSvc.delDt('/app/data/kain',()=>{});
 
 callData('https://cdn.weva.my.id/apix/dtNmKn',{},(e,d)=>{
     _.map(d,(v,k)=>{
