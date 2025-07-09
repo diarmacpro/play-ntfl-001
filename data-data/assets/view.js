@@ -579,10 +579,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  // Helper: set active menu button
+  function setActiveMenu(id) {
+    btnsWithHome.forEach(({ id: btnId }) => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        if (btnId === id) {
+          btn.classList.add('ring', 'ring-blue-500', 'bg-blue-700', 'text-white');
+          btn.classList.remove('bg-blue-500', 'bg-gray-700', 'hover:bg-blue-600', 'hover:bg-gray-900');
+        } else if (btnId === 'btn-home') {
+          btn.className = 'px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-900 font-bold border border-gray-400';
+        } else {
+          btn.className = 'px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600';
+        }
+      }
+    });
+  }
+
   // Button event listeners (Home + data)
   btnsWithHome.forEach(({ id, key, global }) => {
     document.getElementById(id).addEventListener('click', (e) => {
       e.preventDefault();
+      setActiveMenu(id);
       if (key === 'home') {
         // SPA style: update URL tanpa reload dan render dashboard
         const url = new URL(window.location);
@@ -634,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Routing: update URL saat klik tombol data
+  // Routing: update URL tanpa reload
   btns.forEach(({ id, key, global }) => {
     document.getElementById(id).addEventListener('click', () => {
       // Update URL tanpa reload
@@ -645,12 +663,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // On load: cek URL dan tampilkan data sesuai query param
+  // On load: set active menu based on URL or default to home
   const params = new URLSearchParams(window.location.search);
   const dataKey = params.get('data');
   if (dataKey && btns.some(b => b.key === dataKey)) {
-    // Tunggu data global siap, lalu render
     const btnObj = btns.find(b => b.key === dataKey);
+    setActiveMenu('btn-' + btnObj.key);
+    // Tunggu data global siap, lalu render
     const tryRender = () => {
       if (window[btnObj.global] && Array.isArray(window[btnObj.global]) && window[btnObj.global].length > 0) {
         renderData(btnObj.key, btnObj.global, 1);
@@ -661,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     tryRender();
   } else {
+    setActiveMenu('btn-home');
     // Dashboard: tampilkan info ringkas semua data master dengan tampilan modern
     let html = `
     <div class="flex justify-between items-center mb-6">
