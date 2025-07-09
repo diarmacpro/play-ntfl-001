@@ -3,6 +3,13 @@
 // Assumes global data: dataJenis, dataWarna, dataSatuan, dataKain
 // and that the app class from app.js has been instantiated
 
+// Cek login sebelum menjalankan script utama
+if (!localStorage.getItem('userLogin')) {
+  // alert('Silakan login terlebih dahulu!');
+  window.location.href = './login'; // Ganti dengan path login Anda jika berbeda
+  throw new Error('Belum login'); // Stop eksekusi script
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Button definitions
   const btns = [
@@ -19,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'btn-home', key: 'home', label: '🏠 Home', global: null }
   ].concat(btns);
 
+  // Tambahkan tombol Logout di akhir btns
+  btnsWithHome.push({ id: 'btn-logout', key: 'logout', label: 'Logout', global: null });
+
   // Create button container if not present
   const btnContainer = document.getElementById('data-btns') || (() => {
     const c = document.createElement('div');
@@ -28,17 +38,22 @@ document.addEventListener('DOMContentLoaded', () => {
     return c;
   })();
 
-  // Create buttons (Home + data)
+  // Create buttons (Home + data + Logout)
   btnsWithHome.forEach(({ id, label }) => {
-    if (!document.getElementById(id)) {
-      const btn = document.createElement('button');
-      btn.id = id;
-      btn.textContent = label;
-      btn.className = id === 'btn-home'
-        ? 'px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-900 font-bold border border-gray-400'
-        : 'px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600';
-      btnContainer.appendChild(btn);
+    // Hapus elemen jika sudah ada agar className tidak bentrok
+    const existingBtn = document.getElementById(id);
+    if (existingBtn) existingBtn.remove();
+    const btn = document.createElement('button');
+    btn.id = id;
+    btn.textContent = label;
+    if (id === 'btn-home') {
+      btn.className = 'px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-900 font-bold border border-gray-400';
+    } else if (id === 'btn-logout') {
+      btn.className = 'px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 font-bold border border-red-400 ml-auto';
+    } else {
+      btn.className = 'px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600';
     }
+    btnContainer.appendChild(btn);
   });
 
   // Data display area
@@ -596,10 +611,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Button event listeners (Home + data)
+  // Button event listeners (Home + data + Logout)
   btnsWithHome.forEach(({ id, key, global }) => {
     document.getElementById(id).addEventListener('click', (e) => {
       e.preventDefault();
+      if (key === 'logout') {
+        if (confirm('Yakin ingin logout?')) {
+          localStorage.removeItem('userLogin');
+          window.location.href = './login';
+        }
+        return;
+      }
       setActiveMenu(id);
       if (key === 'home') {
         // SPA style: update URL tanpa reload dan render dashboard
