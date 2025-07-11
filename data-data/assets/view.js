@@ -409,73 +409,111 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       document.querySelectorAll('.editable-cell').forEach(td => {
         td.onclick = function(e) {
-          if (td.querySelector('input')) return; // already editing
+          if (td.querySelector('input') || td.querySelector('.search-input')) return; // already editing
           const oldVal = td.textContent;
           const keyField = td.getAttribute('data-key');
           const idVal = td.getAttribute('data-id');
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.value = oldVal;
-          input.className = 'border px-1 py-1 rounded w-full';
-          td.textContent = '';
-          td.appendChild(input);
-          input.focus();
-          input.select();
-          // Save on blur or enter
-          const save = async () => {
-            const newVal = input.value;
-            td.textContent = newVal;
-            if (newVal !== oldVal) {
-              // Update global and IndexedDB
-              const dataArr = window[globalKey] || [];
-              const idx = dataArr.findIndex(r => String(r[idField]) === String(idVal));
-              if (idx !== -1) {
-                dataArr[idx][keyField] = newVal;
-                window[globalKey] = dataArr;
-                // Simpan ke IndexedDB
-                const cached = await localforage.getItem(key);
-                if (cached && cached.data) {
-                  cached.data = dataArr;
-                  await localforage.setItem(key, cached);
+          // Untuk data kain dan field kd_jns/kd_wrn/kd_stn, gunakan searchable select
+          if (currentKey === 'kain' && ['kd_jns', 'kd_wrn', 'kd_stn'].includes(keyField)) {
+            let options = [];
+            let labelField = '';
+            if (keyField === 'kd_jns' && Array.isArray(window.dataJenis)) {
+              options = window.dataJenis;
+              labelField = 'jns';
+            } else if (keyField === 'kd_wrn' && Array.isArray(window.dataWarna)) {
+              options = window.dataWarna;
+              labelField = 'wrn';
+            } else if (keyField === 'kd_stn' && Array.isArray(window.dataSatuan)) {
+              options = window.dataSatuan;
+              labelField = 's';
+            }
+            td.textContent = '';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative';
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'search-input border px-1 py-1 rounded w-full';
+            searchInput.value = oldVal;
+            searchInput.placeholder = 'Cari...';
+            const optionList = document.createElement('div');
+            optionList.className = 'option-list absolute left-0 right-0 bg-white border rounded shadow z-10 max-h-40 overflow-y-auto mt-1 hidden';
+            wrapper.appendChild(searchInput);
+            wrapper.appendChild(optionList);
+            td.appendChild(wrapper);
+            searchInput.focus();
+            let filtered = [];
+            function renderOptions(list) {
+              optionList.innerHTML = list.map(opt => `<div class='option-item px-2 py-1 hover:bg-blue-100 cursor-pointer' data-val='${opt[keyField]}' data-label='${opt[labelField]}'>${opt[labelField]}</div>`).join('');
+              optionList.classList.toggle('hidden', list.length === 0);
+            }
+            searchInput.onfocus = function() {
+              const val = searchInput.value.trim().toLowerCase();
+              if (val) {
+                filtered = options.filter(opt => String(opt[labelField]).toLowerCase().includes(val));
+              } else {
+                filtered = options;
+              }
+              renderOptions(filtered);
+            };
+            searchInput.oninput = function() {
+              const val = searchInput.value.trim().toLowerCase();
+              filtered = options.filter(opt => String(opt[labelField]).toLowerCase().includes(val));
+              renderOptions(filtered);
+            };
+            searchInput.onblur = function() {
+              setTimeout(() => {
+                // Jika ada pilihan yang sedang difilter, ambil yang pertama
+                if (filtered.length > 0 && searchInput.value.trim() !== oldVal) {
+                  const opt = filtered.find(opt => opt[labelField] === searchInput.value.trim());
+                  if (opt) {
+                    save(opt[keyField], opt[labelField]);
+                  } else {
+                    td.textContent = oldVal;
+                  }
                 } else {
-                  await localforage.setItem(key, { data: dataArr, hash: '', lastSync: new Date().toISOString() });
+                  td.textContent = oldVal;
                 }
-                // Update ke server sesuai endpoint
-                let endpoint = '';
-                let payload = {};
-                switch (key) {
-                  case 'jenis':
-                    endpoint = 'https://cdn.weva.my.id/apix/updJn';
-                    payload = { kd_jns: dataArr[idx].kd_jns, jns: dataArr[idx].jns };
-                    break;
-                  case 'warna':
-                    endpoint = 'https://cdn.weva.my.id/apix/updWr';
-                    payload = { kd_wrn: dataArr[idx].kd_wrn, wrn: dataArr[idx].wrn };
-                    break;
-                  case 'satuan':
-                    endpoint = 'https://cdn.weva.my.id/apix/updSt';
-                    payload = { kd_stn: dataArr[idx].kd_stn, stn: dataArr[idx].stn, s: dataArr[idx].s };
-                    break;
-                  case 'rak':
-                    endpoint = 'https://cdn.weva.my.id/apix/updRk';
-                    payload = { kd_rak: dataArr[idx].kd_rak, rak: dataArr[idx].rak };
-                    break;
-                  case 'kol':
-                    endpoint = 'https://cdn.weva.my.id/apix/updKl';
-                    payload = { kd_kol: dataArr[idx].kd_kol, kol: dataArr[idx].kol };
-                    break;
-                  case 'kain':
-                    endpoint = 'https://cdn.weva.my.id/apix/updKn';
-                    payload = {
-                      id_kain: dataArr[idx].id_kain,
-                      kd_jns: dataArr[idx].kd_jns,
-                      kd_wrn: dataArr[idx].kd_wrn,
-                      kd_stn: dataArr[idx].kd_stn,
-                      ktg: dataArr[idx].ktg
-                    };
-                    break;
-                }
-                if (endpoint) {
+                optionList.classList.add('hidden');
+              }, 150);
+            };
+            optionList.onclick = function(e) {
+              if (e.target.classList.contains('option-item')) {
+                const val = e.target.getAttribute('data-val');
+                const label = e.target.getAttribute('data-label');
+                searchInput.value = label;
+                optionList.classList.add('hidden');
+                save(val, label);
+              }
+            };
+            // Save function khusus searchable select
+            const save = async (newVal, newLabel) => {
+              td.textContent = newLabel;
+              if (newLabel !== oldVal) {
+                // Update global dan IndexedDB
+                const dataArr = window[globalKey] || [];
+                const idx = dataArr.findIndex(r => String(r[idField]) === String(idVal));
+                if (idx !== -1) {
+                  dataArr[idx][keyField] = newVal;
+                  window[globalKey] = dataArr;
+                  // Simpan ke IndexedDB
+                  const cached = await localforage.getItem(key);
+                  if (cached && cached.data) {
+                    cached.data = dataArr;
+                    await localforage.setItem(key, cached);
+                  } else {
+                    await localforage.setItem(key, { data: dataArr, hash: '', lastSync: new Date().toISOString() });
+                  }
+                  // Update ke server
+                  let endpoint = 'https://cdn.weva.my.id/apix/updKn';
+                  // Ambil payload kain
+                  const row = dataArr[idx];
+                  const payload = {
+                    id_kain: row.id_kain,
+                    kd_jns: row.kd_jns,
+                    kd_wrn: row.kd_wrn,
+                    kd_stn: row.kd_stn,
+                    ktg: row.ktg
+                  };
                   pR(endpoint, { q: payload }, async (e, d) => {
                     if (e) {
                       console.error('Update gagal:', e);
@@ -486,16 +524,107 @@ document.addEventListener('DOMContentLoaded', () => {
                   });
                 }
               }
-            }
-          };
-          input.onblur = save;
-          input.onkeydown = function(ev) {
-            if (ev.key === 'Enter') {
-              input.blur();
-            } else if (ev.key === 'Escape') {
-              td.textContent = oldVal;
-            }
-          };
+            };
+            // Tambahkan event Enter/Escape pada searchInput agar keluar dari mode edit
+            searchInput.onkeydown = function(ev) {
+              if (ev.key === 'Enter') {
+                // Jika ada pilihan yang sedang difilter, ambil yang pertama
+                if (filtered.length > 0) {
+                  const opt = filtered[0];
+                  save(opt[keyField], opt[labelField]);
+                } else {
+                  td.textContent = oldVal;
+                }
+              } else if (ev.key === 'Escape') {
+                td.textContent = oldVal;
+              }
+            };
+          } else {
+            // ...existing code for normal input...
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldVal;
+            input.className = 'border px-1 py-1 rounded w-full';
+            td.textContent = '';
+            td.appendChild(input);
+            input.focus();
+            input.select();
+            // Save on blur or enter
+            const save = async () => {
+              const newVal = input.value;
+              td.textContent = newVal;
+              if (newVal !== oldVal) {
+                // Update global and IndexedDB
+                const dataArr = window[globalKey] || [];
+                const idx = dataArr.findIndex(r => String(r[idField]) === String(idVal));
+                if (idx !== -1) {
+                  dataArr[idx][keyField] = newVal;
+                  window[globalKey] = dataArr;
+                  // Simpan ke IndexedDB
+                  const cached = await localforage.getItem(key);
+                  if (cached && cached.data) {
+                    cached.data = dataArr;
+                    await localforage.setItem(key, cached);
+                  } else {
+                    await localforage.setItem(key, { data: dataArr, hash: '', lastSync: new Date().toISOString() });
+                  }
+                  // Update ke server sesuai endpoint
+                  let endpoint = '';
+                  let payload = {};
+                  switch (key) {
+                    case 'jenis':
+                      endpoint = 'https://cdn.weva.my.id/apix/updJn';
+                      payload = { kd_jns: dataArr[idx].kd_jns, jns: dataArr[idx].jns };
+                      break;
+                    case 'warna':
+                      endpoint = 'https://cdn.weva.my.id/apix/updWr';
+                      payload = { kd_wrn: dataArr[idx].kd_wrn, wrn: dataArr[idx].wrn };
+                      break;
+                    case 'satuan':
+                      endpoint = 'https://cdn.weva.my.id/apix/updSt';
+                      payload = { kd_stn: dataArr[idx].kd_stn, stn: dataArr[idx].stn, s: dataArr[idx].s };
+                      break;
+                    case 'rak':
+                      endpoint = 'https://cdn.weva.my.id/apix/updRk';
+                      payload = { kd_rak: dataArr[idx].kd_rak, rak: dataArr[idx].rak };
+                      break;
+                    case 'kol':
+                      endpoint = 'https://cdn.weva.my.id/apix/updKl';
+                      payload = { kd_kol: dataArr[idx].kd_kol, kol: dataArr[idx].kol };
+                      break;
+                    case 'kain':
+                      endpoint = 'https://cdn.weva.my.id/apix/updKn';
+                      payload = {
+                        id_kain: dataArr[idx].id_kain,
+                        kd_jns: dataArr[idx].kd_jns,
+                        kd_wrn: dataArr[idx].kd_wrn,
+                        kd_stn: dataArr[idx].kd_stn,
+                        ktg: dataArr[idx].ktg
+                      };
+                      break;
+                  }
+                  if (endpoint) {
+                    pR(endpoint, { q: payload }, async (e, d) => {
+                      if (e) {
+                        console.error('Update gagal:', e);
+                        alert('Update ke server gagal!');
+                        return;
+                      }
+                      console.log('Update sukses:', d);
+                    });
+                  }
+                }
+              }
+            };
+            input.onblur = save;
+            input.onkeydown = function(ev) {
+              if (ev.key === 'Enter') {
+                input.blur();
+              } else if (ev.key === 'Escape') {
+                td.textContent = oldVal;
+              }
+            };
+          }
         };
       });
     }, 0);
