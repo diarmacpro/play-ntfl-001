@@ -440,8 +440,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                   await localforage.setItem(key, { data: dataArr, hash: '', lastSync: new Date().toISOString() });
                 }
-                // Simulasi simpan ke server
-                console.log('direncanakan akan disimpan pada server');
+                // Update ke server sesuai endpoint
+                let endpoint = '';
+                let payload = {};
+                switch (key) {
+                  case 'jenis':
+                    endpoint = 'https://cdn.weva.my.id/apix/updJn';
+                    payload = { kd_jns: dataArr[idx].kd_jns, jns: dataArr[idx].jns };
+                    break;
+                  case 'warna':
+                    endpoint = 'https://cdn.weva.my.id/apix/updWr';
+                    payload = { kd_wrn: dataArr[idx].kd_wrn, wrn: dataArr[idx].wrn };
+                    break;
+                  case 'satuan':
+                    endpoint = 'https://cdn.weva.my.id/apix/updSt';
+                    payload = { kd_stn: dataArr[idx].kd_stn, stn: dataArr[idx].stn, s: dataArr[idx].s };
+                    break;
+                  case 'rak':
+                    endpoint = 'https://cdn.weva.my.id/apix/updRk';
+                    payload = { kd_rak: dataArr[idx].kd_rak, rak: dataArr[idx].rak };
+                    break;
+                  case 'kol':
+                    endpoint = 'https://cdn.weva.my.id/apix/updKl';
+                    payload = { kd_kol: dataArr[idx].kd_kol, kol: dataArr[idx].kol };
+                    break;
+                  case 'kain':
+                    endpoint = 'https://cdn.weva.my.id/apix/updKn';
+                    payload = {
+                      id_kain: dataArr[idx].id_kain,
+                      kd_jns: dataArr[idx].kd_jns,
+                      kd_wrn: dataArr[idx].kd_wrn,
+                      kd_stn: dataArr[idx].kd_stn,
+                      ktg: dataArr[idx].ktg
+                    };
+                    break;
+                }
+                if (endpoint) {
+                  pR(endpoint, { q: payload }, async (e, d) => {
+                    if (e) {
+                      console.error('Update gagal:', e);
+                      alert('Update ke server gagal!');
+                      return;
+                    }
+                    console.log('Update sukses:', d);
+                  });
+                }
               }
             }
           };
