@@ -6,7 +6,7 @@
 // Cek login sebelum menjalankan script utama
 if (!localStorage.getItem('userLogin')) {
   // alert('Silakan login terlebih dahulu!');
-  window.location.href = './login'; // Ganti dengan path login Anda jika berbeda
+  window.location.href = './in'; // Ganti dengan path login Anda jika berbeda
   throw new Error('Belum login'); // Stop eksekusi script
 }
 
@@ -661,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key === 'logout') {
         if (confirm('Yakin ingin logout?')) {
           localStorage.removeItem('userLogin');
-          window.location.href = './login';
+          window.location.href = './in';
         }
         return;
       }
