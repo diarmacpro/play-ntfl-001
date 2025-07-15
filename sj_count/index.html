@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Value Display</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-subtle': 'bounce 2s infinite',
+                        'fade-in': 'fadeIn 1.5s ease-out',
+                        'scale-in': 'scaleIn 1s ease-out',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        glow: {
+                            '0%': { textShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
+                            '100%': { textShadow: '0 0 30px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .glass-effect {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .number-glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+    <div class="gradient-bg min-h-screen w-full flex items-center justify-center relative">
+        <!-- Background particles effect -->
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full opacity-60 animate-pulse-slow"></div>
+            <div class="absolute top-3/4 right-1/4 w-1 h-1 bg-white rounded-full opacity-40 animate-bounce-subtle"></div>
+            <div class="absolute top-1/2 left-1/3 w-1.5 h-1.5 bg-white rounded-full opacity-50 animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/3 w-2 h-2 bg-white rounded-full opacity-30 animate-bounce"></div>
+            <div class="absolute top-1/3 right-1/2 w-1 h-1 bg-white rounded-full opacity-70 animate-pulse-slow"></div>
+        </div>
+        
+        <!-- Main content container -->
+        <div class="glass-effect rounded-3xl p-12 md:p-16 lg:p-20 shadow-2xl animate-fade-in max-w-4xl mx-4 text-center">
+            <!-- Loading state -->
+            <div id="loading" class="text-white">
+                <div class="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mx-auto mb-6"></div>
+                <p class="text-2xl font-light loading-dots">Memuat data</p>
+            </div>
+            
+            <!-- Error state -->
+            <div id="error" class="text-white hidden">
+                <div class="text-red-400 mb-4">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <p class="text-2xl font-light">Gagal memuat data</p>
+                <button onclick="fetchData()" class="mt-4 px-6 py-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all duration-300">
+                    Coba Lagi
+                </button>
+            </div>
+            
+            <!-- Success state -->
+            <div id="success" class="text-white hidden">
+                <div class="mb-8">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-light mb-4 animate-fade-in">
+                        Nilai Saat Ini
+                    </h1>
+                    <div class="w-24 h-1 bg-white bg-opacity-60 mx-auto rounded-full"></div>
+                </div>
+                
+                <div class="animate-scale-in">
+                    <div id="value-display" class="text-8xl md:text-9xl lg:text-[12rem] font-bold number-glow mb-8 leading-none">
+                        <!-- Value will be inserted here -->
+                    </div>
+                </div>
+                
+                <div class="animate-fade-in">
+                    <p class="text-xl md:text-2xl font-light opacity-80 mb-6">
+                        Data diperbarui secara real-time
+                    </p>
+                    <div class="flex items-center justify-center space-x-2 text-sm opacity-60">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span>Live</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Refresh button (floating) -->
+        <button 
+            id="refresh-btn" 
+            onclick="fetchData()" 
+            class="hidden fixed bottom-8 right-8 bg-white bg-opacity-20 hover:bg-opacity-30 p-4 rounded-full transition-all duration-300 backdrop-blur-sm border border-white border-opacity-20"
+            title="Refresh Data">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // State management
+        const state = {
+            loading: document.getElementById('loading'),
+            error: document.getElementById('error'),
+            success: document.getElementById('success'),
+            valueDisplay: document.getElementById('value-display'),
+            refreshBtn: document.getElementById('refresh-btn')
+        };
+
+        // Show specific state
+        function showState(stateName) {
+            Object.keys(state).forEach(key => {
+                if (['loading', 'error', 'success'].includes(key)) {
+                    state[key].classList.add('hidden');
+                }
+            });
+            
+            if (state[stateName]) {
+                state[stateName].classList.remove('hidden');
+            }
+            
+            // Show refresh button only in success state
+            if (stateName === 'success') {
+                state.refreshBtn.classList.remove('hidden');
+            } else {
+                state.refreshBtn.classList.add('hidden');
+            }
+        }
+
+        // Format number with thousands separator
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Fetch data from API
+        async function fetchData() {
+            showState('loading');
+            
+            try {
+                // Replace with your actual API URL
+                const response = await fetch('./data.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                console.log(response);
+                
+                const data = await response.json();
+                
+                console.log(data);
+                
+                if (data && typeof data.value !== 'undefined') {
+                    // Animate the value change
+                    state.valueDisplay.textContent = formatNumber(data.value);
+                    showState('success');
+                    
+                    // Add a subtle animation when value updates
+                    state.valueDisplay.classList.add('animate-pulse');
+                    setTimeout(() => {
+                        state.valueDisplay.classList.remove('animate-pulse');
+                    }, 1000);
+                } else {
+                    throw new Error('Invalid data format');
+                }
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showState('error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                e.preventDefault();
+                fetchData();
+            }
+        });
+    </script>
+</body>
+</html>

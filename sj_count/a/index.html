@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+		<h1 id="data"></h1>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js" integrity="sha256-5/uwFT5U69ovuv9G9LS0Zf2x0bqnOYnVf8/iRKxfNhI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@e2d156cb584c37407c93ab334bce4b5121e2650e/firebase-olah-data/core.js" integrity="sha256-i6LauffDEkYoIANok1hHCoxkI85EOpWq0haHhD641Y8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@e2d156cb584c37407c93ab334bce4b5121e2650e/firebase-olah-data/f.o.d_v.0.2.js" integrity="sha256-z3OTKzs66C480v0rSnJ8V1XAzJq4NlKn9xUlL5AC82w=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+        import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js';
+
+        const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
+        const db = getDatabase(app);
+        Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+    </script>
+    <script>
+        let fbsSvc;
+
+        function tampilkanData(v){
+            $('#data').text(v);
+        }
+
+        $(()=>{
+            fbsSvc = new Fbs(db);
+
+						fbsSvc.gDtOn('data/keyval/idSj',d=>{
+								tampilkanData(d.val());
+						})
+
+            pR('https://cdn.weva.my.id/apix/getCurrentSjId','',(e,d)=>{
+                fbsSvc.gDt('data/keyval/idSj','',(e)=>{
+                    if(d.data === e){
+                        tampilkanData(e);
+                    }else{
+                        fbsSvc.upd('data/keyval/idSj','',d.data,()=>{
+                            tampilkanData(d.data);
+                        })
+                    }
+                })
+            })
+        })
+    </script>
+</body>
+</html>
