@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>xVerifikasi Barang Masuk</title>
+        <title>Verifikasi Barang Masuk</title>
         <link rel="icon" href="https://cdn-icons-png.freepik.com/512/628/628300.png" />
         <script src="https://cdn.tailwindcss.com"></script>
         <!-- Bootstrap Icons CDN -->
@@ -188,6 +188,8 @@
 
     <script src="./script.js"></script>
     <script>
+        console.log('16-07-2025 11:23')
+
         var fbsSvc, dataMainOnFbs, dataLocal = {
             dataHelper: {},
             dataRak: {},
@@ -662,7 +664,7 @@ function getDataMainOnFbs(tgl) {
 const retriedFlags = {}; // Menyimpan status percobaan per tanggal
 
 function getDataMainOnFbs(tgl) {
-  const dtTempTry = getTryData(tgl); // dapatkan jumlah data, misalnya cA vs cB
+//   const dtTempTry = getTryData(tgl); // dapatkan jumlah data, misalnya cA vs cB
 
   // 🚨 Deteksi duplikat
   if (dtTempTry.cA !== dtTempTry.cB) {
