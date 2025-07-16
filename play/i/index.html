@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Console Client</title>
+</head>
+<body>
+  <script>
+    let ws;
+    let channel = "";
+    let userId = "";
+
+    // Inisialisasi koneksi dengan channel dan id
+    function init(ch, id) {
+      channel = ch;
+      userId = id;
+
+      const wsURL = `wss://go-03.zeabur.app/ws/room?channel=${encodeURIComponent(ch)}&id=${encodeURIComponent(id)}`;
+
+      ws = new WebSocket(wsURL);
+
+      ws.onopen = () => {
+        console.log(`🔌 Connected as "${userId}" in channel "${channel}"`);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("📥 Received:", data);
+        } catch (err) {
+          console.warn("⚠️ JSON parsing error", event.data);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log("❌ Connection closed");
+      };
+
+      ws.onerror = (err) => {
+        console.error("⚠️ WebSocket error:", err);
+      };
+    }
+
+    // Kirim hanya teks
+    function sendMessage(text) {
+      if (!channel || !userId) {
+        console.warn("❗ Harap panggil init(channel, id) terlebih dahulu.");
+        return;
+      }
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const payload = {
+          ch: channel,
+          id: userId,
+          tx: text,
+          waktu: new Date().toISOString()
+        };
+        ws.send(JSON.stringify(payload));
+        console.log("📤 Sent:", payload);
+      } else {
+        console.warn("❌ WebSocket belum terbuka.");
+      }
+    }
+  </script>
+</body>
+</html>
