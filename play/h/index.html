@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Responsive Sidebar UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    /* Custom animations */
+    .sidebar-transition {
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    .dropdown-enter {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+      transition: all 0.2s ease-out;
+    }
+    
+    .dropdown-enter-active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    
+    .submenu-enter {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+    
+    .submenu-enter-active {
+      max-height: 200px;
+      opacity: 1;
+    }
+    
+    /* Overlay for mobile */
+    .sidebar-overlay {
+      backdrop-filter: blur(2px);
+      transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Scrollbar styling */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #374151;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #6B7280;
+      border-radius: 2px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #9CA3AF;
+    }
+    
+    /* Hover effects */
+    .menu-item:hover {
+      transform: translateX(4px);
+      transition: transform 0.2s ease;
+    }
+    
+    .submenu-item:hover {
+      transform: translateX(2px);
+      transition: transform 0.2s ease;
+    }
+    
+    /* Active state */
+    .menu-item.active {
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Notification pulse */
+    .notification-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Badge styles */
+    .badge {
+      animation: bounce 1s infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-gray-50">
+
+  <!-- Sidebar Overlay (Mobile) -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden sidebar-overlay opacity-0 pointer-events-none transition-opacity"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="w-64 bg-gradient-to-b from-gray-800 to-gray-900 text-white flex-col fixed lg:relative z-40 sidebar-transition transform -translate-x-full lg:translate-x-0 lg:flex hidden">
+    <!-- Sidebar Header -->
+    <div class="p-4 font-bold text-lg bg-gray-900 sticky top-0 z-10 flex items-center justify-between border-b border-gray-700">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <i class="bi bi-menu-button-wide text-white"></i>
+        </div>
+        <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Dashboard</span>
+      </div>
+      <button id="closeSidebar" class="lg:hidden text-gray-400 hover:text-white transition-colors">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <!-- Menu Container -->
+    <div id="menu-container" class="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar"></div>
+    
+    <!-- Sidebar Footer -->
+    <div class="p-4 bg-gray-900 sticky bottom-0 z-10 text-sm text-gray-400 border-t border-gray-700">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+          <i class="bi bi-person-check text-white text-sm"></i>
+        </div>
+        <div>
+          <p class="text-white font-medium">John Doe</p>
+          <p class="text-xs">Administrator</p>
+        </div>
+      </div>
+      <div class="text-xs text-center pt-2 border-t border-gray-700">
+        &copy; 2025 Your App
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="flex-1 flex flex-col lg:ml-0 transition-all duration-300" id="main-wrapper">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <button id="toggleSidebar" class="text-xl text-gray-600 hover:text-gray-900 lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-xl text-gray-800">Navbar</span>
+          <span class="text-sm text-gray-500 hidden sm:inline">| Dashboard</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2 relative">
+        <!-- Search (hidden on mobile) -->
+        <div class="hidden md:flex items-center bg-gray-100 rounded-lg px-3 py-2">
+          <i class="bi bi-search text-gray-400 mr-2"></i>
+          <input type="text" placeholder="Search..." class="bg-transparent border-none outline-none text-sm w-48">
+        </div>
+        
+        <!-- Notifications -->
+        <div class="relative">
+          <button id="notifBtn" class="text-gray-700 hover:text-gray-900 relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <i class="bi bi-bell text-xl"></i>
+            <span class="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5 badge notification-pulse">3</span>
+          </button>
+          <div id="notifMenu" class="absolute right-0 mt-2 w-80 bg-white shadow-lg rounded-lg border border-gray-200 hidden dropdown-enter z-50">
+            <div class="p-3 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-800">Notifications</h3>
+              <p class="text-sm text-gray-500">You have 3 unread notifications</p>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <div class="p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <i class="bi bi-info-circle text-white text-sm"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">System Update</p>
+                    <p class="text-xs text-gray-500">New features available</p>
+                  </div>
+                  <span class="text-xs text-gray-400">2m ago</span>
+                </div>
+              </div>
+              <div class="p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                    <i class="bi bi-check-circle text-white text-sm"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">Task Completed</p>
+                    <p class="text-xs text-gray-500">Report generation finished</p>
+                  </div>
+                  <span class="text-xs text-gray-400">1h ago</span>
+                </div>
+              </div>
+              <div class="p-3 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center">
+                    <i class="bi bi-exclamation-triangle text-white text-sm"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">Warning</p>
+                    <p class="text-xs text-gray-500">Storage space running low</p>
+                  </div>
+                  <span class="text-xs text-gray-400">3h ago</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-3 border-t border-gray-200">
+              <button class="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium">View All Notifications</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="relative">
+          <button id="msgBtn" class="text-gray-700 hover:text-gray-900 relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <i class="bi bi-envelope text-xl"></i>
+            <span class="absolute -top-1 -right-1 text-[10px] bg-green-500 text-white rounded-full px-1.5 py-0.5 badge">2</span>
+          </button>
+          <div id="msgMenu" class="absolute right-0 mt-2 w-72 bg-white shadow-lg rounded-lg border border-gray-200 hidden dropdown-enter z-50">
+            <div class="p-3 border-b border-gray-200">
+              <h3 class="font-semibold text-gray-800">Messages</h3>
+              <p class="text-sm text-gray-500">2 new messages</p>
+            </div>
+            <div class="max-h-64 overflow-y-auto">
+              <div class="p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium">JD</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">Jane Doe</p>
+                    <p class="text-xs text-gray-500">Hey, how are you doing?</p>
+                  </div>
+                  <span class="text-xs text-gray-400">5m ago</span>
+                </div>
+              </div>
+              <div class="p-3 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium">MS</span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-800">Mike Smith</p>
+                    <p class="text-xs text-gray-500">The project is ready for review</p>
+                  </div>
+                  <span class="text-xs text-gray-400">1h ago</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-3 border-t border-gray-200">
+              <button class="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium">View All Messages</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account -->
+        <div class="relative">
+          <button id="accBtn" class="text-gray-700 hover:text-gray-900 flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+              <i class="bi bi-person text-white"></i>
+            </div>
+            <span class="hidden sm:inline font-medium">John Doe</span>
+            <i class="bi bi-chevron-down text-sm hidden sm:inline"></i>
+          </button>
+          <div id="accMenu" class="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border border-gray-200 hidden dropdown-enter z-50">
+            <div class="p-3 border-b border-gray-200">
+              <p class="font-medium text-gray-800">John Doe</p>
+              <p class="text-sm text-gray-500">john@example.com</p>
+            </div>
+            <div class="py-2">
+              <button class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <i class="bi bi-person-circle"></i> Profile
+              </button>
+              <button class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <i class="bi bi-gear"></i> Settings
+              </button>
+              <button class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <i class="bi bi-question-circle"></i> Help
+              </button>
+            </div>
+            <div class="border-t border-gray-200 py-2">
+              <button class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 overflow-auto bg-gray-50">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-sm text-gray-600 mb-6">
+        <i class="bi bi-house-door"></i>
+        <span>Home</span>
+        <i class="bi bi-chevron-right"></i>
+        <span class="text-gray-800 font-medium">Dashboard</span>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <i class="bi bi-plus-circle"></i>
+            Add New
+          </button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-blue-100">Total Users</p>
+                <p class="text-2xl font-bold">1,234</p>
+              </div>
+              <i class="bi bi-people text-3xl text-blue-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-green-100">Revenue</p>
+                <p class="text-2xl font-bold">$45,678</p>
+              </div>
+              <i class="bi bi-currency-dollar text-3xl text-green-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-purple-100">Orders</p>
+                <p class="text-2xl font-bold">567</p>
+              </div>
+              <i class="bi bi-bag text-3xl text-purple-200"></i>
+            </div>
+          </div>
+          
+          <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-orange-100">Growth</p>
+                <p class="text-2xl font-bold">+23%</p>
+              </div>
+              <i class="bi bi-graph-up text-3xl text-orange-200"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="bg-gray-50 rounded-lg p-8 text-center">
+          <i class="bi bi-graph-up text-6xl text-gray-400 mb-4"></i>
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">Welcome to your Dashboard</h2>
+          <p class="text-gray-600">This is where your main content will be displayed. You can add charts, tables, and other components here.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Script -->
+  <script>
+    // Menu data with enhanced structure
+    const menuData = [
+      {
+        text: "Dashboard",
+        icon: "bi-speedometer2",
+        url: "/dashboard",
+        active: true,
+        onClick: () => {
+          console.log("Dashboard clicked");
+          setActiveMenu("Dashboard");
+        }
+      },
+      {
+        text: "Analytics",
+        icon: "bi-graph-up",
+        url: "/analytics",
+        onClick: () => {
+          console.log("Analytics clicked");
+          setActiveMenu("Analytics");
+        }
+      },
+      {
+        text: "User Management",
+        icon: "bi-people",
+        submenu: [
+          {
+            text: "All Users",
+            icon: "bi-person-lines-fill",
+            url: "/users",
+            onClick: () => {
+              console.log("All Users clicked");
+              setActiveMenu("All Users");
+            }
+          },
+          {
+            text: "User Roles",
+            icon: "bi-person-badge",
+            url: "/roles",
+            onClick: () => {
+              console.log("User Roles clicked");
+              setActiveMenu("User Roles");
+            }
+          },
+          {
+            text: "Permissions",
+            icon: "bi-lock",
+            url: "/permissions",
+            onClick: () => {
+              console.log("Permissions clicked");
+              setActiveMenu("Permissions");
+            }
+          }
+        ]
+      },
+      {
+        text: "Content",
+        icon: "bi-file-earmark-text",
+        submenu: [
+          {
+            text: "Posts",
+            icon: "bi-journal-text",
+            url: "/posts",
+            onClick: () => {
+              console.log("Posts clicked");
+              setActiveMenu("Posts");
+            }
+          },
+          {
+            text: "Categories",
+            icon: "bi-tags",
+            url: "/categories",
+            onClick: () => {
+              console.log("Categories clicked");
+              setActiveMenu("Categories");
+            }
+          }
+        ]
+      },
+      {
+        text: "Reports",
+        icon: "bi-bar-chart",
+        url: "/reports",
+        onClick: () => {
+          console.log("Reports clicked");
+          setActiveMenu("Reports");
+        }
+      },
+      {
+        text: "Settings",
+        icon: "bi-gear",
+        submenu: [
+          {
+            text: "General",
+            icon: "bi-sliders",
+            url: "/settings/general",
+            onClick: () => {
+              console.log("General Settings clicked");
+              setActiveMenu("General");
+            }
+          },
+          {
+            text: "Security",
+            icon: "bi-shield-check",
+            url: "/settings/security",
+            onClick: () => {
+              console.log("Security Settings clicked");
+              setActiveMenu("Security");
+            }
+          },
+          {
+            text: "Notifications",
+            icon: "bi-bell",
+            url: "/settings/notifications",
+            onClick: () => {
+              console.log("Notification Settings clicked");
+              setActiveMenu("Notifications");
+            }
+          }
+        ]
+      }
+    ];
+
+    // Set active menu function
+    function setActiveMenu(menuName) {
+      // Update breadcrumb
+      const breadcrumb = document.querySelector('nav span:last-child');
+      if (breadcrumb) {
+        breadcrumb.textContent = menuName;
+      }
+      
+      // Update page title
+      document.title = `${menuName} - Dashboard`;
+      
+      // Update main content heading
+      const mainHeading = document.querySelector('main h1');
+      if (mainHeading) {
+        mainHeading.textContent = menuName;
+      }
+      
+      // Remove active class from all menu items
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Add active class to clicked menu item
+      document.querySelectorAll('.menu-item').forEach(item => {
+        const span = item.querySelector('span');
+        if (span && span.textContent === menuName) {
+          item.classList.add('active');
+        }
+      });
+    }
+
+    // Build menu function
+    function buildMenu() {
+      const container = document.getElementById("menu-container");
+      container.innerHTML = '';
+      
+      menuData.forEach((item) => {
+        const hasSub = Array.isArray(item.submenu);
+        const button = document.createElement("button");
+        button.className = `menu-item w-full text-left p-3 rounded-lg hover:bg-gray-700 flex items-center justify-between group transition-all ${item.active ? 'active' : ''}`;
+        button.innerHTML = `
+          <div class="flex items-center gap-3">
+            <i class="bi ${item.icon} text-lg"></i>
+            <span class="font-medium">${item.text}</span>
+          </div>
+          ${hasSub ? '<i class="bi bi-chevron-down transition-transform duration-200 group-[.open]:rotate-180"></i>' : ''}
+        `;
+        
+        let submenu = null;
+        if (hasSub) {
+          submenu = document.createElement("div");
+          submenu.className = "ml-8 space-y-1 mt-2 submenu-enter";
+          item.submenu.forEach(sub => {
+            const subBtn = document.createElement("button");
+            subBtn.className = "submenu-item block w-full text-left p-2 rounded-lg hover:bg-gray-600 text-sm flex items-center gap-3 transition-all";
+            subBtn.innerHTML = `
+              <i class="bi ${sub.icon} text-sm"></i> 
+              <span>${sub.text}</span>
+            `;
+            subBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              sub.onClick();
+            });
+            submenu.appendChild(subBtn);
+          });
+          
+          button.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isOpen = button.classList.contains("open");
+            
+            // Close all other submenus
+            document.querySelectorAll('.menu-item.open').forEach(openItem => {
+              if (openItem !== button) {
+                openItem.classList.remove('open');
+                const otherSubmenu = openItem.nextElementSibling;
+                if (otherSubmenu) {
+                  otherSubmenu.classList.add('submenu-enter');
+                  otherSubmenu.classList.remove('submenu-enter-active');
+                }
+              }
+            });
+            
+            button.classList.toggle("open");
+            if (isOpen) {
+              submenu.classList.add('submenu-enter');
+              submenu.classList.remove('submenu-enter-active');
+            } else {
+              submenu.classList.remove('submenu-enter');
+              submenu.classList.add('submenu-enter-active');
+            }
+          });
+        } else {
+          button.addEventListener("click", (e) => {
+            e.stopPropagation();
+            item.onClick();
+          });
+        }
+        
+        container.appendChild(button);
+        if (submenu) container.appendChild(submenu);
+      });
+    }
+
+    // Initialize menu
+    buildMenu();
+
+    // Sidebar functionality
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    function openSidebar() {
+      sidebar.classList.remove('hidden');
+      sidebar.classList.add('flex');
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('opacity-0', 'pointer-events-none');
+      document.body.style.overflow = '';
+      
+      setTimeout(() => {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('flex');
+      }, 300);
+    }
+
+    toggleBtn.addEventListener('click', openSidebar);
+    closeSidebarBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Dropdown functionality
+    function setupDropdown(btnId, menuId) {
+      const btn = document.getElementById(btnId);
+      const menu = document.getElementById(menuId);
+      
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Close all other dropdowns
+        document.querySelectorAll('[id$="Menu"]').forEach(m => {
+          if (m !== menu) {
+            m.classList.add('hidden');
+            m.classList.remove('dropdown-enter-active');
+          }
+        });
+        
+        // Toggle current dropdown
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        
+        if (isHidden) {
+          menu.classList.add('dropdown-enter');
+          setTimeout(() => {
+            menu.classList.remove('dropdown-enter');
+            menu.classList.add('dropdown-enter-active');
+          }, 10);
+        } else {
+          menu.classList.remove('dropdown-enter-active');
+        }
+      });
+    }
+
+    // Setup dropdowns
+    setupDropdown("notifBtn", "notifMenu");
+    setupDropdown("msgBtn", "msgMenu");
+    setupDropdown("accBtn", "accMenu");
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('[id$="Btn"]') && !e.target.closest('[id$="Menu"]')) {
+        document.querySelectorAll('[id$="Menu"]').forEach(menu => {
+          menu.classList.add('hidden');
+          menu.classList.remove('dropdown-enter-active');
+        });
+      }
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 1024) {
+        closeSidebar();
+      }
+    });
+
+    // Initialize theme
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</body>
+</html>

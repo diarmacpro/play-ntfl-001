@@ -658,6 +658,47 @@ function getDataMainOnFbs(tgl) {
       cB: Object.keys(grouped).length
     };
 
+
+const retriedFlags = {}; // Menyimpan status percobaan per tanggal
+
+function getDataMainOnFbs(tgl) {
+  const dtTempTry = getTryData(tgl); // dapatkan jumlah data, misalnya cA vs cB
+
+  // 🚨 Deteksi duplikat
+  if (dtTempTry.cA !== dtTempTry.cB) {
+    if (retriedFlags[tgl]) {
+      console.warn(`Sudah retry sebelumnya untuk ${tgl}, tidak ulang lagi.`);
+      return;
+    }
+
+    console.warn('Data kosong/duplikat, akan generate ulang...');
+
+    retriedFlags[tgl] = true; // ✅ tandai sudah dicoba
+
+    fbsSvc.delDt(`/app/verif-data-masuk/${tgl}`, () => {
+      callDataMain(tgl, (err, newData) => {
+        if (!err && Array.isArray(newData)) {
+          _.forEach(newData, (item) => {
+            fbsSvc.iDtKy(`/app/verif-data-masuk/${tgl}`, item, () => {});
+          });
+
+          setTimeout(() => getDataMainOnFbs(tgl), 1000); // 🔁 hanya sekali
+        } else {
+          console.error('Gagal ambil data baru dari callDataMain.');
+        }
+      });
+    });
+
+    return;
+  }
+
+  // ✅ Data konsisten → lanjut proses
+  console.log('Data konsisten untuk', tgl);
+}
+
+
+
+    /*
     // Jika ada duplikat id_stock, hapus & ambil ulang
     if (dtTempTry.cA !== dtTempTry.cB) {
       console.warn('Data tidak konsisten, ada duplikat id_stock');
@@ -675,6 +716,7 @@ function getDataMainOnFbs(tgl) {
       });
       return;
     }
+    */
 
     // Data valid dan tidak duplikat
     console.log('Data valid, tidak ada duplikat id_stock');
