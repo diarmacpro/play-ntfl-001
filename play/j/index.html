@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aplikasi Web AI dengan Firebase</title>
+</head>
+<body>
+    <h1>Aplikasi Saya dengan Kekuatan AI!</h1>
+
+    <div id="ai-output"></div>
+
+    <script type="module">
+        // --- Bagian PENTING: Import semua yang dibutuhkan dari URL lengkap ---
+        // Impor initializeApp dari Firebase App SDK dengan URL lengkap
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+
+        // Impor fungsi-fungsi AI dari Firebase AI SDK dengan URL lengkap
+        // (getAI, getGenerativeModel, dan GoogleAIBackend adalah yang umum digunakan)
+        import { getAI, getGenerativeModel, GoogleAIBackend } from 'https://cdn.jsdelivr.net/npm/firebase@12.0.0/firebase-ai.min.js';
+        // ------------------------------------------------------------------
+
+        // 1. Konfigurasi Proyek Firebase Anda
+        const firebaseConfig = {
+						apiKey: "AIzaSyC27Gn7NOuQWI23ECXIkag9-DrrBzy6XEk",
+						authDomain: "stock-wv.firebaseapp.com",
+						databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app",
+						projectId: "stock-wv",
+						storageBucket: "stock-wv.firebasestorage.app",
+						messagingSenderId: "463129964774",
+						appId: "1:463129964774:web:61f55a955c098d89434b27",
+						measurementId: "G-R9DZ526ZWD"
+            // apiKey: "AIzaSyDrDGh1YVtBBIdgNTMS9p_PY24uelBZx-w",
+            // authDomain: "stock-wv.firebaseapp.com",
+            // databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app",
+            // projectId: "stock-wv",
+            // storageBucket: "stock-wv.firebasestorage.app",
+            // messagingSenderId: "463129964774",
+            // appId: "1:463129964774:web:351332e003a5a88c434b27",
+            // measurementId: "G-L8KRSPHTNN"
+        };
+
+        // 2. Inisialisasi Aplikasi Firebase Anda
+        const app = initializeApp(firebaseConfig);
+
+        // 3. Inisialisasi Layanan AI Firebase
+        // Penting: Inisialisasi layanan AI dengan backend yang sesuai,
+        // seperti GoogleAIBackend untuk mengakses Gemini API.
+        const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+        console.log("Firebase AI SDK berhasil dimuat dan diinisialisasi!");
+
+        // 4. Contoh Penggunaan
+        async function generateContent() {
+            try {
+                // Gunakan getGenerativeModel yang sudah diimpor
+                const model = getGenerativeModel(ai, { model: 'gemini-2.5-flash' });
+                const prompt = "Berikan saya satu fakta menarik tentang Firebase.";
+                console.log(`Mengirim prompt: "${prompt}"`);
+
+                const result = await model.generateContent(prompt);
+                const responseText = result.response.text();
+
+                console.log("Respon dari AI:", responseText);
+                document.getElementById('ai-output').innerText = `AI mengatakan: ${responseText}`;
+
+            } catch (error) {
+                console.error("Terjadi kesalahan saat berinteraksi dengan AI:", error);
+                document.getElementById('ai-output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        // Panggil fungsi untuk menghasilkan konten saat halaman dimuat
+        generateContent();
+    </script>
+</body>
+</html>
