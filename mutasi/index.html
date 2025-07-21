@@ -6,6 +6,27 @@
     <title>Mutasi</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .modal-enter {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    .modal-enter-active {
+      transition: all 300ms ease-out;
+      opacity: 1;
+      transform: scale(1);
+    }
+    .modal-leave {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .modal-leave-active {
+      transition: all 200ms ease-in;
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  </style>
+
   </head>
   <body class="hidden">
     <!-- ✅ Navbar -->
@@ -19,7 +40,7 @@
         <div class="flex items-center space-x-4">
           <!-- Tombol History -->
           <button
-            id="btn-history"
+            id="openModal"
             class="flex items-center gap-1 bg-blue-100 hover:bg-blue-200 text-blue-600 px-3 py-1 rounded-full transition shadow-sm"
             title="Riwayat"
           >
@@ -123,6 +144,106 @@
         </div>
       </div>
     </div>
+
+<div class="">
+  <!-- Backdrop full screen -->
+  <div id="modalBackdrop" class="p-2 fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+    
+    <!-- Modal full screen dengan padding -->
+    <div id="modalBox" class="bg-white rounded-2xl shadow-xl w-full h-full p-2 relative transform transition-all duration-300 ease-out flex flex-col">
+      <div class="flex-1 overflow-auto rounded-xl bg-white p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Modal Smooth Fullscreen</h2>
+<hr>
+  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
+    <!-- Baris 1 -->
+    <div class="flex justify-between flex-wrap">
+      <span class="font-mono text-blue-600">12:34:56</span>
+      <span>ID: <span class="font-medium">STK1023</span></span>
+      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
+    </div>
+    <!-- Baris 2 -->
+    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
+      <span>Lokasi Awal: <span class="font-semibold">Gudang A</span></span>
+      <span>Lokasi Akhir: <span class="font-semibold">Rak B2</span></span>
+      <span>PIC: <span class="font-semibold">Diar</span></span>
+      <span>Helper: <span class="font-semibold">Andi</span></span>
+    </div>
+  </div>
+  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
+    <!-- Baris 1 -->
+    <div class="flex justify-between flex-wrap">
+      <span class="font-mono text-blue-600">12:34:56</span>
+      <span>ID: <span class="font-medium">STK1023</span></span>
+      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
+    </div>
+    <!-- Baris 2 -->
+    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
+      <span>Lokasi Awal: <span class="font-semibold">Gudang A</span></span>
+      <span>Lokasi Akhir: <span class="font-semibold">Rak B2</span></span>
+      <span>PIC: <span class="font-semibold">Diar</span></span>
+      <span>Helper: <span class="font-semibold">Andi</span></span>
+    </div>
+  </div>
+  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
+    <!-- Baris 1 -->
+    <div class="flex justify-between flex-wrap">
+      <span class="font-mono text-blue-600">12:34:56</span>
+      <span>ID: <span class="font-medium">STK1023</span></span>
+      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
+    </div>
+    <!-- Baris 2 -->
+    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
+      <span>Lokasi Awal: <span class="font-semibold">Gudang A</span></span>
+      <span>Lokasi Akhir: <span class="font-semibold">Rak B2</span></span>
+      <span>PIC: <span class="font-semibold">Diar</span></span>
+      <span>Helper: <span class="font-semibold">Andi</span></span>
+    </div>
+  </div>
+<hr>
+        <div class="text-right">
+          <button id="closeModal" class="mt-2 px-4 py-2 bg-red-300 hover:bg-red-400 text-white rounded-lg transition">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+  <script>
+    const openBtn = document.getElementById('openModal');
+    const closeBtn = document.getElementById('closeModal');
+    const backdrop = document.getElementById('modalBackdrop');
+    const modalBox = document.getElementById('modalBox');
+
+    openBtn.addEventListener('click', () => {
+      history();
+      backdrop.classList.remove('hidden');
+      modalBox.classList.add('modal-enter');
+      setTimeout(() => {
+        modalBox.classList.remove('modal-enter');
+        modalBox.classList.add('modal-enter-active');
+      }, 10);
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modalBox.classList.remove('modal-enter-active');
+      modalBox.classList.add('modal-leave');
+      modalBox.classList.add('modal-leave-active');
+      setTimeout(() => {
+        backdrop.classList.add('hidden');
+        modalBox.classList.remove('modal-leave', 'modal-leave-active');
+      }, 200);
+    });
+
+    // Static backdrop: klik luar tidak menutup modal
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        // tidak menutup
+      }
+    });
+  </script>
+
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" crossorigin="anonymous"></script>

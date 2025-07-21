@@ -221,8 +221,4 @@ $(function () {
   $('#btn-logout').on('click', function () {
     logout();
   });
-
-  $('#btn-history').on('click', function () {
-    history();
-  });
 });
