@@ -1,3 +1,13 @@
+function logout(){
+	console.log("Logout");
+	delFromLocalStorage('z');
+	location.reload();
+}
+
+function history(){
+	console.log("History");
+}
+
 function mulaiInisiasiData() {
 	console.log('🔄 Proses inisialisasi dimulai...');
 }

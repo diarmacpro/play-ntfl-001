@@ -217,4 +217,12 @@ $(function () {
   $('#reset-button').on('click', function () {
     resetFormHlpLoc();
   });
+
+  $('#btn-logout').on('click', function () {
+    logout();
+  });
+
+  $('#btn-history').on('click', function () {
+    history();
+  });
 });
