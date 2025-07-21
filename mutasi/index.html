@@ -34,7 +34,7 @@
       <div class="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
         
         <!-- Tanggal -->
-        <div id="tanggalReal" class="text-sm text-gray-600"></div>
+        <div class="tanggal-real text-sm text-gray-600"></div>
 
         <!-- Tombol kanan -->
         <div class="flex items-center space-x-4">
@@ -152,7 +152,7 @@
     <!-- Modal full screen dengan padding -->
     <div id="modalBox" class="bg-white rounded-2xl shadow-xl w-full h-full p-2 relative transform transition-all duration-300 ease-out flex flex-col">
       <div class="flex-1 overflow-auto rounded-xl bg-white p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-2">Modal Smooth Fullscreen</h2>
+        <div class="text-gray-800 mb-2"><span class="text-lg font-semibold">List History</span> <span class="text-sm tanggal-real"></span></div>
 <hr>
   <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
     <!-- Baris 1 -->
@@ -162,43 +162,128 @@
       <span>Nama: <span class="font-medium">Barang Contoh</span></span>
     </div>
     <!-- Baris 2 -->
-    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
-      <span>Lokasi Awal: <span class="font-semibold">307 B</span></span>
-      <span>Lokasi Akhir: <span class="font-semibold">1 X</span></span>
-      <span>PIC: <span class="font-semibold">Diar</span></span>
-      <span>Helper: <span class="font-semibold">Lainya</span></span>
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Kolom Kiri -->
+      <div class="space-y-1 text-left">
+        <div>
+          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
+        </div>
+        <div>
+          <span>PIC: </span><span class="font-semibold">Diar</span>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan -->
+      <div class="space-y-1 text-right">
+        <div>
+          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
+        </div>
+        <div>
+          <span>Helper: </span><span class="font-semibold">Lainya</span>
+        </div>
+      </div>
     </div>
   </div>
+
+  
   <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
     <!-- Baris 1 -->
     <div class="flex justify-between flex-wrap">
       <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">12345</span></span>
+      <span>ID: <span class="font-medium">23456</span></span>
       <span>Nama: <span class="font-medium">Barang Contoh</span></span>
     </div>
     <!-- Baris 2 -->
-    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
-      <span>Lokasi Awal: <span class="font-semibold">312 D</span></span>
-      <span>Lokasi Akhir: <span class="font-semibold">1 X</span></span>
-      <span>PIC: <span class="font-semibold">Diar</span></span>
-      <span>Helper: <span class="font-semibold">Lainya</span></span>
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Kolom Kiri -->
+      <div class="space-y-1 text-left">
+        <div>
+          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
+        </div>
+        <div>
+          <span>PIC: </span><span class="font-semibold">Diar</span>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan -->
+      <div class="space-y-1 text-right">
+        <div>
+          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
+        </div>
+        <div>
+          <span>Helper: </span><span class="font-semibold">Lainya</span>
+        </div>
+      </div>
     </div>
   </div>
+
+
+  
   <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
     <!-- Baris 1 -->
     <div class="flex justify-between flex-wrap">
       <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">34567</span></span>
+      <span>ID: <span class="font-medium">23456</span></span>
       <span>Nama: <span class="font-medium">Barang Contoh</span></span>
     </div>
     <!-- Baris 2 -->
-    <div class="flex justify-between flex-wrap text-gray-600 mt-1">
-      <span>Lokasi Awal: <span class="font-semibold">318 G</span></span>
-      <span>Lokasi Akhir: <span class="font-semibold">1 X</span></span>
-      <span>PIC: <span class="font-semibold">Diar</span></span>
-      <span>Helper: <span class="font-semibold">Lainya</span></span>
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Kolom Kiri -->
+      <div class="space-y-1 text-left">
+        <div>
+          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
+        </div>
+        <div>
+          <span>PIC: </span><span class="font-semibold">Diar</span>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan -->
+      <div class="space-y-1 text-right">
+        <div>
+          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
+        </div>
+        <div>
+          <span>Helper: </span><span class="font-semibold">Lainya</span>
+        </div>
+      </div>
     </div>
   </div>
+
+
+  
+  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
+    <!-- Baris 1 -->
+    <div class="flex justify-between flex-wrap">
+      <span class="font-mono text-blue-600">12:34:56</span>
+      <span>ID: <span class="font-medium">23456</span></span>
+      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
+    </div>
+    <!-- Baris 2 -->
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Kolom Kiri -->
+      <div class="space-y-1 text-left">
+        <div>
+          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
+        </div>
+        <div>
+          <span>PIC: </span><span class="font-semibold">Diar</span>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan -->
+      <div class="space-y-1 text-right">
+        <div>
+          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
+        </div>
+        <div>
+          <span>Helper: </span><span class="font-semibold">Lainya</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
 <hr>
         <div class="text-right">
           <button id="closeModal" class="mt-2 px-4 py-2 bg-red-300 hover:bg-red-400 text-white rounded-lg transition">
@@ -262,7 +347,7 @@
 
       function renderAfterLogin(){
         $('#namaLogin').text(getFromLocalStorage('z').nama);
-        $('#tanggalReal').text(stm());
+        $('.tanggal-real').text(stm());
         console.log("Sudah Login");
         document.body.classList.remove("hidden");
 
