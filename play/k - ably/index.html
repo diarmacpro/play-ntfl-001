@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ably Chat - Edukasi</title>
+  <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center px-4 py-6">
+
+  <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">Ably Realtime Chat</h1>
+
+    <!-- Form Nama -->
+    <div id="name-form" class="mb-4">
+      <input id="username" type="text" placeholder="Masukkan namamu..."
+        class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button onclick="masukChat()" class="mt-2 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Masuk Chat</button>
+    </div>
+
+    <!-- Chat Box -->
+    <div id="chat-ui" class="hidden flex flex-col space-y-4">
+      <div id="chat-box" class="h-64 overflow-y-auto bg-gray-50 border border-gray-200 rounded p-3 text-sm space-y-2"></div>
+      <div class="flex space-x-2">
+        <input id="message" type="text" placeholder="Tulis pesan..."
+          class="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <button onclick="kirim()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let ably, channel;
+    let username = '';
+
+    function masukChat() {
+      const inputName = document.getElementById('username');
+      username = inputName.value.trim();
+
+      if (!username) {
+        alert('Masukkan nama terlebih dahulu.');
+        return;
+      }
+
+      // Buat koneksi Ably
+      ably = new Ably.Realtime({
+        key: 'siHyZg.TVC4xw:K6KNecN_tO5835ryY4QFxN152ookz7x6BemB38RhD-k',
+        clientId: username
+      });
+
+      // Ambil channel
+      channel = ably.channels.get('room-edukasi');
+
+      // Subscribe pesan masuk
+      channel.subscribe('pesan', msg => {
+        tampilkanPesan(msg.clientId, msg.data);
+      });
+
+      // Tampilkan UI chat
+      document.getElementById('name-form').classList.add('hidden');
+      document.getElementById('chat-ui').classList.remove('hidden');
+    }
+
+    function kirim() {
+      const input = document.getElementById('message');
+      const pesan = input.value.trim();
+      if (pesan) {
+        channel.publish('pesan', pesan);
+        input.value = '';
+      }
+    }
+
+    function tampilkanPesan(pengirim, isi) {
+      const chatBox = document.getElementById('chat-box');
+      const el = document.createElement('div');
+      const isSaya = pengirim === username;
+      el.className = isSaya ? 'text-right' : 'text-left';
+      el.innerHTML = `
+        <span class="${isSaya ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'} inline-block px-3 py-1 rounded-lg max-w-[80%] break-words">
+          <strong>${pengirim}</strong>: ${isi}
+        </span>
+      `;
+      chatBox.appendChild(el);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>

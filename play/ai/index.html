@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Chat - Static App</title>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'bounce-slow': 'bounce 1s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .message-bubble {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .typing-indicator {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .sidebar-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div id="app" class="h-screen flex">
+        <!-- Loading Screen -->
+        <div id="loading" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+            <div class="text-center">
+                <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-gray-400">Memuat aplikasi...</p>
+            </div>
+        </div>
+
+        <!-- Auth Page -->
+        <div id="authPage" class="hidden min-h-screen bg-gray-900 flex items-center justify-center px-4 w-full">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="flex items-center justify-center mb-6">
+                        <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl font-bold text-white mb-2">Gemini Chat AI</h1>
+                    <p class="text-gray-400 text-lg">Platform chat AI dengan Google Gemini</p>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
+                    <div class="text-center mb-8">
+                        <svg class="w-12 h-12 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        <h2 class="text-2xl font-bold text-white">Masuk ke Akun</h2>
+                        <p class="text-gray-400 mt-2">Akses chat AI Gemini Anda</p>
+                    </div>
+
+                    <div id="authError" class="hidden bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-lg mb-6"></div>
+
+                    <form id="loginFormElement" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <input type="email" id="loginEmail" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400" placeholder="masukkan@email.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="loginPassword" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 pr-12" placeholder="••••••••" required>
+                                <button type="button" id="toggleLoginPassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="loginButton" class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center hover-scale">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1"></path>
+                            </svg>
+                            Masuk
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" class="hidden bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
+                    <div class="text-center mb-8">
+                        <svg class="w-12 h-12 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                        </svg>
+                        <h2 class="text-2xl font-bold text-white">Buat Akun Baru</h2>
+                        <p class="text-gray-400 mt-2">Mulai chat dengan AI Gemini</p>
+                    </div>
+
+                    <form id="registerFormElement" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                            <input type="email" id="registerEmail" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400" placeholder="masukkan@email.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <input type="password" id="registerPassword" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400" placeholder="••••••••" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Konfirmasi Password</label>
+                            <input type="password" id="confirmPassword" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" id="registerButton" class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-800 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center hover-scale">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                            </svg>
+                            Daftar
+                        </button>
+                    </form>
+                </div>
+
+                <div class="text-center mt-6">
+                    <button id="toggleAuth" class="text-blue-400 hover:text-blue-300 transition duration-200">
+                        <span id="toggleAuthText">Belum punya akun? <span class="font-medium">Daftar di sini</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden h-screen flex bg-gray-900 w-full">
+            <!-- Sidebar -->
+            <div class="w-80 bg-gray-800 border-r border-gray-700 flex flex-col h-full sidebar-transition">
+                <!-- Header -->
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <svg class="w-8 h-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            <h1 class="text-xl font-bold text-white">Gemini Chat</h1>
+                        </div>
+                        <button id="settingsButton" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- New Chat Button -->
+                <div class="p-4">
+                    <button id="newChatButton" class="w-full flex items-center justify-center p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 hover-scale">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Chat Baru
+                    </button>
+                </div>
+
+                <!-- Sessions List -->
+                <div class="flex-1 overflow-y-auto p-4">
+                    <h3 class="text-sm font-medium text-gray-400 mb-3">RIWAYAT CHAT</h3>
+                    <div id="sessionsList" class="space-y-2">
+                        <!-- Sessions will be populated here -->
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div class="p-4 border-t border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="text-white">
+                            <p id="userEmail" class="text-sm font-medium"></p>
+                            <p id="apiKeyCount" class="text-xs text-gray-400">API Keys: 0</p>
+                        </div>
+                        <button id="logoutButton" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition duration-200">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="flex-1 flex flex-col bg-gray-900">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="flex-1 flex items-center justify-center text-gray-400">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        <h3 class="text-xl font-medium mb-2">Selamat datang di Gemini Chat</h3>
+                        <p class="text-gray-500">Pilih session atau buat chat baru untuk memulai</p>
+                    </div>
+                </div>
+
+                <!-- No API Key Screen -->
+                <div id="noApiKeyScreen" class="hidden flex-1 flex items-center justify-center text-gray-400">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 12H9v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-6.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
+                        <h3 class="text-xl font-medium mb-2">API Key Diperlukan</h3>
+                        <p class="text-gray-500">Silakan tambahkan Google Gemini API key di pengaturan</p>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chatArea" class="hidden flex-1 flex flex-col">
+                    <div id="messagesContainer" class="flex-1 overflow-y-auto p-6 space-y-6">
+                        <!-- Messages will be populated here -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="border-t border-gray-700 p-6">
+                        <div class="flex items-end space-x-4">
+                            <div class="flex-1">
+                                <textarea id="messageInput" placeholder="Ketik pesan Anda di sini..." class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 resize-none" rows="1"></textarea>
+                            </div>
+                            <button id="sendButton" class="p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg transition duration-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md border border-gray-700">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 12H9v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-6.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
+                        Pengaturan API
+                    </h2>
+                    <button id="closeSettingsButton" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Google Gemini API Key</label>
+                        <input type="password" id="apiKeyInput" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white" placeholder="AIza...">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Model</label>
+                        <select id="modelSelect" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        </select>
+                    </div>
+
+                    <div class="flex space-x-3 pt-4">
+                        <button id="cancelSettingsButton" class="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition duration-200">
+                            Batal
+                        </button>
+                        <button id="saveSettingsButton" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-800 transition duration-200">
+                            Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
