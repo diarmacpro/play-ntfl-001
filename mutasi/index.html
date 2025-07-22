@@ -164,139 +164,16 @@
       <div class="flex-1 overflow-auto rounded-xl bg-white p-6 pt-0">
         <div class="text-gray-800 mb-2 pt-6" id="closeModal"><span class="text-lg font-semibold">List History</span> <span class="text-sm tanggal-real"></span></div>
 <hr>
-  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
-    <!-- Baris 1 -->
-    <div class="flex justify-between flex-wrap">
-      <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">23456</span></span>
-      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
-    </div>
-    <!-- Baris 2 -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Kolom Kiri -->
-      <div class="space-y-1 text-left">
-        <div>
-          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
-        </div>
-        <div>
-          <span>PIC: </span><span class="font-semibold">Diar</span>
-        </div>
-      </div>
 
-      <!-- Kolom Kanan -->
-      <div class="space-y-1 text-right">
-        <div>
-          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
-        </div>
-        <div>
-          <span>Helper: </span><span class="font-semibold">Lainya</span>
-        </div>
-      </div>
-    </div>
-  </div>
+<div id="historyContainer" class="space-y-2"></div>
 
-  
-  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
-    <!-- Baris 1 -->
-    <div class="flex justify-between flex-wrap">
-      <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">23456</span></span>
-      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
-    </div>
-    <!-- Baris 2 -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Kolom Kiri -->
-      <div class="space-y-1 text-left">
-        <div>
-          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
-        </div>
-        <div>
-          <span>PIC: </span><span class="font-semibold">Diar</span>
-        </div>
-      </div>
-
-      <!-- Kolom Kanan -->
-      <div class="space-y-1 text-right">
-        <div>
-          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
-        </div>
-        <div>
-          <span>Helper: </span><span class="font-semibold">Lainya</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  
-  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
-    <!-- Baris 1 -->
-    <div class="flex justify-between flex-wrap">
-      <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">23456</span></span>
-      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
-    </div>
-    <!-- Baris 2 -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Kolom Kiri -->
-      <div class="space-y-1 text-left">
-        <div>
-          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
-        </div>
-        <div>
-          <span>PIC: </span><span class="font-semibold">Diar</span>
-        </div>
-      </div>
-
-      <!-- Kolom Kanan -->
-      <div class="space-y-1 text-right">
-        <div>
-          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
-        </div>
-        <div>
-          <span>Helper: </span><span class="font-semibold">Lainya</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  
-  <div class="border-b border-gray-200 py-3 text-sm text-gray-700">
-    <!-- Baris 1 -->
-    <div class="flex justify-between flex-wrap">
-      <span class="font-mono text-blue-600">12:34:56</span>
-      <span>ID: <span class="font-medium">23456</span></span>
-      <span>Nama: <span class="font-medium">Barang Contoh</span></span>
-    </div>
-    <!-- Baris 2 -->
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Kolom Kiri -->
-      <div class="space-y-1 text-left">
-        <div>
-          <span>Lokasi Awal: </span><span class="font-semibold">307 B</span>
-        </div>
-        <div>
-          <span>PIC: </span><span class="font-semibold">Diar</span>
-        </div>
-      </div>
-
-      <!-- Kolom Kanan -->
-      <div class="space-y-1 text-right">
-        <div>
-          <span>Lokasi Akhir: </span><span class="font-semibold">1 X</span>
-        </div>
-        <div>
-          <span>Helper: </span><span class="font-semibold">Lainya</span>
-        </div>
-      </div>
-    </div>
-  </div>
       </div>
     </div>
 
   </div>
 </div>
+
+
   <script>
     const openBtn = document.getElementById('openModal');
     const closeBtn = document.getElementById('closeModal');
@@ -340,6 +217,7 @@
     <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
 
     <script src="./app.js"></script>
+    <script src="./render.js"></script>
 
     <script>
 function showAlert(text = 'Berhasil!', type = 'success') {
