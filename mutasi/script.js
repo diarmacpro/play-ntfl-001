@@ -8,20 +8,40 @@ function history(){
 	console.log("History");
 }
 
+function tampilkanBackdrop() {
+  document.getElementById('backdrop').classList.remove('hidden');
+}
+
+function sembunyikanBackdrop() {
+  document.getElementById('backdrop').classList.add('hidden');
+}
+
 function mulaiInisiasiData() {
-	console.log('🔄 Proses inisialisasi dimulai...');
+	tampilkanBackdrop();
+	console.log('Proses inisialisasi dimulai...');
+	showAlert('Proses inisialisasi dimulai...',type='info');
+
+	// Simulasi proses inisialisasi
+	setTimeout(() => {
+		selesaiInisiasiData();
+		sembunyikanBackdrop();
+	}, 2000);
 }
 
 function selesaiInisiasiData() {
-	console.log('✅ Semua data berhasil diinisialisasi.');
+	console.log('Semua data berhasil diinisialisasi.');
+	showAlert('Semua data berhasil diinisialisasi.',type='success');
 }
 
 function errorInisiasiData(error) {
-	console.error('❌ Terjadi kesalahan saat inisialisasi:', error);
+	sembunyikanBackdrop();
+	console.error('Terjadi kesalahan saat inisialisasi:', error);
+	showAlert('Terjadi kesalahan saat inisialisasi:',type='error');
 }
 
 function parInisiasiData(nama) {
-	console.log(`✅ Data ${nama.toLowerCase()} selesai`);
+	console.log(`Data ${nama.toLowerCase()} selesai`);
+	showAlert(`Data ${nama.toLowerCase()} selesai`,type='success');
 }
 
 function inisiasiData(callback) {
