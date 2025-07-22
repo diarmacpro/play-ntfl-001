@@ -9,30 +9,29 @@ function renderHistory(dataArray) {
     return acc;
   }, {});
 
-  // Render per grup ID
   Object.entries(grouped).forEach(([id, items]) => {
     const groupEl = document.createElement('div');
-    groupEl.className = 'border border-gray-300 rounded-xl p-4 shadow-sm bg-white';
+    groupEl.className = 'border border-gray-200 rounded-xl p-4 shadow-sm bg-white';
 
-    // Judul Grup
     const header = `
-      <div class="flex justify-between items-center mb-2">
-        <div class="text-lg font-bold text-gray-800">ID: ${id}</div>
+      <div class="flex justify-between items-center mb-4">
+        <div class="text-base font-bold text-gray-800">ID: ${id}</div>
         <div class="text-sm text-gray-500">Nama: <span class="font-medium">${items[0].nama}</span></div>
       </div>
-      <hr class="mb-3">
     `;
 
     const histories = items.map(item => `
-      <div class="border-b border-gray-200 py-2 text-sm text-gray-700">
-        <div class="flex justify-between flex-wrap">
-          <span class="font-mono text-blue-600">${item.jam}</span>
-          <span>Lokasi Awal: <span class="font-semibold">${item.lokasi_awal}</span></span>
-          <span>Lokasi Akhir: <span class="font-semibold">${item.lokasi_akhir}</span></span>
-        </div>
-        <div class="flex justify-between mt-1 text-xs text-gray-600">
-          <span>PIC: <span class="font-semibold">${item.pic}</span></span>
-          <span>Helper: <span class="font-semibold">${item.helper}</span></span>
+      <div class="mb-3 px-4 py-3 bg-gray-50 rounded-lg shadow-sm">
+        <div class="text-xs text-center text-gray-500 mb-1 font-semibold">${item.jam}</div>
+        <div class="flex justify-between text-sm">
+          <div class="flex flex-col text-left text-gray-700">
+            <span class="font-semibold text-blue-600">${item.lokasi_akhir}</span>
+            <span class="text-xs text-gray-500">Helper: ${item.helper}</span>
+          </div>
+          <div class="flex flex-col text-right text-gray-700">
+            <span class="font-semibold text-green-600">${item.lokasi_awal}</span>
+            <span class="text-xs text-gray-500">PIC: ${item.pic}</span>
+          </div>
         </div>
       </div>
     `).join('');
@@ -41,6 +40,7 @@ function renderHistory(dataArray) {
     container.appendChild(groupEl);
   });
 }
+
 
 
 const contohData = [
