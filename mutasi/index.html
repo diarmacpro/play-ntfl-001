@@ -161,8 +161,8 @@
     
     <!-- Modal full screen dengan padding -->
     <div id="modalBox" class="bg-white rounded-2xl shadow-xl w-full h-full p-2 relative transform transition-all duration-300 ease-out flex flex-col pt-0">
-      <div class="flex-1 overflow-auto rounded-xl bg-white p-6 pt-0">
-        <div class="text-gray-800 mb-2 pt-6" id="closeModal"><span class="text-lg font-semibold">List History</span> <span class="text-sm tanggal-real"></span></div>
+      <div class="flex-1 overflow-auto rounded-xl bg-white p-2 pt-0">
+        <div class="text-gray-800 mb-2 pt-6" id="closeModal"><span class="text-lg font-semibold">History Mutasi</span> <span class="text-sm tanggal-saja-real"></span></div>
 <hr>
 
 <div id="historyContainer" class="space-y-2"></div>
@@ -220,6 +220,9 @@
     <script src="./render.js"></script>
 
     <script>
+      var dataHistory = []
+
+
 function showAlert(text = 'Berhasil!', type = 'success') {
   const container = document.getElementById('notif-container');
 
@@ -262,6 +265,7 @@ function showAlert(text = 'Berhasil!', type = 'success') {
       function renderAfterLogin(){
         $('#namaLogin').text(getFromLocalStorage('z').nama);
         $('.tanggal-real').text(stm());
+        $('.tanggal-saja-real').text(stm('t'));
         console.log("Sudah Login");
         document.body.classList.remove("hidden");
 

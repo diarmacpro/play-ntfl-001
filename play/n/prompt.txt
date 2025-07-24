@@ -1,0 +1,22 @@
+buatkan saya tampilan untuk melakukan login dan register,
+setelah melakukan login ataupun register, pengguna akan di bawa ke halaman simpel berisi pembeda bahwa dia terlah login dan pengguna dapat logout
+halaman menggunakan single page application index.html dengan tailwind cdn dan bootstrap icon cdn serta alpine js cdn
+semua hal harus patuh pada curl berikut
+curl -X POST https://reg-log.diarmacpro-pj02.workers.dev  \
+  -H "Content-Type: application/json" \
+  --data '{
+    "mode": "register",
+    "username": "budi456",
+    "password": "rahasia123",
+    "nama": "Diar",
+    "email": "budi@example.com",
+    "nomor_whatsapp": "628123456789"
+  }'
+
+curl -X POST https://reg-log.diarmacpro-pj02.workers.dev  \
+  -H "Content-Type: application/json" \
+  --data '{
+    "mode": "login",
+    "username": "budi456",
+    "password": "rahasia123"
+  }'

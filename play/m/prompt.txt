@@ -1,0 +1,34 @@
+gemini api
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent" \
+  -H 'Content-Type: application/json' \
+  -H 'X-goog-api-key: AIzaSyAPy5npNkxcLckuyq-b2fx_UBf_gvkC9jo' \
+  -X POST \
+  -d '{
+    "contents": [
+      {
+        "parts": [
+          {
+            "text": "..."
+          }
+        ]
+      }
+    ]
+  }'
+
+root key ably
+InFkjQ.GQn5QQ:soSjfmlCNEmqs8GB7bpKh_Om8DUvNankTtjwUYLHh7o
+
+supabase url
+https://ipuyyuiljeegdunjgcup.supabase.co
+
+supabase key
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwdXl5dWlsamVlZ2R1bmpnY3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwOTAxMTIsImV4cCI6MjA2NjY2NjExMn0.LiJ3v8Pb4vgmrOTgzDqA-YXoysC5fZ6MULab_6kYE_Y
+
+buatkan index.html dengan hardcode untuk menggunakan ui sebagai chat box yang dapat disimpan pada supabase
+mula mula:
+buatkan query untuk mengatur supabase supaya kompatibel
+
+lalu supaya setiap chat yang di response oleh gemini akan di simpan pada supabase beserta embeding vectornya
+dan gunakan gte-small sebagai konvertornya
+
+jadikan semua itu hardcode demi kepentingan edukasi dalam index.html yang di dukung oleh jquery cdn, tailwind cdn, bootstrap icon cdn

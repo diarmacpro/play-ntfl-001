@@ -1,0 +1,30 @@
+curl -L -X POST 'https://ipuyyuiljeegdunjgcup.supabase.co/functions/v1/quick-action' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlwdXl5dWlsamVlZ2R1bmpnY3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwOTAxMTIsImV4cCI6MjA2NjY2NjExMn0.LiJ3v8Pb4vgmrOTgzDqA-YXoysC5fZ6MULab_6kYE_Y' \ 
+  -H 'Content-Type: application/json' \
+  --data '{
+  "mode": "register",
+  "username": "diar123",
+  "password": "rahasia123",
+  "nama": "Diar",
+  "email": "diar@example.com",
+  "nomor_whatsapp": "628123456789"
+}'
+
+curl -X POST https://reg-log.diarmacpro-pj02.workers.dev \
+  -H "Content-Type: application/json" \
+  --data '{
+    "mode": "register",
+    "username": "budi456",
+    "password": "rahasia123",
+    "nama": "Diar",
+    "email": "budi@example.com",
+    "nomor_whatsapp": "628123456789"
+  }'
+
+curl -X POST https://reg-log.diarmacpro-pj02.workers.dev \
+  -H "Content-Type: application/json" \
+  --data '{
+    "mode": "login",
+    "username": "budi456",
+    "password": "rahasia123"
+  }'

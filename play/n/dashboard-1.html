@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#1e40af',
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .content {
+            margin-left: 260px;
+            transition: all 0.3s ease;
+        }
+        .sidebar-header {
+            height: 70px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .sidebar-footer {
+            height: 80px;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .navbar {
+            height: 70px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .content-body {
+            padding: 24px;
+            min-height: calc(100vh - 70px);
+            background-color: #f1f5f9;
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            margin: 4px 12px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar-link.active {
+            background: rgba(59, 130, 246, 0.2);
+            color: white;
+        }
+        .sidebar-link i {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        .account-menu {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            display: none;
+        }
+        .account-menu.show {
+            display: block;
+        }
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-radius: 6px;
+            color: #cbd5e1;
+            transition: all 0.2s;
+        }
+        .account-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .account-item i {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="sidebar flex flex-col">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header flex items-center px-6">
+                <div class="bg-indigo-500 w-10 h-10 rounded-lg flex items-center justify-center mr-3">
+                    <i class="bi bi-grid-3x3-gap text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold text-white">Dashboard</h1>
+            </div>
+            
+            <!-- Sidebar Body -->
+            <div class="sidebar-body py-4">
+                <div class="sidebar-link active">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </div>
+                <div class="sidebar-link">
+                    <i class="bi bi-people"></i>
+                    <span>Users</span>
+                </div>
+                <div class="sidebar-link">
+                    <i class="bi bi-graph-up"></i>
+                    <span>Analytics</span>
+                </div>
+                <div class="sidebar-link">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Reports</span>
+                </div>
+                <div class="sidebar-link">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer flex items-center px-4 relative">
+                <div class="flex items-center cursor-pointer" id="accountTrigger">
+                    <div class="bg-indigo-500 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                        <i class="bi bi-person-circle text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-white font-medium text-sm">John Doe</p>
+                        <p class="text-gray-400 text-xs">Administrator</p>
+                    </div>
+                    <i class="bi bi-chevron-up text-gray-400 ml-auto"></i>
+                </div>
+                
+                <!-- Account Menu -->
+                <div class="account-menu" id="accountMenu">
+                    <a href="profile.html" class="account-item">
+                        <i class="bi bi-person"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="#" class="account-item">
+                        <i class="bi bi-gear"></i>
+                        <span>Pengaturan</span>
+                    </a>
+                    <a href="#" class="account-item text-red-400 hover:text-red-300">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content flex-1">
+            <!-- Fixed Navbar -->
+            <div class="navbar flex items-center px-6">
+                <div class="flex items-center">
+                    <button class="text-gray-600 mr-4">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                    <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
+                </div>
+                <div class="ml-auto flex items-center">
+                    <button class="text-gray-600 mr-4 relative">
+                        <i class="bi bi-bell text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <div class="relative">
+                        <div class="bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center">
+                            <i class="bi bi-person text-gray-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Body -->
+            <div class="content-body">
+                <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Welcome to Dashboard</h3>
+                    <p class="text-gray-600">This is a blank content area. You can add your content here.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mr-4">
+                                <i class="bi bi-people text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Users</p>
+                                <p class="text-2xl font-bold text-gray-800">12,361</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mr-4">
+                                <i class="bi bi-currency-dollar text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Revenue</p>
+                                <p class="text-2xl font-bold text-gray-800">$24,580</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mr-4">
+                                <i class="bi bi-graph-up text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Growth</p>
+                                <p class="text-2xl font-bold text-gray-800">+18.4%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle account menu
+        document.getElementById('accountTrigger').addEventListener('click', function() {
+            document.getElementById('accountMenu').classList.toggle('show');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const accountMenu = document.getElementById('accountMenu');
+            const accountTrigger = document.getElementById('accountTrigger');
+            
+            if (!accountTrigger.contains(event.target) && !accountMenu.contains(event.target)) {
+                accountMenu.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

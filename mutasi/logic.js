@@ -10,6 +10,11 @@ $(function () {
     console.log(hasil);
   });
 
+  function offFunction(){
+    $('#wadah-part-2').addClass('hidden');
+    resetForm();    
+  }
+
   function resetForm() {
     $('#hasilCari').html('');
     $('#wadah-cari-id').removeClass('hidden');
@@ -64,12 +69,26 @@ $(function () {
   }
 
   $('#btn-power').on('click', function () {
-    $('#wadah-part-2').addClass('hidden');
-    resetForm();
+    offFunction();
   });
 
   $('#btn-send').on('click', function ()  {
-    console.log( data.dataPick,data.helperLokasi );
+    const result = {
+      jam: stm('w'),
+      id: data.dataPick.hasilCariId.id_stock,
+      nama: data.dataPick.hasilCariId.k,
+      lokasi_awal: data.dataPick.hasilCariId.rkkl,
+      lokasi_akhir: `${data.helperLokasi.lokasi.rak.v} ${data.helperLokasi.lokasi.kol.v}`,
+      pic: getFromLocalStorage('z').nama,
+      helper: data.helperLokasi.helper.v
+    };
+
+    dataHistory.push(result);
+    renderHistory(dataHistory);
+    // console.log( data.dataPick,data.helperLokasi );
+    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{})
+    console.log(result);
+    offFunction();
   });
 
   // resetForm();

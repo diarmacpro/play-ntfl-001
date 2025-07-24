@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Embedding Save Example</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    textarea { width: 100%; height: 120px; }
+    button { padding: 10px 20px; margin-top: 1rem; }
+    pre { background: #f0f0f0; padding: 1rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>Text to Embedding</h1>
+  <textarea id="textInput" placeholder="Tulis teks di sini..."></textarea><br />
+  <button id="submitBtn">Generate & Save</button>
+
+  <pre id="output">Menunggu input...</pre>
+
+  <script>
+    const button = document.getElementById('submitBtn');
+    const output = document.getElementById('output');
+
+    button.onclick = async () => {
+      const text = document.getElementById('textInput').value.trim();
+
+      if (!text) {
+        output.textContent = '⚠️ Teks kosong!';
+        return;
+      }
+
+      output.textContent = '⏳ Memproses...';
+
+      try {
+        const res = await fetch('https://ipuyyuiljeegdunjgcup.supabase.co/functions/v1/vct', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            embedField: ['text_body'],
+            data: [{ text_body: text }],
+            db: {
+              insert: true,
+              table: 'embeddings',
+              field: ['text_body', 'text_body_vector']
+            }
+          })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          output.textContent = '✅ Sukses:\n' + JSON.stringify(result, null, 2);
+        } else {
+          output.textContent = '❌ Gagal:\n' + JSON.stringify(result, null, 2);
+        }
+      } catch (err) {
+        output.textContent = '🚫 Error saat fetch:\n' + err.message;
+      }
+    };
+  </script>
+</body>
+</html>

@@ -11,26 +11,27 @@ function renderHistory(dataArray) {
 
   Object.entries(grouped).forEach(([id, items]) => {
     const groupEl = document.createElement('div');
-    groupEl.className = 'border border-gray-200 rounded-xl p-4 shadow-sm bg-white';
+    groupEl.className = 'border border-gray-200 rounded-xl p-2 shadow-sm bg-white';
 
     const header = `
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-base font-bold text-gray-800">ID: ${id}</div>
-        <div class="text-sm text-gray-500">Nama: <span class="font-medium">${items[0].nama}</span></div>
+      <div class="flex justify-between items-center mb-1">
+        <div class="text-base font-bold text-gray-800 me-2">${id}</div>
+        <div class="text-sm text-gray-500"><span class="font-medium">${items[0].nama}</span></div>
       </div>
     `;
 
     const histories = items.map(item => `
-      <div class="mb-3 px-4 py-3 bg-gray-50 rounded-lg shadow-sm">
-        <div class="text-xs text-center text-gray-500 mb-1 font-semibold">${item.jam}</div>
-        <div class="flex justify-between text-sm">
-          <div class="flex flex-col text-left text-gray-700">
-            <span class="font-semibold text-blue-600">${item.lokasi_akhir}</span>
-            <span class="text-xs text-gray-500">Helper: ${item.helper}</span>
-          </div>
-          <div class="flex flex-col text-right text-gray-700">
-            <span class="font-semibold text-green-600">${item.lokasi_awal}</span>
-            <span class="text-xs text-gray-500">PIC: ${item.pic}</span>
+      <div class="mb-1 px-0 py-1 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-xs text-center text-red-700 mb-1 font-semibold">${item.jam} <b>(${item.pic})</b></div>
+        <div class="flex justify-center text-sm">
+          <div class="text-gray-700">
+            <div>
+              <span class="font-semibold text-blue-600">${item.lokasi_awal}</span>
+              <i class="bi bi-arrow-right"></i>
+              <span class="font-semibold text-green-600">${item.lokasi_akhir}</span>
+              <span class="inline-block rounded-full bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1 mx-2">by</span>
+              <span class="text-xs text-center font-bold text-gray-500">Helper : ${item.helper}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -42,8 +43,8 @@ function renderHistory(dataArray) {
 }
 
 
-
-const contohData = [
+/*
+dataHistory = [
   {
     "jam": "08:15:01",
     "id": "A001",
@@ -92,4 +93,5 @@ const contohData = [
 ];
 
 // Panggil saat modal ditampilkan
-renderHistory(contohData);
+renderHistory(dataHistory);
+*/

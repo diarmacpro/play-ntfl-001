@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>WhatsApp Live Feed</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #111; color: #0f0; }
+    #log { white-space: pre-wrap; height: 70vh; overflow-y: auto; border: 1px solid #0f0; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Live WhatsApp Messages</h2>
+  <div id="log">Menghubungkan ke WebSocket …</div>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:8080/wss');
+    const logDiv = document.getElementById('log');
+
+    function addLine(text) {
+      const t = document.createTextNode(text + '\n');
+      logDiv.appendChild(t);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(text);
+    }
+
+    ws.onopen    = () => addLine('[WS] Connected');
+    ws.onmessage = (e) => addLine('[MSG] ' + e.data);
+    ws.onclose   = () => addLine('[WS] Disconnected');
+    ws.onerror   = (e) => addLine('[WS] Error: ' + e);
+  </script>
+</body>
+</html>

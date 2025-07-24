@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login & Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-md bg-white shadow-lg rounded-lg p-6 space-y-4">
+    <h2 id="form-title" class="text-2xl font-bold text-center mb-4">Login to Your Account</h2>
+
+    <!-- Tabs -->
+    <div class="flex justify-center space-x-4 mb-6">
+      <button id="login-tab" onclick="showForm('login')" class="font-medium text-blue-600 border-b-2 border-blue-600 pb-2 px-4">Login</button>
+      <button id="register-tab" onclick="showForm('register')" class="font-medium text-gray-500 hover:text-blue-600 border-b-2 border-transparent pb-2 px-4">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="space-y-4 hidden">
+      <div>
+        <label for="email-login" class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" id="email-login" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <div>
+        <label for="password-login" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="password-login" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+        Login
+      </button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="register-form" class="space-y-4">
+      <div>
+        <label for="name-register" class="block text-sm font-medium text-gray-700">Name</label>
+        <input type="text" id="name-register" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <div>
+        <label for="email-register" class="block text-sm font-medium text-gray-700">Email</label>
+        <input type="email" id="email-register" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <div>
+        <label for="password-register" class="block text-sm font-medium text-gray-700">Password</label>
+        <input type="password" id="password-register" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+      </div>
+      <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200">
+        Register
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function showForm(formType) {
+      const loginTab = document.getElementById('login-tab');
+      const registerTab = document.getElementById('register-tab');
+      const loginForm = document.getElementById('login-form');
+      const registerForm = document.getElementById('register-form');
+      const formTitle = document.getElementById('form-title');
+
+      if (formType === 'login') {
+        loginTab.classList.add('text-blue-600', 'border-blue-600');
+        loginTab.classList.remove('text-gray-500', 'border-transparent');
+        registerTab.classList.add('text-gray-500', 'border-transparent');
+        registerTab.classList.remove('text-blue-600', 'border-blue-600');
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        formTitle.textContent = "Login to Your Account";
+      } else {
+        registerTab.classList.add('text-blue-600', 'border-blue-600');
+        registerTab.classList.remove('text-gray-500', 'border-transparent');
+        loginTab.classList.add('text-gray-500', 'border-transparent');
+        loginTab.classList.remove('text-blue-600', 'border-blue-600');
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        formTitle.textContent = "Create a New Account";
+      }
+    }
+
+    // Default show login form
+    window.onload = () => showForm('login');
+  </script>
+</body>
+</html>

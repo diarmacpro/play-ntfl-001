@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Bot</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <!-- Alpine.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    :root {
+      --sidebar-bg: #1e293b;
+      --sidebar-text: #e2e8f0;
+      --sidebar-hover: #334155;
+      --chat-bg: #f8fafc;
+      --chat-header: #e2e8f0;
+      --chat-border: #cbd5e1;
+      --primary: #0ea5e9;
+      --primary-dark: #0284c7;
+    }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--chat-bg);
+      height: 100vh;
+      overflow: hidden;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .sidebar {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      transition: all 0.3s ease;
+    }
+    .chat-panel {
+      background: var(--chat-bg);
+    }
+    .msg {
+      max-width: 80%;
+      border-radius: 18px;
+      margin-bottom: 15px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 5px;
+    }
+    .msg.bot {
+      align-self: flex-start;
+      background: white;
+      border: 1px solid var(--chat-border);
+      border-bottom-left-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .session-item.active {
+      background: var(--primary);
+    }
+    .session-item:hover {
+      background: var(--sidebar-hover);
+    }
+    .dropdown-menu {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .accordion-content.open {
+      max-height: 1000px;
+    }
+    .chat-body {
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f8fafc"/><path d="M0 0L100 100M100 0L0 100" stroke="%23e2e8f0" stroke-width="0.5"/></svg>');
+      background-size: 30px 30px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- Authentication Screen -->
+  <div id="auth" x-data="auth" class="fixed inset-0 flex items-center justify-center bg-gray-50">
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="bg-blue-100 p-3 rounded-full">
+            <i class="bi bi-chat-dots text-blue-500 text-2xl"></i>
+          </div>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800" x-text="mode === 'login' ? 'Login' : 'Daftar'"></h2>
+        <p class="text-gray-600 mt-2">Masuk ke akun Anda untuk melanjutkan</p>
+      </div>
+      
+      <form @submit.prevent="handleAuth" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input 
+            type="text" 
+            x-model="username" 
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Masukkan username">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input 
+            type="password" 
+            x-model="password" 
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Masukkan password">
+        </div>
+        
+        <template x-if="mode === 'register'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+            <input 
+              type="text" 
+              x-model="nama" 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan nama lengkap">
+          </div>
+        </template>
+        
+        <template x-if="mode === 'register'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input 
+              type="email" 
+              x-model="email" 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Masukkan email">
+          </div>
+        </template>
+        
+        <template x-if="mode === 'register'">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp</label>
+            <input 
+              type="text" 
+              x-model="whatsapp" 
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="628...">
+          </div>
+        </template>
+        
+        <div x-show="errorMessage" x-text="errorMessage" class="text-red-500 text-sm"></div>
+        
+        <button 
+          type="submit" 
+          class="w-full py-2.5 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition duration-300"
+          x-text="mode === 'login' ? 'Login' : 'Daftar'">
+        </button>
+      </form>
+      
+      <div class="text-center">
+        <button 
+          @click="toggleMode" 
+          class="text-blue-500 hover:text-blue-700 font-medium"
+          x-text="mode === 'login' ? 'Buat akun baru' : 'Sudah punya akun?'">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chat Interface -->
+  <div id="main" x-data="chatApp" class="hidden h-screen flex flex-col">
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar -->
+      <div class="sidebar w-64 flex flex-col">
+        <div class="p-4 border-b border-gray-700">
+          <h2 class="text-xl font-bold flex items-center gap-2">
+            <i class="bi bi-robot text-blue-400"></i>
+            <span>Chat Bot</span>
+          </h2>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-2">
+          <!-- New Chat Button -->
+          <button @click="startNewChat" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition mb-2">
+            <i class="bi bi-plus-circle text-blue-400"></i>
+            <span>Percakapan Baru</span>
+          </button>
+          
+          <!-- Chat History Accordion -->
+          <div class="mt-4">
+            <button 
+              @click="toggleChatHistory" 
+              class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-700 transition"
+            >
+              <div class="flex items-center gap-3">
+                <i class="bi bi-clock-history text-blue-400"></i>
+                <span>Riwayat Chat</span>
+              </div>
+              <i class="bi" :class="chatHistoryOpen ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+            
+            <div class="accordion-content" :class="{'open': chatHistoryOpen}">
+              <div class="pl-4 pr-2 py-1 space-y-1">
+                <template x-for="(session, index) in chatSessions" :key="session.id">
+                  <div class="group relative flex items-center justify-between p-2 rounded hover:bg-gray-700">
+                    <div @click="selectSession(session)" class="flex items-center gap-2 cursor-pointer flex-1">
+                      <i class="bi bi-chat" :class="{'text-blue-400': session.id === currentSession}"></i>
+                      <span x-text="session.title" :class="{'text-blue-400': session.id === currentSession}"></span>
+                    </div>
+                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button @click="archiveSession(session)" class="p-1 rounded hover:bg-gray-600">
+                        <i class="bi bi-archive text-gray-300"></i>
+                      </button>
+                      <button @click="shareSession(session)" class="p-1 rounded hover:bg-gray-600">
+                        <i class="bi bi-share text-gray-300"></i>
+                      </button>
+                      <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-600">
+                          <i class="bi bi-three-dots-vertical text-gray-300"></i>
+                        </button>
+                        <div x-show="open" @click.outside="open = false" class="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg py-1 z-10">
+                          <button @click="archiveSession(session); open = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <i class="bi bi-archive mr-2"></i>Arsipkan
+                          </button>
+                          <button @click="shareSession(session); open = false" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            <i class="bi bi-share mr-2"></i>Bagikan
+                          </button>
+                          <button @click="deleteSession(session); open = false" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                            <i class="bi bi-trash mr-2"></i>Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Application Menu -->
+          <div class="mt-4">
+            <div class="px-3 py-2 text-xs uppercase text-gray-400">Aplikasi</div>
+            <div class="space-y-1">
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-speedometer2 text-blue-400"></i>
+                <span>Dashboard Bot</span>
+              </button>
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-archive text-blue-400"></i>
+                <span>Arsip</span>
+              </button>
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-trash text-blue-400"></i>
+                <span>Trash</span>
+              </button>
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-people text-blue-400"></i>
+                <span>Kontak</span>
+              </button>
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-envelope text-blue-400"></i>
+                <span>Pesan</span>
+              </button>
+              <button class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition">
+                <i class="bi bi-bell text-blue-400"></i>
+                <span>Notifikasi</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Account Dropdown -->
+        <div class="p-2 border-t border-gray-700">
+          <div class="relative" x-data="{ open: false }">
+            <button 
+              @click="open = !open" 
+              class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-700 transition"
+            >
+              <div class="bg-gray-200 border-2 border-dashed rounded-xl w-8 h-8" />
+              <div class="text-left flex-1">
+                <div class="font-medium">John Doe</div>
+                <div class="text-xs text-gray-400">Online</div>
+              </div>
+              <i class="bi bi-chevron-down text-gray-400"></i>
+            </button>
+            
+            <div 
+              x-show="open" 
+              @click.outside="open = false"
+              class="dropdown-menu absolute bottom-full left-0 right-0 mb-2 bg-gray-800 rounded-lg shadow-lg py-1 z-20"
+            >
+              <button class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2">
+                <i class="bi bi-person"></i> Profil
+              </button>
+              <button class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2">
+                <i class="bi bi-gear"></i> Pengaturan
+              </button>
+              <button class="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2">
+                <i class="bi bi-question-circle"></i> Bantuan
+              </button>
+              <hr class="border-gray-700 my-1">
+              <button 
+                @click="logout" 
+                class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center gap-2"
+              >
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Panel -->
+      <div class="chat-panel flex-1 flex flex-col">
+        <div class="bg-white border-b border-gray-200 p-4 flex items-center gap-3">
+          <i class="bi bi-chat-dots text-blue-500"></i>
+          <h3 class="font-semibold text-lg" x-text="currentSessionTitle">Percakapan Baru</h3>
+        </div>
+        
+        <div class="chat-body flex-1 overflow-y-auto p-4 flex flex-col">
+          <template x-if="messages.length === 0">
+            <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <div class="bg-blue-100 p-4 rounded-full mb-4">
+                <i class="bi bi-robot text-blue-500 text-3xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mb-2">Selamat Datang di Chat Bot</h3>
+              <p class="text-gray-600 max-w-md mb-6">Ajukan pertanyaan Anda dan bot kami akan membantu menjawab dengan cepat dan akurat.</p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                  <i class="bi bi-lightning text-blue-500 text-xl mb-2"></i>
+                  <h4 class="font-medium mb-1">Respons Cepat</h4>
+                  <p class="text-sm text-gray-600">Dapatkan jawaban dalam hitungan detik</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                  <i class="bi bi-globe text-blue-500 text-xl mb-2"></i>
+                  <h4 class="font-medium mb-1">Multi Bahasa</h4>
+                  <p class="text-sm text-gray-600">Dukungan dalam berbagai bahasa</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200">
+                  <i class="bi bi-shield-check text-blue-500 text-xl mb-2"></i>
+                  <h4 class="font-medium mb-1">Keamanan</h4>
+                  <p class="text-sm text-gray-600">Data Anda tetap aman dan terlindungi</p>
+                </div>
+              </div>
+            </div>
+          </template>
+          
+          <template x-for="(message, index) in messages" :key="index">
+            <div class="msg" :class="{'user': message.sender === 'user', 'bot': message.sender === 'bot'}">
+              <div class="font-medium" x-text="message.sender === 'user' ? 'Anda' : 'Bot'"></div>
+              <div x-text="message.text"></div>
+              <div class="text-xs opacity-70 mt-1" x-text="message.time"></div>
+            </div>
+          </template>
+        </div>
+        
+        <div class="bg-white border-t border-gray-200 p-4">
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              x-model="newMessage"
+              @keydown.enter="sendMessage"
+              placeholder="Tulis pesan..." 
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <button 
+              @click="sendMessage"
+              class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full w-12 h-12 flex items-center justify-center transition"
+            >
+              <i class="bi bi-send"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('auth', () => ({
+        mode: 'login',
+        username: '',
+        password: '',
+        nama: '',
+        email: '',
+        whatsapp: '',
+        errorMessage: '',
+        
+        toggleMode() {
+          this.mode = this.mode === 'login' ? 'register' : 'login';
+          this.errorMessage = '';
+        },
+        
+        handleAuth() {
+          // Simulate authentication
+          if (this.username && this.password) {
+            // Save token to localStorage
+            localStorage.setItem('token', 'demo-token');
+            // Hide auth screen and show main app
+            document.getElementById('auth').classList.add('hidden');
+            document.getElementById('main').classList.remove('hidden');
+          } else {
+            this.errorMessage = 'Username dan password harus diisi';
+          }
+        }
+      }));
+      
+      Alpine.data('chatApp', () => ({
+        chatHistoryOpen: true,
+        currentSession: null,
+        currentSessionTitle: 'Percakapan Baru',
+        newMessage: '',
+        messages: [],
+        chatSessions: [
+          { id: 1, title: 'Pertanyaan Umum', lastMessage: 'Bagaimana cara reset password?' },
+          { id: 2, title: 'Bantuan Teknis', lastMessage: 'Masalah dengan koneksi internet' },
+          { id: 3, title: 'Panduan Penggunaan', lastMessage: 'Cara menggunakan fitur baru' },
+          { id: 4, title: 'Pertanyaan Billing', lastMessage: 'Konfirmasi pembayaran' },
+          { id: 5, title: 'Dukungan Produk', lastMessage: 'Kompatibilitas dengan OS' }
+        ],
+        
+        init() {
+          // Check if user is authenticated
+          if (!localStorage.getItem('token')) {
+            document.getElementById('auth').classList.remove('hidden');
+            document.getElementById('main').classList.add('hidden');
+          } else {
+            document.getElementById('auth').classList.add('hidden');
+            document.getElementById('main').classList.remove('hidden');
+          }
+        },
+        
+        toggleChatHistory() {
+          this.chatHistoryOpen = !this.chatHistoryOpen;
+        },
+        
+        startNewChat() {
+          this.currentSession = null;
+          this.currentSessionTitle = 'Percakapan Baru';
+          this.messages = [];
+          
+          // Add to chat sessions
+          const newSession = {
+            id: Date.now(),
+            title: 'Percakapan Baru',
+            lastMessage: 'Baru saja dimulai'
+          };
+          this.chatSessions.unshift(newSession);
+        },
+        
+        selectSession(session) {
+          this.currentSession = session.id;
+          this.currentSessionTitle = session.title;
+          
+          // Load messages for this session (simulated)
+          this.messages = [
+            { sender: 'bot', text: 'Halo! Ada yang bisa saya bantu?', time: '10:30' },
+            { sender: 'user', text: 'Saya memiliki pertanyaan tentang akun saya', time: '10:32' },
+            { sender: 'bot', text: 'Tentu, saya siap membantu. Apa yang ingin Anda ketahui tentang akun Anda?', time: '10:32' }
+          ];
+        },
+        
+        sendMessage() {
+          if (this.newMessage.trim() === '') return;
+          
+          // Add user message
+          this.messages.push({
+            sender: 'user',
+            text: this.newMessage,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          });
+          
+          // Simulate bot response
+          setTimeout(() => {
+            const responses = [
+              "Terima kasih atas pertanyaan Anda. Saya akan mencari informasi terbaik untuk Anda.",
+              "Pertanyaan yang bagus! Saya sedang memproses informasi yang relevan.",
+              "Saya mengerti permintaan Anda. Berikut adalah informasi yang saya temukan.",
+              "Itu pertanyaan menarik. Berdasarkan data terbaru, berikut jawaban saya.",
+              "Saya akan membantu Anda dengan itu. Mohon tunggu sebentar."
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            
+            this.messages.push({
+              sender: 'bot',
+              text: randomResponse,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            
+            // Scroll to bottom
+            const chatBody = document.querySelector('.chat-body');
+            chatBody.scrollTop = chatBody.scrollHeight;
+          }, 1000);
+          
+          // Clear input
+          this.newMessage = '';
+        },
+        
+        deleteSession(session) {
+          this.chatSessions = this.chatSessions.filter(s => s.id !== session.id);
+          if (this.currentSession === session.id) {
+            this.startNewChat();
+          }
+        },
+        
+        archiveSession(session) {
+          alert(`Sesi "${session.title}" telah diarsipkan`);
+        },
+        
+        shareSession(session) {
+          alert(`Berbagi sesi "${session.title}"`);
+        },
+        
+        logout() {
+          localStorage.removeItem('token');
+          location.reload();
+        }
+      }));
+    });
+  </script>
+</body>
+</html>

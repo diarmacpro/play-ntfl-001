@@ -31,6 +31,11 @@ function mulaiInisiasiData() {
 function selesaiInisiasiData() {
 	console.log('Semua data berhasil diinisialisasi.');
 	showAlert('Semua data berhasil diinisialisasi.',type='success');
+	fbsSvc.gDt(`/app/mutasi/${stm('t')}/`, '', (d) => {
+		const arr = Object.values(d);
+		dataHistory = arr;
+		renderHistory(dataHistory);
+	});
 }
 
 function errorInisiasiData(error) {
