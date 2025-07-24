@@ -1,0 +1,157 @@
+perubahan dari
+lokasi_akhir: `${data.helperLokasi.lokasi.rak.v} ${data.helperLokasi.lokasi.kol.v}`,
+mennjadi
+lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.v,kol:data.helperLokasi.lokasi.kol.v},
+supaya : mudah di reuse untuk hal selanjutnya yaitu untuk melakukan update pada path lain
+
+------
+sebelum : 
+dari baris kode insert data menggunakan key default untuk keperluan history dan pencatatan data yang akan dilakukan perubahan pada server utama
+belum memiliki script yang bertujuan untuk melakukan perubahan persistent kepada seluruh data pipeline di bagian path lain (path : layer2) pada firebase
+    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{})
+setelahnya :
+ditambah script yang bertujuan untuk melakukan apa yang diharapkan sebelumnya supaya data tetap presisten walau sudah tidak ada koneksi secara langsung melalui jaringan web Socket, antara pengguna dan penyimpanan pada database realtime di cloud
+
+    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
+        fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
+        const indexes = [];
+        console.log(result);
+
+        d.forEach((item, index) => {
+            if (item.id_stock === result.id) {
+            indexes.push(index);
+            }
+        });
+
+        if (indexes.length > 0) {
+            const idx = indexes[0];
+            const path = `/layer2/${result.id_kain}/${idx}`;
+
+            fbsSvc.gDt(path, '', (oldData) => {
+            const updatedData = {
+                kol:result.lokasi_akhir.kol,
+                rak:result.lokasi_akhir.rak,
+                rkkl:`${result.lokasi_akhir.rak} ${result.lokasi_akhir.kol}`
+            };
+
+
+            console.log(
+                {result,updatedData}
+            );
+            
+            fbsSvc.upd(path, null, updatedData, (err) => {
+                if (err) {
+                console.error('Gagal update:', err);
+                } else {
+                console.log('Data berhasil diupdate:', updatedData);
+                }
+            });
+            
+            });
+        } else {
+            console.log('id_stock tidak ditemukan');
+        }
+        });
+    });
+
+hasil : semua berhasil di lakukan ujicoba dan penyesuaian kode hingga menghasilkan script yang relevan dan konsisten serta efisien dari segi penulisan dan alur
+
+------------------------------
+
+tujuan : membuat fungsi update variabel global
+sebelumnya : saat melakukan send data mutasi, variabel global tidak berubah, hanya data pada firebase yang berubah
+
+setelah : dibangun fungsi untuk melakukan perubahan data pada variabel global, supaya data pada browser sama dengan data yang ada pada firebase (sebagai cache cloud yang digunakan)
+
+function updateLayer2ByIdStock(id, newValues) {
+  const index = _.findIndex(data.layer2, i => i.id_stock === id);
+
+  if (index !== -1) {
+    Object.assign(data.layer2[index], newValues);
+
+    fbsSvc.upd(`/layer2/${index}`, null, data.layer2[index], (err) => {
+      if (err) {
+        console.error('Gagal update:', err);
+      } else {
+        console.log(`Berhasil update layer2/${index}`, data.layer2[index]);
+      }
+    });
+  } else {
+    console.log(`id_stock ${id} tidak ditemukan`);
+  }
+}
+
+alasan : karena jika tidak menggunakan fungsi / method ini, maka data harus dimuat ulang setiap kali ada perubahan sedang kan jumlahnya tidak sedikit, selain membuat semakin menipisnya jumlah limit harian data dari google, juga rentan membuat browser semakin berat karena adanya beberapa tindakan fetch dalam jumlah besar di waktu yang berdekatan.
+hasil : fungsi sudah di uji coba dan berhasil di gunakan untuk merubah variabel global hingga ke bagian properti selektif (artinya tidak menimpa wadahnya tapi value dari sub wadah didalamnya)
+
+------------------------------
+
+
+sebelum
+            fbsSvc.upd(path, null, updatedData, (err) => {
+                if (err) {
+                console.error('Gagal update:', err);
+                } else {
+                console.log('Data berhasil diupdate:', updatedData);
+                }
+            });
+
+setelah
+
+      fbsSvc.upd(path, null, updatedData, (err) => {
+        if (err) {
+          console.error('Gagal update:', err);
+        } else {
+          updateLayer2ByIdStock(result.id, updatedData)
+          console.log('Data berhasil diupdate:', updatedData);
+        }
+      });
+
+----------------------------
+
+perubahan pada cara menyajikan data pada ui render pop up history
+sebelumnya : 
+              <span class="font-semibold text-blue-600">${item.lokasi_akhir}</span>
+setelahnya : 
+              <span class="font-semibold text-green-600">${item.lokasi_akhir.rak} ${item.lokasi_akhir.kol}</span>
+alasan : karena ada perubahan struktur pada properti lokasi_akhir yang sebelumnya string menjadi objek bersarang yang memiliki 2 properti turunan yaitu : rak dan kol
+
+hasil : berhasil di implementasikan dengan baik tanpa ada kendala karena sudah dilakukan uji pada dev console di browser
+
+
+
+-------------------------
+
+
+        <div class="flex justify-center text-sm">
+          <div class="text-gray-700">
+            <div>
+              <span class="font-semibold text-blue-600">${item.lokasi_awal}</span>
+              <i class="bi bi-arrow-right"></i>
+              <span class="font-semibold text-green-600">${item.lokasi_akhir.rak} ${item.lokasi_akhir.kol}</span>
+              <span class="inline-block rounded-full bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1 mx-2">by</span>
+              <span class="text-xs text-center font-bold text-gray-500">Helper : ${item.helper}</span>
+            </div>
+          </div>
+        </div>
+
+
+menjadi
+<div class="flex items-center justify-between text-sm px-3">
+  <!-- div a: kiri -->
+  <div class="flex-1 flex justify-start text-blue-600 font-semibold">
+    ${item.lokasi_awal}
+    <i class="bi bi-arrow-right mx-2"></i>
+    <span class="font-semibold text-green-600">${item.lokasi_akhir.rak} ${item.lokasi_akhir.kol}</span>
+  </div>
+
+  <!-- div b: tengah -->
+  <div class="text-center px-2">
+    <span class="inline-block rounded-full bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1 mx-2">by</span>
+  </div>
+
+  <!-- div c: kanan -->
+  <div class="flex-1 flex justify-end font-bold text-gray-500">
+    ${item.helper}
+  </div>
+</div>

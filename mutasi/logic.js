@@ -68,6 +68,24 @@ $(function () {
     $('#cari-helper').focus();
   }
 
+  function updateLayer2ByIdStock(id, newValues) {
+    const index = _.findIndex(data.layer2, i => i.id_stock === id);
+
+    if (index !== -1) {
+      Object.assign(data.layer2[index], newValues);
+
+      fbsSvc.upd(`/layer2/${index}`, null, data.layer2[index], (err) => {
+        if (err) {
+          console.error('Gagal update:', err);
+        } else {
+          console.log(`Berhasil update layer2/${index}`, data.layer2[index]);
+        }
+      });
+    } else {
+      console.log(`id_stock ${id} tidak ditemukan`);
+    }
+  }
+
   $('#btn-power').on('click', function () {
     offFunction();
   });
@@ -78,15 +96,61 @@ $(function () {
       id: data.dataPick.hasilCariId.id_stock,
       nama: data.dataPick.hasilCariId.k,
       lokasi_awal: data.dataPick.hasilCariId.rkkl,
-      lokasi_akhir: `${data.helperLokasi.lokasi.rak.v} ${data.helperLokasi.lokasi.kol.v}`,
+      lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.v,kol:data.helperLokasi.lokasi.kol.v},
       pic: getFromLocalStorage('z').nama,
-      helper: data.helperLokasi.helper.v
+      helper: data.helperLokasi.helper.v,
+      id_kain: data.dataPick.hasilCariId.id_kain
     };
 
     dataHistory.push(result);
     renderHistory(dataHistory);
     // console.log( data.dataPick,data.helperLokasi );
-    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{})
+    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
+
+
+fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
+  const indexes = [];
+  console.log(result);
+
+  d.forEach((item, index) => {
+    if (item.id_stock === result.id) {
+      indexes.push(index);
+    }
+  });
+
+  if (indexes.length > 0) {
+    const idx = indexes[0];
+    const path = `/layer2/${result.id_kain}/${idx}`;
+
+    fbsSvc.gDt(path, '', (oldData) => {
+      const updatedData = {
+        kol:result.lokasi_akhir.kol,
+        rak:result.lokasi_akhir.rak,
+        rkkl:`${result.lokasi_akhir.rak} ${result.lokasi_akhir.kol}`
+      };
+
+
+      console.log(
+        {result,updatedData}
+      );
+      
+      fbsSvc.upd(path, null, updatedData, (err) => {
+        if (err) {
+          console.error('Gagal update:', err);
+        } else {
+          updateLayer2ByIdStock(result.id, updatedData)
+          console.log('Data berhasil diupdate:', updatedData);
+        }
+      });
+      
+    });
+  } else {
+    console.log('id_stock tidak ditemukan');
+  }
+});
+
+
+    });
     console.log(result);
     offFunction();
   });
