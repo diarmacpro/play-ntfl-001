@@ -35,6 +35,12 @@ function selesaiInisiasiData() {
 		const arr = Object.values(d);
 		dataHistory = arr;
 		renderHistory(dataHistory);
+
+
+  $('#openModal, #btn-logout')
+  .prop('disabled', false)                            // Hilangkan atribut disabled
+  .removeClass('opacity-50 cursor-not-allowed');      // Hilangkan class tampilan disabled
+
 	});
 }
 

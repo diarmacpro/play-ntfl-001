@@ -1,0 +1,87 @@
+dtSo, dtSoHst, iDtSoHst, iDtSo
+
+
+gtDtByPost('/apix/dtSo', dtSo, 'id');
+gtDtByPost('/apix/dtSoHst', dtSoHst, 'id');
+
+
+pR('https://cdn.weva.my.id/apix/dtSo',{"id":"29028"},(e,d)=>{
+    console.log(d.data);
+})
+
+const dataSo = {
+    "id_so": 17215,
+    "tgl_so": "2024-01-09T09:12:04.000Z",
+    "pic": 7,
+    "hlp": null,
+    "ge": "e",
+    "id_stock": 29028,
+    "kd_rak": 137,
+    "kd_kol": 10,
+    "q_so": "63.51",
+    "q_so_sup": "63.51",
+    "q_so_nett": "63.51"
+}
+
+
+
+https://cdn.weva.my.id/apix/updDtSo
+const dtUpdtSo = {
+    id_stock: parseInt(v.id,10),
+    tgl_so: stm(),
+    pic: parseInt(getCookie('usr'),10),
+    hlp: dataBulk.hlp,
+    ge: "g",
+    kd_rak: dataBulk.rak,
+    kd_kol: dataBulk.kol,
+    q_so: parseFloat(dataBulk.qty).toFixed(2),
+    q_so_sup: parseFloat(dtSoIdIni.q_so_sup).toFixed(2),
+    q_so_nett: parseFloat(dtSoIdIni.q_so_nett).toFixed(2)
+};
+
+
+https://cdn.weva.my.id/apix/iDtSoHst
+
+
+const dtSoHstA = {
+    tgl_hst: stm(),
+    pic_hst: parseInt(getCookie('usr'),10),
+    id_so: dtSoIdIni.id_so,
+    tgl_so: formatDateTime(dtSoIdIni.tgl_so),
+    pic: dtSoIdIni.pic,
+    hlp: dtSoIdIni.hlp,
+    ge: 'g',
+    id_stock: dtSoIdIni.id_stock,
+    kd_rak: dtSoIdIni.kd_rak,
+    kd_kol: dtSoIdIni.kd_kol,
+    q_so: dtSoIdIni.q_so,
+};
+
+function gtDtSo(id, cb) {
+    const idStr = Array.isArray(id) ? id.join(',') : id;
+    pR('https://cdn.weva.my.id/apix/dtSo', { id: idStr }, (err, res) => {
+        if (err) return cb(err);
+        cb(null, res.data);
+    });
+}
+
+gtDtSo(29028, (err, data) => {
+    if (err) { console.error(err); }
+    else { console.log(data[0]); }
+});
+
+
+
+{
+    "id_so": 17215,
+    "tgl_so": "2024-01-09T09:12:04.000Z",
+    "pic": 7,
+    "hlp": null,
+    "ge": "e",
+    "id_stock": 29028,
+    "kd_rak": 137,
+    "kd_kol": 10,
+    "q_so": "63.51",
+    "q_so_sup": "63.51",
+    "q_so_nett": "63.51"
+}
