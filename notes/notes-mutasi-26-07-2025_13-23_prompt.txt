@@ -1,0 +1,429 @@
+-- melakukan get data dari tb_so
+
+SELECT
+	`id_so`,
+	`tgl_so`,
+	`pic`,
+	`hlp`,
+	`ge`,
+	`id_stock`,
+	`kd_rak`,
+	`kd_kol`,
+	`q_so`,
+	`q_so_sup`,
+	`q_so_nett` 
+FROM
+	tb_so 
+WHERE
+	`id_stock` = 29028;
+
+-- -------------------------------------------------------------- [jika data tersedia pada tb_so]
+	
+-- 	didapati value dari filed : `id_so`, `tgl_so`, `pic`, `hlp`, `ge`, `id_stock`, `kd_rak`, `kd_kol`, `q_so`, `q_so_sup`, `q_so_nett`
+-- dari field itu dijadikan value untuk insert ke kolom dengan field yang sama pada tb_so_hst dengan tambahan 2 value untuk foeld {tgl_hst = di isi dengan value tgl_hst (data baru)} dan {pic_hst = di isi dengan value pic_hst (data baru)}
+	
+INSERT INTO `tb_so_hst` ( `tgl_hst`, `pic_hst`, `id_so`, `tgl_so`, `pic`, `hlp`, `ge`, `id_stock`, `kd_rak`, `kd_kol`, `q_so` )
+VALUES
+	( '2025-07-26 13:12:44', 1, 17215, '2024-01-09 16:12:04', 7, NULL, 'e', 29028, 137, 10, 63.51 );
+
+-- -------------------------------------------------------------- [setelah insert berhasil]
+
+-- melakukan update kepada 5 field 
+-- `tgl_so` = di isi sama dengan value tgl_hst
+-- `pic` = di isi sama dengan value pic_hst
+-- `hlp` = di isi dengan value hlp (data baru)
+-- `kd_rak` = di isi dengan value kd_rak (data baru)
+-- `kd_kol` = di isi dengan value kd_kol (data baru)
+
+UPDATE `wevagarm_stock`.`tb_so` 
+SET `tgl_so` = '2025-07-26 13:12:44',
+`pic` = 1,
+`hlp` = 9,
+`kd_rak` = 34,
+`kd_kol` = 1 
+WHERE
+	`id_so` = 17215
+
+apakah event itu bisa di kerjakan sekaligus pada node js dengan 1x panggil query?
+
+dengan payload
+tgl = untuk field (tgl_hst : <insert> tb_so_hst) dan (tgl_so : <update> tb_so)
+pic = untuk field (pic_hst: <insert> tb_so_hst) dan (pic : <update> tb_so)
+hlp = untuk filed (hlp : <update> tb_so)
+kd_rak = untuk filed (kd_rak : <update> tb_so)
+kd_kol = untuk filed (kd_kol : <update> tb_so)
+
+------------------------------------------
+
+1 transaksi pasti hanya menangani 1 id_stock
+dan berikut contoh dari file js yang sudah bekerja dengan query yang berbeda
+
+contoh,
+
+dthlp.js
+const db = require('../../db');
+
+const dthlp = (id) => {
+  return new Promise((resolve, reject) => {
+    const w = id ? WHERE tb_hlp.id_hlp = ${id} : '';
+    const query = SELECT
+                  	tb_hlp.id_hlp,
+                  	tb_hlp.hlp,
+                  	tb_hlp.stts
+                  FROM tb_hlp ${w};
+
+    db.promise().query(query)
+      .then(([results]) => {
+        resolve(results);
+      })
+      .catch((err) => {
+        console.error('Query Error:', err.sqlMessage || err.message);
+        reject(err);
+      });
+  });
+};
+
+module.exports = { dthlp };
+
+
+file : iuDbCore.js
+const db = require('../../db');
+
+// Helper: Insert
+const runInsert = (q, values) => {
+  return new Promise((resolve, reject) => {
+    db.promise().query(q, values)
+      .then(([result]) => resolve({ insertedId: result.insertId }))
+      .catch((err) => {
+        console.error('Insert Error:', err.sqlMessage || err.message);
+        reject(err);
+      });
+  });
+};
+
+// Helper: Update
+const runUpdate = (q, values) => {
+  return new Promise((resolve, reject) => {
+    db.promise().query(q, values)
+      .then(([result]) => resolve({ affectedRows: result.affectedRows }))
+      .catch((err) => {
+        console.error('Update Error:', err.sqlMessage || err.message);
+        reject(err);
+      });
+  });
+};
+
+// ---------------------------------
+// INSERT FUNCTIONS
+// ---------------------------------
+
+// Insert jenis
+const insJn = ({ jns }) => {
+  const q = INSERT INTO tb_jns (jns) VALUES (?);
+  return runInsert(q, [jns]);
+};
+
+// Insert warna
+const insWr = ({ wrn }) => {
+  const q = INSERT INTO tb_wrn (wrn) VALUES (?);
+  return runInsert(q, [wrn]);
+};
+
+// Insert satuan
+const insSt = ({ stn, s }) => {
+  const q = INSERT INTO tb_stn (stn, s) VALUES (?, ?);
+  return runInsert(q, [stn, s]);
+};
+
+// Insert kain ke tb_km dan tb_kain
+const insKn = async ({ kd_jns, kd_wrn, kd_stn, ktg }) => {
+  const q1 = INSERT INTO tb_km (
+    kd_jns, kd_wrn,
+    hb, hg, he_a, he_b,
+    kd_stn, ktg, kd_kat
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+  const values1 = [
+    kd_jns, kd_wrn,
+    0, 0, 0, 0,
+    kd_stn, ktg, 0
+  ];
+
+  try {
+    const res1 = await runInsert(q1, values1);
+
+    const q2 = INSERT INTO tb_kain (
+      kd_jns, kd_wrn, kd_stn, ktg, kd_kat
+    ) VALUES (?, ?, ?, ?, ?);
+
+    const values2 = [kd_jns, kd_wrn, kd_stn, ktg, 0];
+
+    const res2 = await runInsert(q2, values2);
+
+    if (res1.insertedId === res2.insertedId) {
+      return { insertedId: res1.insertedId };
+    }
+
+    return {
+      tb_km: res1.insertedId,
+      tb_kain: res2.insertedId,
+    };
+  } catch (err) {
+    throw err;
+  }
+};
+
+// Insert rak
+const insRk = ({ rak }) => {
+  const q = INSERT INTO tb_rak (rak) VALUES (?);
+  return runInsert(q, [rak]);
+};
+
+// Insert kolom
+const insKl = ({ kol }) => {
+  const q = INSERT INTO tb_kol (kol) VALUES (?);
+  return runInsert(q, [kol]);
+};
+
+// ---------------------------------
+// UPDATE FUNCTIONS
+// ---------------------------------
+
+// Update jenis
+const updJn = ({ kd_jns, jns }) => {
+  const q = UPDATE tb_jns SET jns = ? WHERE kd_jns = ?;
+  return runUpdate(q, [jns, kd_jns]);
+};
+
+// Update warna
+const updWr = ({ kd_wrn, wrn }) => {
+  const q = UPDATE tb_wrn SET wrn = ? WHERE kd_wrn = ?;
+  return runUpdate(q, [wrn, kd_wrn]);
+};
+
+// Update satuan
+const updSt = ({ kd_stn, stn, s }) => {
+  const q = UPDATE tb_stn SET stn = ?, s = ? WHERE kd_stn = ?;
+  return runUpdate(q, [stn, s, kd_stn]);
+};
+
+// Update rak
+const updRk = ({ kd_rak, rak }) => {
+  const q = UPDATE tb_rak SET rak = ? WHERE kd_rak = ?;
+  return runUpdate(q, [rak, kd_rak]);
+};
+
+// Update kolom
+const updKl = ({ kd_kol, kol }) => {
+  const q = UPDATE tb_kol SET kol = ? WHERE kd_kol = ?;
+  return runUpdate(q, [kol, kd_kol]);
+};
+
+/*
+// Update tb_km
+const updKm = ({ id_kain, kd_jns, kd_wrn, kd_stn, ktg, old_kd_jns, old_kd_wrn }) => {
+  const q = UPDATE tb_km SET kd_jns = ?, kd_wrn = ?, kd_stn = ?, ktg = ? WHERE id_kain = ? AND kd_jns = ? AND kd_wrn = ?;
+  return runUpdate(q, [kd_jns, kd_wrn, kd_stn, ktg, id_kain, old_kd_jns, old_kd_wrn]);
+};
+
+// Update tb_kain
+const updKn = ({ id_kain, kd_jns, kd_wrn, kd_stn, ktg, old_kd_jns, old_kd_wrn }) => {
+  const q = UPDATE tb_kain SET kd_jns = ?, kd_wrn = ?, kd_stn = ?, ktg = ? WHERE id_kain = ? AND kd_jns = ? AND kd_wrn = ?;
+  return runUpdate(q, [kd_jns, kd_wrn, kd_stn, ktg, id_kain, old_kd_jns, old_kd_wrn]);
+};
+*/
+
+// Update tb_km dan tb_kain (field pasti sama)
+const updKn = async ({ id_kain, kd_jns, kd_wrn, kd_stn, ktg }) => {
+  const q1 = UPDATE tb_km SET 
+    kd_jns = ?, kd_wrn = ?, kd_stn = ?, ktg = ?
+    WHERE id_kain = ?;
+
+  const values1 = [kd_jns, kd_wrn, kd_stn, ktg, id_kain];
+
+  const q2 = UPDATE tb_kain SET 
+    kd_jns = ?, kd_wrn = ?, kd_stn = ?, ktg = ?
+    WHERE id_kain = ?;
+
+  const values2 = [kd_jns, kd_wrn, kd_stn, ktg, id_kain];
+
+  try {
+    const res1 = await runUpdate(q1, values1);
+    const res2 = await runUpdate(q2, values2);
+
+    return {
+      tb_km: res1.affectedRows,
+      tb_kain: res2.affectedRows,
+    };
+  } catch (err) {
+    throw err;
+  }
+};
+
+
+/**
+ * Mengambil ID SJ baru secara aman (otomatis menaikkan angka terakhir).
+ * Menggunakan transaksi database dengan penguncian baris (FOR UPDATE) untuk mencegah ID ganda saat dipanggil bersamaan.
+ * 
+ * Sumber data: Tabel sj_counter dengan kolom last_id.
+ * Output: ID SJ berikutnya dalam bentuk integer.
+ */
+const getNextSjId = async () => {
+  // Ambil koneksi database dari pool secara manual untuk transaksi
+  const connection = await db.promise().getConnection();
+
+  try {
+    // Mulai transaksi
+    await connection.beginTransaction();
+
+    // Ambil nilai terakhir dari tabel sj_counter dan kunci baris tersebut
+    const [rows] = await connection.query(
+      SELECT last_id FROM sj_counter WHERE id = 1 FOR UPDATE
+    );
+
+    // Validasi: pastikan baris sj_counter dengan id=1 tersedia
+    if (rows.length === 0) {
+      throw new Error('sj_counter belum diinisialisasi');
+    }
+
+    // Hitung ID berikutnya
+    const lastId = rows[0].last_id;
+    const nextId = lastId + 1;
+
+    // Simpan nilai ID baru ke tabel sj_counter
+    await connection.query(
+      UPDATE sj_counter SET last_id = ? WHERE id = 1,
+      [nextId]
+    );
+
+    // Commit transaksi dan kembalikan koneksi ke pool
+    await connection.commit();
+    connection.release();
+
+    // Kembalikan ID SJ baru ke pemanggil
+    return nextId;
+  } catch (err) {
+    // Jika terjadi error, rollback transaksi dan kembalikan koneksi
+    await connection.rollback();
+    connection.release();
+    console.error('Gagal ambil ID SJ:', err.message);
+    throw err;
+  }
+};
+
+
+/**
+ * Mengambil ID SJ terakhir dari tabel sj_counter tanpa mengubahnya.
+ * Output: Nilai last_id saat ini (integer).
+ */
+const getCurrentSjId = async () => {
+  try {
+    const [rows] = await db.promise().query(
+      SELECT last_id FROM sj_counter ORDER BY id DESC LIMIT 1
+    );
+
+    if (rows.length === 0) {
+      throw new Error('sj_counter belum diinisialisasi');
+    }
+
+    return rows[0].last_id;
+  } catch (err) {
+    console.error('Gagal ambil current ID SJ:', err.message);
+    throw err;
+  }
+};
+
+
+// ---------------------------------
+// EXPORT
+// ---------------------------------
+
+module.exports = {
+  // Insert
+  insJn, insWr, insSt, insKn, insRk, insKl,
+  // Update
+  updJn, updWr, updSt, updRk, updKl, updKn,
+  // getNextSjId
+  getNextSjId, getCurrentSjId
+};
+
+
+------------------------------------------
+
+
+file js akan di panggil dengan ini pada app.js
+
+const gtDtByPost = (url, queryFunction, id = null) => {
+  app.post(url, async (req, res) => {
+    const param = id ? req.body[id] : null;
+    try {
+      const data = await queryFunction(param);
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching data:', error.message || error);
+      res.status(500).json({
+        message: 'Internal Server Error',
+        error: error.sqlMessage || error.message || 'Unknown error',
+      });
+    }
+  });
+};
+
+berikan saya file js nya
+
+------------------------------------------
+
+const payload = {
+  tgl: '2025-07-26 13:12:44', // tgl_hst & tgl_so
+  pic: 1,                     // pic_hst & pic
+  hlp: 9,
+  kd_rak: 34,
+  kd_kol: 1,
+  id_stock: 29028
+};
+
+pR('https://cdn.weva.my.id/apix/queryMutasi', payload, (err, result) => {
+  if (err) {
+    console.error('Gagal:', err.error);
+    return;
+  }
+
+  console.log('Sukses:', result.data);
+  console.log('Timestamp:', result.time);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+const payload = {
+  tgl: '2025-07-26 13:12:44',
+  pic: 1,
+  hlp: 9,
+  kd_rak: 34,
+  kd_kol: 1,
+  id_stock: 99028
+};
+
+pR('https://cdn.weva.my.id/apix/queryMutasi', { data: payload }, (err, result) => {
+  if (err) {
+    console.error('Gagal:', err.error);
+    return;
+  }
+
+  console.log('Sukses:', result.data);
+  console.log('Timestamp:', result.time);
+});
+
+{
+    "message": "Internal Server Error",
+    "error": "Data tb_so tidak ditemukan untuk id_stock 99028"
+}

@@ -97,60 +97,87 @@ $(function () {
       nama: data.dataPick.hasilCariId.k,
       lokasi_awal: data.dataPick.hasilCariId.rkkl,
       lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.v,kol:data.helperLokasi.lokasi.kol.v},
+      i_lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.i,kol:data.helperLokasi.lokasi.kol.i},
       pic: getFromLocalStorage('z').nama,
+      i_pic: getFromLocalStorage('z').id,
       helper: data.helperLokasi.helper.v,
+      i_hlp: data.helperLokasi.helper.i,
       id_kain: data.dataPick.hasilCariId.id_kain
     };
 
     dataHistory.push(result);
     renderHistory(dataHistory);
-    // console.log( data.dataPick,data.helperLokasi );
-    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
+
+    const payload = {
+      tgl: stm(),
+      pic: result.i_pic,
+      hlp: result.i_hlp,
+      kd_rak: result.i_lokasi_akhir.rak,
+      kd_kol: result.i_lokasi_akhir.kol,
+      id_stock: result.id
+    };
+    console.log({payload});
+
+    kirimMutasiJQuery(payload).then(data => {
+      console.log('Hasil:', data);
+      if (data && data.id_stock !== null) {
 
 
-fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
-  const indexes = [];
-  console.log(result);
-
-  d.forEach((item, index) => {
-    if (item.id_stock === result.id) {
-      indexes.push(index);
-    }
-  });
-
-  if (indexes.length > 0) {
-    const idx = indexes[0];
-    const path = `/layer2/${result.id_kain}/${idx}`;
-
-    fbsSvc.gDt(path, '', (oldData) => {
-      const updatedData = {
-        kol:result.lokasi_akhir.kol,
-        rak:result.lokasi_akhir.rak,
-        rkkl:`${result.lokasi_akhir.rak} ${result.lokasi_akhir.kol}`
-      };
+        // console.log( data.dataPick,data.helperLokasi );
+        fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
 
 
-      console.log(
-        {result,updatedData}
-      );
-      
-      fbsSvc.upd(path, null, updatedData, (err) => {
-        if (err) {
-          console.error('Gagal update:', err);
-        } else {
-          updateLayer2ByIdStock(result.id, updatedData)
-          console.log('Data berhasil diupdate:', updatedData);
-        }
-      });
-      
-    });
-  } else {
-    console.log('id_stock tidak ditemukan');
-  }
-});
+          fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
+            const indexes = [];
+            console.log(result);
+
+            d.forEach((item, index) => {
+              if (item.id_stock === result.id) {
+                indexes.push(index);
+              }
+            });
+
+            if (indexes.length > 0) {
+              const idx = indexes[0];
+              const path = `/layer2/${result.id_kain}/${idx}`;
+
+              fbsSvc.gDt(path, '', (oldData) => {
+                const updatedData = {
+                  kol:result.lokasi_akhir.kol,
+                  rak:result.lokasi_akhir.rak,
+                  rkkl:`${result.lokasi_akhir.rak} ${result.lokasi_akhir.kol}`
+                };
 
 
-    });
+                console.log(
+                  {result,updatedData}
+                );
+                
+                fbsSvc.upd(path, null, updatedData, (err) => {
+                  if (err) {
+                    console.error('Gagal update:', err);
+                  } else {
+                    updateLayer2ByIdStock(result.id, updatedData)
+                    console.log('Data berhasil diupdate:', updatedData);
+                    cekNav();
+                  }
+                });
+                
+              });
+            } else {
+              console.log('id_stock tidak ditemukan');
+            }
+          });
+
+
+        });
+      } else {
+        console.log("Error");
+      }
+
+    }).catch(console.error);
+
+
     console.log(result);
     offFunction();
   });

@@ -28,6 +28,7 @@ function mulaiInisiasiData() {
 	}, 2000);
 }
 
+/*
 function selesaiInisiasiData() {
 	console.log('Semua data berhasil diinisialisasi.');
 	showAlert('Semua data berhasil diinisialisasi.',type='success');
@@ -42,6 +43,57 @@ function selesaiInisiasiData() {
   .removeClass('opacity-50 cursor-not-allowed');      // Hilangkan class tampilan disabled
 
 	});
+}
+*/
+
+var tombolNav = false;
+
+function cekNav(){
+  if(!tombolNav){
+    fbsSvc.gDt(`/app/mutasi/2025-07-26/`, '', (d) => {
+      if(d) {
+        tombolNav = true;
+        const arr = Object.values(d);
+        dataHistory = arr;
+        renderHistory(dataHistory);
+
+        $('#openModal, #btn-logout')
+          .prop('disabled', false)
+          .removeClass('opacity-50 cursor-not-allowed');
+      }
+    })
+  }
+}
+
+function selesaiInisiasiData() {
+  console.log('Semua data berhasil diinisialisasi.');
+  showAlert('Semua data berhasil diinisialisasi.', 'success');
+
+  fbsSvc.gDt(`/app/mutasi/${stm('t')}/`, '', (d) => {
+	if(d) {
+		tombolNav = true;
+	}else{
+		tombolNav = false;
+    $('#btn-logout')
+      .prop('disabled', false)
+      .removeClass('opacity-50 cursor-not-allowed');
+	}
+	console.log("xxx",d);
+    // 🚫 Exception: jika d kosong/null/undefined atau bukan objek, hentikan
+    if (!d || typeof d !== 'object' || Object.keys(d).length === 0) {
+      console.warn('Data kosong atau tidak valid, tidak menjalankan render.');
+      showAlert('Data tidak tersedia untuk ditampilkan.', 'warning');
+      return; // keluar dari callback
+    }
+
+    const arr = Object.values(d);
+    dataHistory = arr;
+    renderHistory(dataHistory);
+
+    $('#openModal, #btn-logout')
+      .prop('disabled', false)
+      .removeClass('opacity-50 cursor-not-allowed');
+  });
 }
 
 function errorInisiasiData(error) {

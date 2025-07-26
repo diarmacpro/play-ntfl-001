@@ -24,3 +24,12 @@ function delFromLocalStorage(key) {
         console.error('Gagal menghapus dari localStorage:', e);
     }
 }
+
+function kirimMutasiJQuery(payload) {
+  return new Promise((resolve, reject) => {
+    pR('https://cdn.weva.my.id/apix/queryMutasi', { data: payload }, (err, result) => {
+      if (err) return reject(err);
+      resolve(result.data);
+    });
+  });
+}

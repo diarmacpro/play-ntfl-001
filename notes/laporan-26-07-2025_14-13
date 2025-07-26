@@ -1,0 +1,330 @@
+sebelum : belum ada throw exception
+function selesaiInisiasiData() {
+	console.log('Semua data berhasil diinisialisasi.');
+	showAlert('Semua data berhasil diinisialisasi.',type='success');
+	fbsSvc.gDt(`/app/mutasi/${stm('t')}/`, '', (d) => {
+		const arr = Object.values(d);
+		dataHistory = arr;
+		renderHistory(dataHistory);
+
+
+  $('#openModal, #btn-logout')
+  .prop('disabled', false)                            // Hilangkan atribut disabled
+  .removeClass('opacity-50 cursor-not-allowed');      // Hilangkan class tampilan disabled
+
+	});
+}
+
+sesudah : sudah ada exception (handing error)
+function selesaiInisiasiData() {
+  console.log('Semua data berhasil diinisialisasi.');
+  showAlert('Semua data berhasil diinisialisasi.', 'success');
+
+  fbsSvc.gDt(`/app/mutasi/${stm('t')}/`, '', (d) => {
+    // 🚫 Exception: jika d kosong/null/undefined atau bukan objek, hentikan
+    if (!d || typeof d !== 'object' || Object.keys(d).length === 0) {
+      console.warn('Data kosong atau tidak valid, tidak menjalankan render.');
+      showAlert('Data tidak tersedia untuk ditampilkan.', 'warning');
+      return; // keluar dari callback
+    }
+
+    const arr = Object.values(d);
+    dataHistory = arr;
+    renderHistory(dataHistory);
+
+    $('#openModal, #btn-logout')
+      .prop('disabled', false)
+      .removeClass('opacity-50 cursor-not-allowed');
+  });
+}
+
+-------------------------------------------------------------------------
+sebelumnya
+    const result = {
+      jam: stm('w'),
+      id: data.dataPick.hasilCariId.id_stock,
+      nama: data.dataPick.hasilCariId.k,
+      lokasi_awal: data.dataPick.hasilCariId.rkkl,
+      lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.v,kol:data.helperLokasi.lokasi.kol.v},
+      pic: getFromLocalStorage('z').nama,
+      helper: data.helperLokasi.helper.v,
+      id_kain: data.dataPick.hasilCariId.id_kain
+    };
+
+sesudah
+    const result = {
+      jam: stm('w'),
+      id: data.dataPick.hasilCariId.id_stock,
+      nama: data.dataPick.hasilCariId.k,
+      lokasi_awal: data.dataPick.hasilCariId.rkkl,
+      lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.v,kol:data.helperLokasi.lokasi.kol.v},
+      i_lokasi_akhir: {rak:data.helperLokasi.lokasi.rak.i,kol:data.helperLokasi.lokasi.kol.i},
+      pic: getFromLocalStorage('z').nama,
+      i_pic: getFromLocalStorage('z').id,
+      helper: data.helperLokasi.helper.v,
+      i_hlp: data.helperLokasi.helper.i,
+      id_kain: data.dataPick.hasilCariId.id_kain
+    };
+-------------------------------------------------------------------------
+menambah method / fungsi backend queryMutasi() didalam app.js
+
+function kirimMutasiJQuery(payload) {
+  return new Promise((resolve, reject) => {
+    pR('https://cdn.weva.my.id/apix/queryMutasi', { data: payload }, (err, result) => {
+      if (err) return reject(err);
+      resolve(result.data);
+    });
+  });
+}
+
+// Contoh penggunaan:
+const payload = {
+  tgl: '2025-07-11 13:12:44',
+  pic: 2,
+  hlp: 1,
+  kd_rak: 1,
+  kd_kol: 1,
+  id_stock: 29028
+};
+
+kirimMutasiJQuery(payload).then(data => {
+  console.log('Hasil:', data);
+}).catch(console.error);
+
+
+------------------------------------
+sebelumnya : tidak dibungkus dalam fungsi lain
+fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
+  . . . . .
+  fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
+    . . . . .
+    fbsSvc.gDt(path, '', (oldData) => {
+      . . . . .
+      fbsSvc.upd(path, null, updatedData, (err) => {
+        . . . . .
+      });
+        
+    });
+    } else {
+      console.log('id_stock tidak ditemukan');
+    }
+});
+
+sesudahnya : mengintegrasikan dengan fungsi kirimMutasiJQuery() sehingga data dapat di ungguh ke server pusat dalam waktu yang relatif singkat dalam 1 jalur proses
+kirimMutasiJQuery(payload).then(data => {
+  if (data && data.id_stock !== null) {
+    fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
+      . . . . .
+      fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
+        . . . . .
+        fbsSvc.gDt(path, '', (oldData) => {
+          . . . . .
+          fbsSvc.upd(path, null, updatedData, (err) => {
+            . . . . .
+          });
+            
+        });
+        } else {
+          console.log('id_stock tidak ditemukan');
+        }
+    });
+  }
+}).catch(console.error);
+
+
+
+--------------------------
+supaya tombol pada nav dapat fleksibel maka dibuat var global tombolNav yang nilai semulanya 'boolean : false' lalu dibuat fungsi cekNav() untuk melakukan validasi data, saat data valid maka lakukan tindakan untuk mengaktifkan tombol pada nav
+var tombolNav = false;
+
+function cekNav(){
+  if(!tombolNav){
+    fbsSvc.gDt(`/app/mutasi/2025-07-26/`, '', (d) => {
+      if(d) {
+        tombolNav = true;
+        const arr = Object.values(d);
+        dataHistory = arr;
+        renderHistory(dataHistory);
+
+        $('#openModal, #btn-logout')
+          .prop('disabled', false)
+          .removeClass('opacity-50 cursor-not-allowed');
+      }
+    })
+  }
+}
+
+
+--------------------------
+
+implementasi method dalam fungsi selesaiInisiasiData()
+ditambah logical saat data belum tersedia maka tetap disabled tombol logout
+
+fbsSvc.gDt(`/app/mutasi/${stm('t')}/`, '', (d) => {
+  . . . . .
+	if(d) {
+		tombolNav = true;
+	}else{
+		tombolNav = false;
+    $('#btn-logout')
+      .prop('disabled', false)
+      .removeClass('opacity-50 cursor-not-allowed');
+	}
+  . . . . .
+})
+--------------------------
+pembuatan back-end untuk menangani arus data pada sistem ini supaya tidak banyak fetch url dan tidak membebani server secara berlebihan melakukan req panggilan api public,
+karena saat ovecall sangat berpotensi terjadi bootleneck pada sistem yang akan menghambat hal hal lain nya
+
+membuat file 'queryMutasi.js' didalam direktori data pada main direktory 'query' dan didalam parent direktory 'apix'
+const db = require('../../db'); // Mengimpor koneksi database dari file di atasnya (folder induk).
+
+// Fungsi utama yang menerima payload input dan memproses mutasi data di database.
+const queryMutasi = async (payload) => {
+  const {
+    tgl,     // Tanggal mutasi (waktu pencatatan terbaru)
+    pic,     // Person in Charge (penanggung jawab input)
+    hlp,     // Helper / Asisten yang membantu
+    kd_rak,  // Kode rak tempat barang berada
+    kd_kol,  // Kode kolom tempat barang berada
+    id_stock // ID unik dari stok barang
+  } = payload;
+
+  // Validasi awal: jika salah satu nilai tidak ada, kembalikan null.
+  if (!tgl || !pic || !hlp || !kd_rak || !kd_kol || !id_stock) {
+    return { id_stock: null }; // Payload tidak lengkap
+  }
+
+  // Membuat koneksi database
+  const conn = await db.promise().getConnection();
+
+  try {
+    await conn.beginTransaction(); // Mulai transaksi (untuk menjamin atomicity)
+
+    // Ambil satu baris dari tabel tb_so berdasarkan id_stock
+    const [rows] = await conn.query(`
+      SELECT id_so, tgl_so, pic, hlp, ge, id_stock, kd_rak, kd_kol, q_so
+      FROM tb_so WHERE id_stock = ? LIMIT 1
+    `, [id_stock]);
+
+    // Jika tidak ditemukan data dengan id_stock tsb, rollback dan kembalikan null
+    if (rows.length === 0) {
+      await conn.rollback(); // Batalkan transaksi
+      conn.release();        // Kembalikan koneksi ke pool
+      return { id_stock: null };
+    }
+
+    const r = rows[0]; // Ambil baris pertama sebagai referensi
+
+    // Backup data lama ke tabel histori (tb_so_hst), tanpa q_so_sup dan q_so_nett
+    await conn.query(`
+      INSERT INTO tb_so_hst (
+        tgl_hst, pic_hst, id_so, tgl_so, pic, hlp, ge,
+        id_stock, kd_rak, kd_kol, q_so
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      tgl,       // waktu sekarang sebagai waktu histori
+      pic,       // user yang sedang input
+      r.id_so,   // ID data asli
+      r.tgl_so,  // tanggal data sebelumnya
+      r.pic,     // pic sebelumnya
+      r.hlp,     // hlp sebelumnya
+      r.ge,      // ge sebelumnya
+      r.id_stock,
+      r.kd_rak,
+      r.kd_kol,
+      r.q_so
+    ]);
+
+    // Lanjut update data di tabel utama (tb_so) dengan input baru
+    await conn.query(`
+      UPDATE tb_so SET
+        tgl_so = ?, pic = ?, hlp = ?, kd_rak = ?, kd_kol = ?
+      WHERE id_stock = ?
+    `, [tgl, pic, hlp, kd_rak, kd_kol, id_stock]);
+
+    await conn.commit();  // Konfirmasi dan simpan perubahan
+    conn.release();       // Kembalikan koneksi ke pool
+
+    return { id_stock: r.id_stock }; // Berhasil → kembalikan id_stock
+  } catch (err) {
+    await conn.rollback(); // Jika terjadi error, batalkan semua proses
+    conn.release();        // Kembalikan koneksi ke pool
+    console.error('queryMutasi Error:', err.message); // Tampilkan log error
+    return { id_stock: null }; // Kembalikan null sebagai indikasi gagal
+  }
+};
+
+module.exports = { queryMutasi }; // Ekspor fungsi agar bisa dipakai di file lain
+
+--- Kesimpulan Alur Fungsi: ---
+Validasi input.
+Ambil data lama dari tb_so.
+Jika ada:
+  Backup data ke tb_so_hst.
+  Update data di tb_so dengan nilai baru.
+Jika tidak ada data:
+  Batalkan transaksi dan kembalikan { id_stock: null }.
+Jika sukses:
+  Commit dan kembalikan { id_stock: <value> }.
+Jika error:
+  Rollback dan tetap kembalikan { id_stock: null }.
+
+
+file akan di routing via app.js untuk dapat digunakan secara publik dengan batasan CORS dari cloudflare security
+app.js
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+const { queryMutasi } = require('./query/data/queryMutasi');
+
+const gtDtByPost = (url, queryFunction, id = null) => {
+ . . . .
+};
+
+. . . .
+
+gtDtByPost('/apix/queryMutasi', queryMutasi, 'data');
+
+. . . .
+
+const port = *****;
+app.listen(port, () => { });
+
+--------------------------
+
+melakukan uji method back-end pada front-end
+uji salah dan uji benar
+
+// payload uji salah
+const payload = {
+  tgl: '2025-07-26 13:12:44',
+  pic: 1,
+  hlp: 9,
+  kd_rak: 34,
+  kd_kol: 1,
+  id_stock: 99028
+};
+
+// payload uji benar
+const payload = {
+  tgl: '2025-07-26 13:12:44',
+  pic: 1,
+  hlp: 9,
+  kd_rak: 34,
+  kd_kol: 1,
+  id_stock: 99028
+};
+
+
+// penamggilan fungsi / method
+pR('https://cdn.weva.my.id/apix/queryMutasi', { data: payload }, (err, result) => {
+  if (err) {
+    console.error('Gagal:', err.error);
+    return;
+  }
+
+  console.log('Sukses:', result.data);
+  console.log('Timestamp:', result.time);
+});
