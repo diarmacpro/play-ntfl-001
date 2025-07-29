@@ -18,36 +18,28 @@ function cekNav(){
 
 -------------------------------------------------------------
 
+Sebelum
+window.location.replace(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`);
 
-      // window.location.replace(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`);
-      const newTab = window.open(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`, '_blank');
-
--------------------------------------------------------------
-
-function reloadOnce() {
-  const reloaded = localStorage.getItem('hasReloaded');
-
-  if (!reloaded) {
-    localStorage.setItem('hasReloaded', 'true');
-    location.reload();
-  }
-}
-
-// Panggil fungsi ini saat dibutuhkan
-reloadOnce();
+Sesudah
+const newTab = window.open(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`, '_blank');
 
 -------------------------------------------------------------
 
+Sebelum
   inisiasiData((hasil) => {
     console.log(hasil);
   });
 
-
+Sesudah
 setTimeout(() => {
   inisiasiData((hasil) => {
     console.log(hasil);
   });
 }, 500);
+
+-------------------------------------------------------------
+
 
 
 -------------------------------------------------------------
