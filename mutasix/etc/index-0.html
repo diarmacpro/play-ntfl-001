@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Mutasi</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body>
+		<div class="p-2 mx-auto">
+			<!-- 4 Kolom Responsif -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 mb-6">
+					<div>
+							<small id="hasil-cari-helper" class="block mt-1 text-lg text-gray-500"> </small>
+							<input 
+									id="cari-helper" 
+									class="w-full p-2 bg-white border border-gray-300 rounded-sm text-gray-900 text-4xl placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200" 
+									placeholder="Helper" 
+									autocomplete="off" 
+									autofocus
+							/>
+					</div>
+					<div>
+							<small id="hasil-cari-lokasi" class="block mt-1 text-lg text-gray-500"> </small>
+							<input 
+									id="cari-lokasi" 
+									class="w-full p-2 bg-white border border-gray-300 rounded-sm text-gray-900 text-4xl placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-200" 
+									placeholder="Lokasi" 
+									autocomplete="off" 
+									autofocus
+							/>
+					</div>
+					<div>
+							<small class="block mt-1 text-lg text-gray-500"> </small>
+							<button class="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">
+								<h1 class="text-4xl"><i class="bi bi-arrow-repeat"></i></h1>
+							</button>
+					</div>
+			</div>
+
+
+		</div>
+		<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" integrity="sha256-qXBd/EfAdjOA2FGrGAG+b3YBn2tn5A6bhz+LSgYD96k=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js" integrity="sha256-5/uwFT5U69ovuv9G9LS0Zf2x0bqnOYnVf8/iRKxfNhI=" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
+		<script type="module">
+			import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+			import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+
+			const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
+			const db = getDatabase(app);
+			Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+		</script>
+		<script src="./script.js"></script>
+	<script>
+		var data = {};
+		let fbsSvc;
+
+		$(function () {
+			fbsSvc = new Fbs(db);
+
+			inisiasiData((hasil) => {
+				console.log(hasil);
+			});
+
+			$('#cari-lokasi').on('input', function () {
+				const val = $(this).val();
+				console.log(cariLokasi(val, data));
+				let res;
+				if (val){
+					const hasil = cariLokasi(val, data);
+					if(hasil){
+						res = `Hasil : <b>${hasil.rak.v} ${hasil.kol.v}</b> (Silahkan tekan 'ENTER')`
+					}else{
+						res = "Data tidak ditemukan";
+					}
+				}else{
+					res = " ";
+				}
+				
+				$('#hasil-cari-lokasi').html(res);
+			})
+
+			$('#cari-helper').on('input', function () {
+				const val = $(this).val();
+				let res;
+				if (val){
+					const hasil = cariTerdekat(data.helper, val);
+					if(hasil){
+						res = `Hasil : <b>${hasil.v}</b> (Silahkan tekan 'ENTER')`;
+					}else{
+						res = "Data tidak ditemukan";
+					}
+				}else{
+					res = " ";
+				}
+				
+				$('#hasil-cari-helper').html(res);
+			})
+		});
+
+		// cariTerdekat(data.helper,'e')
+	</script>
+
+	</body>
+</html>
+
+

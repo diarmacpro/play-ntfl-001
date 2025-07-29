@@ -1,0 +1,46 @@
+fbsSvc.iDtKy(`/app/mutasi/${stm('t')}`,{
+    t:stm('w'),
+    h:"abcd",
+    u:""
+},(d)=>{
+    console.log(d);
+})
+
+
+fbsSvc.iDtKy(`/app/mutasi/${stm('t')}`,{t:stm('w'),tx:"abcd"},(d)=>{
+    console.log(d);
+})
+
+{
+    "id": "14",
+    "nama": "Diar",
+    "posisi": "System Admin"
+}
+
+JSON.stringify({
+    "id": "14",
+    "nama": "Diar",
+    "posisi": "System Admin"
+});
+
+btoa(JSON.stringify({
+    "id": "14",
+    "nama": "Diar",
+    "posisi": "System Admin"
+}));
+
+JSON.parse(atob('eyJpZCI6IjE0IiwibmFtYSI6IkRpYXIiLCJwb3Npc2kiOiJTeXN0ZW0gQWRtaW4ifQ'));
+
+gtQrl('z') ? JSON.parse(atob(gtQrl('z'))) : null;
+
+
+
+  {
+    "time": "08:12:45",
+    "id_stock": "STK1001",
+    "nama_barang": "Baut Baja M10",
+    "loc_awal": "Gudang A1",
+    "loc_akhir": "Rak C3",
+    "pic": "Diar",
+    "helper": "Andi"
+  },
