@@ -1,7 +1,7 @@
 function logout(){
 	console.log("Logout");
 	delFromLocalStorage('z');
-	window.location.replace("https://weva.my.id/mutasi-try");
+	window.location.replace("https://weva.my.id/mutasi-barang");
 }
 
 function history(){
