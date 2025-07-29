@@ -1,3 +1,5 @@
+judul : adanya kekeliruan path pada firebase realtime database, yang menyebabkan navigasi tidak berjalan dengan baik.
+
 Sebelum :
 function cekNav(){
   if(!tombolNav){
@@ -18,6 +20,8 @@ function cekNav(){
 
 -------------------------------------------------------------
 
+judul : pada hal berikut telah diubah redirect yang sebelumnya menimpa halaman parent untuk triger login melalui payload pada parameter 'z' menjadi tidak menimpa tetapi membuka pada tab baru
+
 Sebelum
 window.location.replace(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`);
 
@@ -25,6 +29,8 @@ Sesudah
 const newTab = window.open(`https://play-ntfl-001.netlify.app/mutasi/?z=${payload}`, '_blank');
 
 -------------------------------------------------------------
+
+judul : inisiasi tidak dilakukan jeda sehingga terkadang tidak terjadi inisiasi yang menyebabkan tidak tersedianya data yang dibutuhkan, setelahnya dilakukan jeda supaya dapat memberikan kelonggaran pada sistem untuk memproses hal lainya.
 
 Sebelum
   inisiasiData((hasil) => {
@@ -39,6 +45,8 @@ setTimeout(() => {
 }, 500);
 
 -------------------------------------------------------------
+
+judul : reposisi redirect pada logout supaya menempatkan pada posisi yang sesuai karena hari ini parent akan berganti dari 'mutasi-try' menjadi 'mutasi-barang'
 
 function logout(){
 	console.log("Logout");

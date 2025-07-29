@@ -3,6 +3,9 @@ function renderHistory(dataArray) {
   container.innerHTML = '';
 
   // Group by ID
+  // const dataArrayX = _.orderBy(dataArray, ['jam'], ['asc']);
+
+  // const grouped = dataArrayX.reduce((acc, item) => {
   const grouped = dataArray.reduce((acc, item) => {
     if (!acc[item.id]) acc[item.id] = [];
     acc[item.id].push(item);
