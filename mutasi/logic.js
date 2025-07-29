@@ -4,11 +4,28 @@ let helperTerkunci = null;
 let lokasiTerkunci = null;
 
 $(function () {
+  function reloadOnce() {
+    const reloaded = localStorage.getItem('hasReloaded');
+
+    if (!reloaded) {
+      // console.log("reload dalam 300ms...");
+      localStorage.setItem('hasReloaded', 'true');
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    }
+  }
+
+  // Panggil fungsi ini saat dibutuhkan
+  reloadOnce();
+
   fbsSvc = new Fbs(db);
 
+setTimeout(() => {
   inisiasiData((hasil) => {
     console.log(hasil);
   });
+}, 500);
 
   function offFunction(){
     $('#wadah-part-2').addClass('hidden');
