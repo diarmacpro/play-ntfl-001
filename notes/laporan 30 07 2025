@@ -1,0 +1,27 @@
+Masuk laporan terkait barang berupa "Canvas Greige, K.1"
+tidak dapat dimasukan keranjang
+ditemukan 1 barang tergantung pada database lama yang over usage
+dan 2 barang sudah ada pada keranjang pengguna lain
+
+tindakan : 
+
+informasi disampaikan dan
+
+
+------------------------
+
+
+auto load data dari beberapa perangkat pengguna (sistem tracking surat) tidak berjalan, sehingga saat pengguna membentuk surat jalan baru, tidak terdeteksi oleh sistem
+sudah diselesaikan 
+
+--------------------
+
+masuk beberapa laporan terkait halaman stock tidak realtime,
+ditemukan bahwa perangkat masih menggunakan cache lama, dan tidak update kepada cache baru, menyarankan untuk membersihkan cache supaya perangkat otomatis membentuk cache yang baru
+
+--------------------
+
+halaman sync yang digunakan untuk menyelaraskan data supaya tetap linear dilaporkan oleh 2 pengguna bahwa tidak dapat digunakan,
+
+tindakan : salah satu pengguna sudah di informasikan atau dilakukan himbauan supaya melakukan clear cache
+dan pengguna lain dilakukan tindakan clear cache langsung pada perangkatnya karena dalam 1 lingkup yang sama, sehingga dilakukan penanganan langsung.
