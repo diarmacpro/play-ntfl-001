@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Koneksi Supabase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-sm:w-11/12 max-w-md">
+    <h1 class="text-2xl font-bold mb-6 text-center">Test Koneksi Supabase</h1>
+
+    <label class="block mb-2 font-semibold">URL Proyek</label>
+    <input id="url" type="text" placeholder="https://xyz.supabase.co"
+           class="w-full border border-gray-300 rounded px-3 py-2 mb-4">
+
+    <label class="block mb-2 font-semibold">Anon Key</label>
+    <input id="key" type="text" placeholder="eyJhbGciOi..."
+           class="w-full border border-gray-300 rounded px-3 py-2 mb-6">
+
+    <button id="btnTest"
+            class="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition">
+      Test Koneksi
+    </button>
+
+    <!-- Status -->
+    <div id="status" class="mt-6 text-center hidden">
+      <svg id="icon" class="w-10 h-10 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+        <path id="iconPath"></path>
+      </svg>
+      <span id="label" class="font-semibold"></span>
+    </div>
+  </div>
+
+  <script>
+    // SVG path
+    const checkSvg = 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z';
+    const xSvg   = 'M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z';
+
+    function setStatus(ok) {
+      $('#iconPath').attr('d', ok ? checkSvg : xSvg);
+      $('#icon').removeClass('text-red-500 text-green-500').addClass(ok ? 'text-green-500' : 'text-red-500');
+      $('#label').text(ok ? 'Koneksi berhasil' : 'Koneksi gagal')
+                 .removeClass('text-red-600 text-green-600').addClass(ok ? 'text-green-600' : 'text-red-600');
+      $('#status').removeClass('hidden');
+    }
+
+    $('#btnTest').on('click', async function () {
+      const $btn = $(this);
+      $btn.prop('disabled', true).text('Menghubungkan...');
+      $('#status').addClass('hidden');
+
+      try {
+        const res = await fetch('https://cek-konkeksi-supabase.diarmacpro-pj02.workers.dev/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: $('#url').val().trim(), key: $('#key').val().trim() })
+        });
+        const { ok } = await res.json();
+        setStatus(ok);
+      } catch {
+        setStatus(false);
+      } finally {
+        $btn.prop('disabled', false).text('Test Koneksi');
+      }
+    });
+  </script>
+</body>
+</html>

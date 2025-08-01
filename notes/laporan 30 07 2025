@@ -1,27 +1,67 @@
+list pipe-line sementara yang terdampak atas adanya migrasi realtime database (dari 2 akun google firebase) dikarenakan salah satu akun mendapat peringatan over usage
+s.weva.my.id/
+…/layer/syncx
+…/last-sj/
+…/tracking-data-sj/
+
+---------------------------------------------------
+
 Masuk laporan terkait barang berupa "Canvas Greige, K.1"
 tidak dapat dimasukan keranjang
-ditemukan 1 barang tergantung pada database lama yang over usage
+ditemukan 1 barang tergantung pada database lama yang terkena over usage
 dan 2 barang sudah ada pada keranjang pengguna lain
 
-tindakan : 
+tindakan : dilakukan pengecekan pada tracking machine hasilnya barang tersedia, lalu dilakukan pengecekan terhadap tabel surat jalan : barang tidak dalam kondisi dikeranjangkan oleh pengguna lain, maka langkah terakhir saya berasumsi bahwa adanya kejadian data tersebut tersangkut pada sebuah transaksi, sehingga saya melakukan clear pada cache yang sedang berjalan.
 
-informasi disampaikan dan
-
+informasi disampaikan kepada pengguna terkait supaya dicek kembali karena saat ini kemungkinan barang sudah dapat masukan kedalam keranjang kembali,
 
 ------------------------
 
 
-auto load data dari beberapa perangkat pengguna (sistem tracking surat) tidak berjalan, sehingga saat pengguna membentuk surat jalan baru, tidak terdeteksi oleh sistem
-sudah diselesaikan 
+mendapatkan laporan masuk bahwa sistem auto load data dari beberapa perangkat pengguna (sistem tracking surat) tidak berjalan, sehingga saat pengguna membentuk surat jalan baru, tidak terdeteksi oleh sistem
+tindakan : melakukan pengecekan pada sistem autoload dan memastikan seluruh data pipe line membaca seluruh kegiatan pengguna dalam hal aktifitas barang pada sistem, khususnya mendeteksi perangkat apabila melakukan pembentukan nomor surat jalan baru dari beberapa barang,
+dari hasil pengecekan, sistem masih menggunakan database lama (efek terdampak dari : migrasi realtime database (dari google firebase)), pipeline sudah disesuaikan untuk mengarah pada database yang baru,
+
+hasil : sudah diselesaikan dan tidak ada laporan lanjutan berikutnya,
 
 --------------------
 
 masuk beberapa laporan terkait halaman stock tidak realtime,
-ditemukan bahwa perangkat masih menggunakan cache lama, dan tidak update kepada cache baru, menyarankan untuk membersihkan cache supaya perangkat otomatis membentuk cache yang baru
+muncul asumsi sementara bahwa perangkat terdampak masih menggunakan cache lama, dan tidak update kepada cache baru, menyarankan untuk membersihkan cache supaya perangkat otomatis membentuk cache yang baru, memberikan panduan kepada salah satu pengguna terkait cara dalam melakukan pembersihan cache untuk memastikan bahwa tidak ada cache lama yang mengendap dan mengganggu proses operasional,
+
+hasil : sudah diselesaikan dan tidak ada laporan lanjutan berikutnya,
 
 --------------------
 
-halaman sync yang digunakan untuk menyelaraskan data supaya tetap linear dilaporkan oleh 2 pengguna bahwa tidak dapat digunakan,
-
+adanya hal terkait halaman sync yang digunakan untuk menyelaraskan data supaya tetap linear dilaporkan oleh 2 pengguna bahwa tidak dapat digunakan,
 tindakan : salah satu pengguna sudah di informasikan atau dilakukan himbauan supaya melakukan clear cache
 dan pengguna lain dilakukan tindakan clear cache langsung pada perangkatnya karena dalam 1 lingkup yang sama, sehingga dilakukan penanganan langsung.
+hasil : sudah diselesaikan sesuai dengan prosedur dan prioritas
+
+--------------------
+
+nomor surat 46340 dilaporkan sudah di proses tetapi pada sajian data tidak terpengaruh,
+diagnosa kecurigaan mengarah pada cache, sehingga dilakukan clear dari server, dengan harapan dapat ditangani dengan baik
+hasil : tidak ada laporan lanjutan sembari menunggu feedback
+menyimpulkan hal tersebut berhasil teratasi dan sajian data sudah sesuai (linear dengan data asli)
+
+--------------------
+
+masuk perintah untuk melakukan sync.
+tindakan melakukan sync dari sisi saya
+hasil, sync berhasil dilakukan
+
+
+--------------------
+
+memberikan tanda pada halaman sync jika halaman tersebut suda tidak menggunakan cache lama
+tanda di berikan pada posisi pojok kiri atas sebagai penanda bahwa halaman tersebut bukan hasil endapan cache sebelum adanya proses migrasi database / pipeline
+
+--------------------
+
+memberikan tanda pada halaman mutasi jika halaman tersebut suda tidak menggunakan cache lama
+tanda di berikan pada posisi pojok kiri atas sebagai penanda bahwa halaman tersebut bukan hasil endapan cache sebelum adanya proses migrasi database / pipeline
+
+--------------------
+
+pada halaman monitoring marketing melakukan remote reload pada setiap perangkat pengguna di halaman sajian data barang, supaya di setiap perangkat pengguna otomatis halaman ter-refresh atau reload dengan harapan halaman atau perangkat dapat memperbaharui cache dengan yang terbaru saat ini dan tidak menimbulkan kendala dalam penggunaan

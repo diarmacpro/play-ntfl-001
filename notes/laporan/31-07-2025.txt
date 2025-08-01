@@ -1,0 +1,13 @@
+masuk laporan dari PIC warehouse bahwa barang barang yang di request oleh toko tidak masuk kepada sajian monitoring dan tidak ada notifikasi
+
+tindakan : mencurigai adanya kemungkinan terkait imbas dari migrasi database, serta melakukan pengecekan terhadap aliran data yang masuk, ternyata tidak ada data masuk dan segera melakukan penggantian konfigurasi string pada sistem terkait supaya dapat linear kembali.
+
+https://wvx.netlify.app/monitoring-req-gudang/
+toko-req-ke-gudang/
+
+hasil : semua barang yang sudah di request sekaligus tersaji dan masuk bersamaan saat pic melakukan refresh pada sistem, karena pada bagian konfigurasi sudah disesuaikan.
+
+
+---------------------------------------------
+
+
