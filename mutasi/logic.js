@@ -1,4 +1,7 @@
 var data = {};
+
+var cacheHistoryBarang = {};
+
 let fbsSvc;
 let helperTerkunci = null;
 let lokasiTerkunci = null;
@@ -302,12 +305,38 @@ setTimeout(() => {
 
       }
 
+      cacheHistoryBarang = {};
       const nmKn = pecahNamaKain(hasilCariId.k,hasilCariId.j);
 
 
       const uiHasil = `<div class="border rounded-xl shadow-md p-4 bg-white space-y-2 text-sm">
         <div class="font-bold text-center text-xl text-gray-800">${nmKn.k_terambil}</div>
         <div class="font-bold text-center text-xl text-gray-800">${nmKn.k_sisa}</div>
+        <div class="text-gray-600 flex justify-center text-xl">
+          <button data-id-stock="${hasilCariId.id_stock}" class="tombol-history-per-barang inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full shadow hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1">
+            <i class="bi bi-clock-history text-lg"></i>
+            <span class="text-sm font-medium">Lihat Riwayat Barang</span>
+          </button>
+        </div>
+
+        
+<!-- Alert box -->
+<div id="alertBox" class="flex items-start justify-between gap-4 bg-blue-100 text-blue-800 border border-blue-300 rounded p-4 mb-4 relative hidden">
+  <div class="flex-1">
+    <div class="flex items-center gap-2 mb-2">
+      <i class="bi bi-info-circle text-lg"></i>
+      <span class="text-sm font-medium">Riwayat Mutasi :</span>
+    </div>
+    <div class="h-[200px] overflow-y-auto border rounded p-2 bg-white text-sm leading-relaxed" id="sajianHistoryBarang">
+    </div>
+  </div>
+  <button type="button" id="btnCloseAlert" class="text-blue-800 hover:text-blue-900 transition">
+    <i class="bi bi-x-lg"></i>
+  </button>
+</div>
+
+
+
         <div class="text-gray-600 text-center text-xl">
             <span class="font-medium"><i class="bi bi-ui-checks"></i> ${hasilCariId.id_stock}</span>
             <span class="font-medium"><i class="bi bi-geo-alt-fill"></i> ${hasilCariId.rkkl}</span>
@@ -348,4 +377,85 @@ setTimeout(() => {
   $('#btn-logout').on('click', function () {
     logout();
   });
+});
+
+/*
+$(document).on('click', '.tombol-history-per-barang', function () {
+  console.log('Tombol diklik:', this);
+  // const idBarang = $(this).data('id');
+  // bukaModalHistory(idBarang);
+  const idBarang = $(this).data('id-stock');
+  pR('https://cdn.weva.my.id/apix/fullHistoryById',{id:idBarang},(e,d)=>{
+    console.log(d.data)
+  });
+});
+*/
+
+function renderDataHistoryBarang(data) {
+  const target = $('#sajianHistoryBarang');
+
+  if (!Array.isArray(data) || data.length === 0) {
+    target.html(`<div class="text-gray-500 italic">Tidak ada data riwayat.</div>`);
+    return;
+  }
+
+  const html = `
+    <ul class="divide-y divide-gray-200 border rounded overflow-hidden bg-white">
+      ${data.map(item => {
+        const tgl = item?.tgl || '...';
+        const pic = item?.pic || '...';
+        const hlp = item?.hlp || '??????';
+        const rak = item?.rak ?? '...';
+        const kol = item?.kol ?? '...';
+
+        return `
+          <li class="px-4 py-2 hover:bg-gray-50 text-sm text-gray-700">
+            <div class="font-medium">${hlp} — Rak: ${rak}, Kol: ${kol}</div>
+            <div class="text-xs text-gray-500">${formatTanggalWaktu(tgl)} — ${pic}</div>
+          </li>
+        `;
+      }).join('')}
+    </ul>
+  `;
+
+  target.html(html);
+}
+
+
+
+$(document).on('click', '.tombol-history-per-barang', function () {
+  const idBarang = $(this).data('id-stock');
+
+  // Jika data sudah ada di cache, langsung gunakan
+  if (cacheHistoryBarang[idBarang]) {
+    renderDataHistoryBarang(cacheHistoryBarang[idBarang]);
+    console.log('Data dari cache:', cacheHistoryBarang[idBarang]);
+    // Jalankan aksi lanjutan dengan data cache di sini, jika perlu
+    
+    $('#alertBox').removeClass('hidden');
+    $(this).prop('disabled', true);
+
+    return;
+  }
+
+  // Jika belum ada, tampilkan backdrop dan ambil data
+  tampilkanBackdropLoading("Menunggu Data History Barang Ini....");
+
+  pR('https://cdn.weva.my.id/apix/fullHistoryById', { id: idBarang }, (e, d) => {
+    console.log('Data dari server:', d.data);
+
+    $('#alertBox').removeClass('hidden');
+    $(this).prop('disabled', true);    
+    // Simpan ke cache
+    cacheHistoryBarang[idBarang] = d.data;
+    renderDataHistoryBarang(d.data);
+    // Jalankan aksi lanjutan di sini, jika perlu
+
+    sembunyikanBackdropLoading();
+  });
+});
+
+$(document).on('click', '#btnCloseAlert', function () {
+  $('#alertBox').addClass('hidden');
+  $('.tombol-history-per-barang').prop('disabled', false);
 });

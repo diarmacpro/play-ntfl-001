@@ -16,6 +16,17 @@ function sembunyikanBackdrop() {
   document.getElementById('backdrop').classList.add('hidden');
 }
 
+function tampilkanBackdropLoading(val) {
+  $('#backdropLoading').removeClass('hidden');
+  $('#textBackdropLoading').html(val);
+}
+
+function sembunyikanBackdropLoading() {
+  $('#backdropLoading').addClass('hidden');
+  $('#textBackdropLoading').html('');
+}
+
+
 function mulaiInisiasiData() {
 	tampilkanBackdrop();
 	console.log('Proses inisialisasi dimulai...');
