@@ -301,7 +301,7 @@ function cariLokasi(input, data) {
 
 
 function cariDataKainDariStock(id) {
-  // console.log(id);
+  console.log(id);
 
   const dtStock = data.layer2.find(d => d.id_stock == id);
   console.log(dtStock);
@@ -309,6 +309,29 @@ function cariDataKainDariStock(id) {
   if (!dtStock) {
     console.warn('Data stock tidak ditemukan untuk id', id);
     return null;
+  }
+
+  console.log(dtStock.stts);
+  if(dtStock.stts == 'h'){
+    $('#reset-button').addClass('hidden');
+    $('#btn-send').addClass('hidden');
+    // $('#btn-combined').removeClass('hidden');
+
+    $('#cari-helper').addClass('hidden');
+    $('#cari-lokasi').addClass('hidden');
+
+    $('.wadah-tombol-aksi').toggleClass('grid-cols-3 grid-cols-1');
+    $('#hasil-final').addClass('hidden');
+  }else{
+    $('#reset-button').removeClass('hidden');
+    $('#btn-send').removeClass('hidden');
+    // $('#btn-combined').addClass('hidden');
+
+    $('#cari-helper').removeClass('hidden');
+    $('#cari-lokasi').removeClass('hidden');
+
+    $('.wadah-tombol-aksi').toggleClass('grid-cols-3 grid-cols-1');
+    $('#hasil-final').removeClass('hidden');
   }
 
   const dtKain = data.kain.find(d => d.ik == dtStock.id_kain);
