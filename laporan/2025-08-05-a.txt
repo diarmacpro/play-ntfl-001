@@ -1,0 +1,27 @@
+	pR(
+		'https://cdn.weva.my.id/apix/dtSj',
+		{ tgl : '2025-08-05' },
+		( e, d )=>{
+
+		const grouped = _.chain(d.data)
+			.groupBy('id_sj')
+			.mapValues(sjGroup =>
+				_.groupBy(sjGroup, item => item.id_mkt ?? 'null')
+			)
+			.value();
+
+		// Pisahkan berdasarkan jumlah id_mkt dalam tiap id_sj
+		const [singleMkt, multipleMkt] = _.partition(
+			Object.entries(grouped),
+			([, mktGroup]) => Object.keys(mktGroup).length === 1
+		);
+
+		// Ubah kembali menjadi objek jika perlu
+		const singleMktObj = Object.fromEntries(singleMkt);
+		const multipleMktObj = Object.fromEntries(multipleMkt);
+
+		console.log('Hanya 1 marketing:', singleMktObj);
+		console.log('Lebih dari 1 marketing:', multipleMktObj);
+
+		}
+	);

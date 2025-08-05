@@ -312,6 +312,17 @@ function cariDataKainDariStock(id) {
   }
 
   console.log(dtStock.stts);
+
+  const isHidden = dtStock.stts === 'h';
+
+  $('#reset-button, #btn-send, #cari-helper, #cari-lokasi, #hasil-final')
+    .toggleClass('hidden', isHidden);
+
+  $('.wadah-tombol-aksi')
+    .toggleClass('grid-cols-3', !isHidden)
+    .toggleClass('grid-cols-1', isHidden);
+
+  /*
   if(dtStock.stts == 'h'){
     $('#reset-button').addClass('hidden');
     $('#btn-send').addClass('hidden');
@@ -333,6 +344,7 @@ function cariDataKainDariStock(id) {
     $('.wadah-tombol-aksi').toggleClass('grid-cols-3 grid-cols-1');
     $('#hasil-final').removeClass('hidden');
   }
+  */
 
   const dtKain = data.kain.find(d => d.ik == dtStock.id_kain);
   // console.log(dtKain);
