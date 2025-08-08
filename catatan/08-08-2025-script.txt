@@ -1,0 +1,75 @@
+	pR(
+		'https://cdn.weva.my.id/apix/dtSj',
+		{ tgl : '2025-08-05' },
+		( e, d )=>{
+
+		const grouped = _.chain(d.data)
+			.groupBy('id_sj')
+			.mapValues(sjGroup =>
+				_.groupBy(sjGroup, item => item.id_mkt ?? 'null')
+			)
+			.value();
+
+		// Pisahkan berdasarkan jumlah id_mkt dalam tiap id_sj
+		const [singleMkt, multipleMkt] = _.partition(
+			Object.entries(grouped),
+			([, mktGroup]) => Object.keys(mktGroup).length === 1
+		);
+
+		// Ubah kembali menjadi objek jika perlu
+		const singleMktObj = Object.fromEntries(singleMkt);
+		const multipleMktObj = Object.fromEntries(multipleMkt);
+
+const summary = {};
+
+Object.entries(singleMktObj).forEach(([id_sj, itemsByMkt]) => {
+	const id_mkt = Object.keys(itemsByMkt)[0];
+	const items = itemsByMkt[id_mkt];
+
+	// Ambil waktu dari properti 'stamp_sj' (ambil waktu saja, format HH:mm:ss)
+	const stamp_sj_time = (() => {
+		const s = items[0]?.stamp_sj;
+		if (!s) return '';
+		return new Date(s).toTimeString().split(' ')[0]; // Format HH:mm:ss
+	})();
+
+	// Hitung status_sj berdasarkan keberadaan d_mgr, d_wh, d_finish
+	const status_sj = (() => {
+		const status = {
+			d_mgr: items[0]?.d_mgr,
+			d_wh: items[0]?.d_wh,
+			d_finish: items[0]?.d_finish
+		};
+
+		if (status.d_mgr && !status.d_wh && !status.d_finish) return 1;
+		if (status.d_mgr && status.d_wh && !status.d_finish) return 2;
+		if (status.d_mgr && status.d_wh && status.d_finish) return 3;
+		return 4;
+	})();
+
+	// Hitung jumlah properti tidak null / tidak kosong
+	const countValid = (key) =>
+		items.filter(item => item[key] != null && item[key] !== '').length;
+
+	summary[id_sj] = {
+		id_sj: Number(id_sj),
+		id_mkt: Number(id_mkt),
+		jml_item: items.length,
+		stamp: stamp_sj_time,
+		status_sj: status_sj,
+		rtr: countValid('rtr'),
+		onoff: countValid('onOff'),
+		ekspedisi: countValid('ekspedisi')
+	};
+});
+
+console.log(summary);
+
+
+		console.log('Hanya 1 marketing:', singleMktObj);
+		console.log('Lebih dari 1 marketing:', multipleMktObj);
+
+		}
+	);
+
+
