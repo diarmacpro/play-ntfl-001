@@ -174,12 +174,45 @@
         <div class="text-gray-800 mb-2 pt-6" id="closeModal"><span class="text-lg font-semibold">History Mutasi</span> <span class="text-sm tanggal-saja-real"></span></div>
         <hr>
           <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm mb-2" placeholder="Cari mutasi...">
-          <div id="historyContainer" class="space-y-2 overflow-y-auto px-0" style="height: calc(100% - 110px);"></div>
+          <!-- <div id="historyContainer" class="space-y-2 overflow-y-auto px-0" style="height: calc(100% - 110px);"></div> -->
+<!-- Tabs -->
+<div class="mb-2">
+  <div class="flex border-b border-gray-200">
+    <button id="tabBefore" class="tab-btn px-4 py-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600">Sebelum Jam 12</button>
+    <button id="tabAfter" class="tab-btn px-4 py-2 text-sm font-semibold text-gray-500 hover:text-blue-600">Setelah Jam 12</button>
+  </div>
+</div>
+
+<!-- Tab content -->
+<div id="historyContainer" class="overflow-y-auto px-0" style="height: calc(100% - 180px);">
+  <div id="tabContentBefore" class="space-y-2"></div>
+  <div id="tabContentAfter" class="space-y-2 hidden"></div>
+</div>
+
       </div>
     </div>
 
   </div>
 </div>
+
+<script>
+  document.getElementById('tabBefore').addEventListener('click', () => {
+    document.getElementById('tabContentBefore').classList.remove('hidden');
+    document.getElementById('tabContentAfter').classList.add('hidden');
+    document.getElementById('tabBefore').classList.add('text-blue-600', 'border-blue-600');
+    document.getElementById('tabAfter').classList.remove('text-blue-600', 'border-blue-600');
+    document.getElementById('tabAfter').classList.add('text-gray-500');
+  });
+
+  document.getElementById('tabAfter').addEventListener('click', () => {
+    document.getElementById('tabContentBefore').classList.add('hidden');
+    document.getElementById('tabContentAfter').classList.remove('hidden');
+    document.getElementById('tabAfter').classList.add('text-blue-600', 'border-blue-600');
+    document.getElementById('tabBefore').classList.remove('text-blue-600', 'border-blue-600');
+    document.getElementById('tabBefore').classList.add('text-gray-500');
+  });
+</script>
+
 
 
   <script>

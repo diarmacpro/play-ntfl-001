@@ -1,4 +1,69 @@
 function renderHistory(dataArray) {
+  const beforeContainer = document.getElementById('tabContentBefore');
+  const afterContainer = document.getElementById('tabContentAfter');
+  beforeContainer.innerHTML = '';
+  afterContainer.innerHTML = '';
+
+  const groupById = (data) => {
+    return data.reduce((acc, item) => {
+      if (!acc[item.id]) acc[item.id] = [];
+      acc[item.id].push(item);
+      return acc;
+    }, {});
+  };
+
+  // Pisahkan sebelum dan sesudah jam 12
+  const isBeforeNoon = item => {
+    const [h] = item.jam.split(':').map(Number);
+    return h < 12;
+  };
+
+  const groupedBefore = groupById(dataArray.filter(isBeforeNoon));
+  const groupedAfter = groupById(dataArray.filter(item => !isBeforeNoon(item)));
+
+  const buildGroup = grouped => {
+    return Object.entries(grouped).map(([id, items]) => {
+      const groupEl = document.createElement('div');
+      groupEl.className = 'border border-gray-200 rounded-xl p-2 shadow-sm bg-white';
+
+      const header = `
+        <div class="flex justify-between items-center mb-1">
+          <div class="text-base font-bold text-gray-800 me-2">${id}</div>
+          <div class="text-sm text-gray-500"><span class="font-medium">${items[0].nama}</span></div>
+        </div>
+      `;
+
+      const histories = items.map(item => `
+        <div class="mb-1 px-0 py-1 bg-gray-50 rounded-lg shadow-sm border border-gray-200">
+          <div class="text-xs text-center text-red-700 mb-1 font-semibold">${item.jam} <b>(${item.pic})</b></div>
+          <div class="flex items-center justify-between text-sm px-3">
+            <div class="flex-1 flex justify-start text-blue-600 font-semibold">
+              ${item.lokasi_awal}
+              <i class="bi bi-arrow-right mx-2"></i>
+              <span class="font-semibold text-green-600">${item.lokasi_akhir.rak} ${item.lokasi_akhir.kol}</span>
+            </div>
+            <div class="text-center px-2">
+              <span class="inline-block rounded-full bg-blue-100 text-blue-700 text-xs font-medium px-3 py-1 mx-2">by</span>
+            </div>
+            <div class="flex-1 flex justify-end font-bold text-gray-500">
+              ${item.helper}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      groupEl.innerHTML = header + histories;
+      return groupEl;
+    });
+  };
+
+  buildGroup(groupedBefore).forEach(el => beforeContainer.appendChild(el));
+  buildGroup(groupedAfter).forEach(el => afterContainer.appendChild(el));
+}
+
+
+/*
+function renderHistory(dataArray) {
   const container = document.getElementById('historyContainer');
   container.innerHTML = '';
 
@@ -52,6 +117,7 @@ function renderHistory(dataArray) {
     container.appendChild(groupEl);
   });
 }
+*/
 
 
 /*
