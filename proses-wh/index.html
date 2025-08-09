@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Proses WH</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    i[data-lucide] { margin-right: .5rem; }
+  </style>
+
+  </head>
+  <body>
+      
+<i data-lucide="circle" class="text-green-600 fill-current"></i>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.replace();
+    });
+  </script>
+
+		<!-- Kiri 30% -->
+		<div id="sidebar" class="w-[20%] p-4 border-r border-gray-300 overflow-auto">
+			<h2 class="text-xl font-semibold mb-4">Sidebar / Summary</h2>
+			<div id="summary" class="space-y-4"></div>
+		</div>
+
+		<!-- Kanan 70% -->
+		<div id="mainContent" class="flex-1 p-4 overflow-auto">
+			<h2 class="text-xl font-semibold mb-4">Main Content</h2>
+			<p>Tempat konten lain bisa ditaruh di sini...</p>
+		</div>
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
+
+    <script src="./script.js"></script>
+    <script>
+      data 
+      
+      lucide.createIcons();
+      $(()=>{
+        prosesDataSJ(
+            'https://cdn.weva.my.id/apix/dtSj',
+            { tgl: '2025-08-05' },
+            (result) => {
+                console.log('Hasil:', result);
+                renderElemenSummary(result.summary);
+                // Simpan ke variabel, proses lanjut di sini
+            }
+        );
+      })
+    </script>
+  </body>
+</html>

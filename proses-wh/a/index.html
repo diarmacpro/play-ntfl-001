@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucide CDN Demo</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    i[data-lucide] { margin-right: .5rem; }
+  </style>
+</head>
+<body>
+
+  <h1>Hello Lucide Icons!</h1>
+
+  <!-- 定义图标：写法 1 -->
+  <i data-lucide="home"></i> Home
+  <i data-lucide="settings"></i> Settings
+  <i data-lucide="user"></i> Profile
+
+  <!-- 写法 2：带自定义 class -->
+  <i data-lucide="heart" class="text-red-500"></i>
+
+  <!-- CDN：推荐生产版本 -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // 一次性渲染全部 data-lucide 标签
+    lucide.createIcons();
+
+    // 如果是动态插入的图标，可重复调用
+    // lucide.createIcons({ nameAttr: 'data-lucide' });
+  </script>
+
+</body>
+</html>
