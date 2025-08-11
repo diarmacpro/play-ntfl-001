@@ -173,13 +173,32 @@
       <div class="flex-1 overflow-auto rounded-xl bg-white p-2 pt-0">
         <div class="text-gray-800 mb-2 pt-6" id="closeModal"><span class="text-lg font-semibold">History Mutasi</span> <span class="text-sm tanggal-saja-real"></span></div>
         <hr>
-          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm mb-2" placeholder="Cari mutasi...">
+
+<div class="flex w-full p-0">
+    <!-- Input Pencarian -->
+    <input 
+        type="text" 
+        placeholder="Cari mutasi..." 
+        class="flex-1 px-3 py-2 h-10 border border-gray-300 border-r-0 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+    >
+
+    <!-- Input Tanggal -->
+    <input 
+        type="date" 
+        id="pilihTanggalHistory" 
+        class="px-3 py-2 h-10 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm cursor-pointer"
+    >
+</div>
+
+
+
+          <!-- <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm mb-2" placeholder="Cari mutasi..."> -->
           <!-- <div id="historyContainer" class="space-y-2 overflow-y-auto px-0" style="height: calc(100% - 110px);"></div> -->
 <!-- Tabs -->
 <div class="mb-2">
   <div class="flex border-b border-gray-200">
-    <button id="tabBefore" class="tab-btn px-4 py-2 text-sm font-semibold text-blue-600 border-b-2 border-blue-600">Sebelum Jam 12</button>
-    <button id="tabAfter" class="tab-btn px-4 py-2 text-sm font-semibold text-gray-500 hover:text-blue-600">Setelah Jam 12</button>
+    <button id="tabBefore" class="tab-btn px-4 py-2 text-sm font-semibold hover:text-blue-600 tab-active">Sebelum Jam 12</button>
+    <button id="tabAfter" class="tab-btn px-4 py-2 text-sm font-semibold hover:text-blue-600">Setelah Jam 12</button>
   </div>
 </div>
 
@@ -195,21 +214,36 @@
   </div>
 </div>
 
+<style>
+  /* Penanda tab aktif */
+  .tab-active {
+    border-bottom: 2px solid #2563eb; /* biru */
+    color: #2563eb;
+    font-weight: 600;
+  }
+</style>
+
 <script>
+  function setActiveTab(activeId, inactiveId, activeContent, inactiveContent) {
+    // hapus tab-active dari tab lain
+    document.getElementById(inactiveId).classList.remove('tab-active');
+    document.getElementById(inactiveId).classList.add('text-gray-500');
+
+    // aktifkan tab yang dipilih
+    document.getElementById(activeId).classList.add('tab-active');
+    document.getElementById(activeId).classList.remove('text-gray-500');
+
+    // tampilkan konten sesuai tab
+    document.getElementById(activeContent).classList.remove('hidden');
+    document.getElementById(inactiveContent).classList.add('hidden');
+  }
+
   document.getElementById('tabBefore').addEventListener('click', () => {
-    document.getElementById('tabContentBefore').classList.remove('hidden');
-    document.getElementById('tabContentAfter').classList.add('hidden');
-    document.getElementById('tabBefore').classList.add('text-blue-600', 'border-blue-600');
-    document.getElementById('tabAfter').classList.remove('text-blue-600', 'border-blue-600');
-    document.getElementById('tabAfter').classList.add('text-gray-500');
+    setActiveTab('tabBefore', 'tabAfter', 'tabContentBefore', 'tabContentAfter');
   });
 
   document.getElementById('tabAfter').addEventListener('click', () => {
-    document.getElementById('tabContentBefore').classList.add('hidden');
-    document.getElementById('tabContentAfter').classList.remove('hidden');
-    document.getElementById('tabAfter').classList.add('text-blue-600', 'border-blue-600');
-    document.getElementById('tabBefore').classList.remove('text-blue-600', 'border-blue-600');
-    document.getElementById('tabBefore').classList.add('text-gray-500');
+    setActiveTab('tabAfter', 'tabBefore', 'tabContentAfter', 'tabContentBefore');
   });
 </script>
 
@@ -307,6 +341,7 @@ function showAlert(text = 'Berhasil!', type = 'success') {
         $('#namaLogin').text(getFromLocalStorage('z').nama);
         $('.tanggal-real').text(stm());
         $('.tanggal-saja-real').text(stm('t'));
+        $('#pilihTanggalHistory').val(stm('t'));
         console.log("Sudah Login");
         document.body.classList.remove("hidden");
 
