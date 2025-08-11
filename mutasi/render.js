@@ -26,6 +26,14 @@ function renderHistory(dataArray) {
     const groupedBefore = groupById(dataArray.filter(isBeforeNoon));
     const groupedAfter = groupById(dataArray.filter(item => !isBeforeNoon(item)));
 
+    const groupCountBefore = Object.keys(groupedBefore).length;
+    const groupCountAfter = Object.keys(groupedAfter).length;
+
+    $('#countBefore').html(` (${groupCountBefore})`);
+    $('#countAfter').html(` (${groupCountAfter})`);
+
+    console.log({groupCountBefore, groupCountAfter});
+
     const buildGroup = grouped => {
       return Object.entries(grouped).map(([id, items]) => {
         const groupEl = document.createElement('div');
