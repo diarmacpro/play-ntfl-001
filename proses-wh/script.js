@@ -76,9 +76,9 @@ function renderElemenSummary(data) {
 	// Loop setiap id_sj
 	_.forEach(data, (item, key) => {
 		// Buat elemen ringkasan untuk satu SJ
-		const rtrText = item.rtr === 0 ? 'Tidak ada retur' : `Retur: ${item.rtr}`;
-		const ekspedisiText = item.ekspedisi === 1 ? 'Ekspedisi ON' : 'Ekspedisi OFF';
-		const onoffText = item.onoff === 1 ? 'On' : 'Off';
+		const rtrText = item.rtr === 0 ? 'hidden' : ``;
+		const ekspedisiText = item.ekspedisi === 1 ? '' : 'hidden';
+		const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
 		
 		function getStatusColor(status) {
 			switch (status) {
@@ -91,8 +91,8 @@ function renderElemenSummary(data) {
 		}
 		// Card container
 		const card = document.createElement('div');
-		card.className = 'border rounded p-4 shadow hover:shadow-lg transition cursor-pointer bg-white';
-
+		card.className = 'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-colors duration-300';
+    const jamMenit = item.stamp.split(':').slice(0, 2).join(':');
 
         // "id_sj": 46577,
         // "id_mkt": 16,
@@ -105,16 +105,24 @@ function renderElemenSummary(data) {
 
 		// Isi card
 		card.innerHTML = `
-			<div class="flex justify-between items-center mb-2">
-				<h3 class="font-semibold text-lg">SJ ID: ${item.id_sj}</h3>
-				<span class="text-sm text-gray-500">${item.stamp}</span>
-			</div>
-			<p>Marketing ID: <strong>${item.id_mkt}</strong></p>
-			<p>Jumlah Item: <strong>${item.jml_item}</strong></p>
-			<i data-lucide="circle" class="text-green-600 fill-current"></i>
-			<p>${rtrText}</p>
-			<p>Status On/Off: <strong>${onoffText}</strong></p>
-			<p>${ekspedisiText}</p>
+      <div class="flex items-center w-full">
+        <span class="text-sm text-gray-500 w-[15%]">${jamMenit}</span>
+
+        <span class="w-[25%]">
+          ${item.id_sj} (<span class="font-bold">${item.jml_item}</span>)
+        </span>
+
+        <div class="flex items-center w-[44%]">
+          <i class="rounded-full shadow-md bi bi-circle-fill text-${onoffText}"></i>
+          <span class="ml-1">${cariById(item.id_mkt).mkt}</span>
+        </div>
+
+        <div class="flex items-center gap-1 w-[16%]">
+          <i class="bi bi-truck px-1 bg-blue-600 border border-gray-900 text-white ${ekspedisiText}"></i>
+          <i class="bi bi-recycle px-1 bg-yellow-300 border border-gray-900 ${rtrText}"></i>
+        </div>
+      </div>
+
 		`;
 
 		container.appendChild(card);

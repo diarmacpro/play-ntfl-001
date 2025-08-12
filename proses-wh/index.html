@@ -7,38 +7,42 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
-  <style>
-    body { font-family: sans-serif; padding: 2rem; }
-    i[data-lucide] { margin-right: .5rem; }
-  </style>
+    <style>
+    .thin-scroll::-webkit-scrollbar {
+      width: 1px;
+      height: 1px;
+    }
+    .thin-scroll::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.4);
+      border-radius: 2px;
+    }
+    .thin-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    </style>
 
   </head>
-  <body>
-      
-<i data-lucide="circle" class="text-green-600 fill-current"></i>
+ <body class="h-screen flex">
 
+  <!-- Sidebar kiri -->
+  <div id="sidebar" class="w-[20%] p-2 border-r border-gray-300 flex flex-col">
+    <h2 class="text-xl font-semibold mb-4 flex-shrink-0 border-b border-gray-300 pb-2">
+      List SJ Yang Di Proses
+    </h2>
+    <div id="summary" class="space-y-2 overflow-auto flex-1 overflow-auto thin-scroll">
+      <!-- isi summary -->
+    </div>
+  </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      lucide.replace();
-    });
-  </script>
-
-		<!-- Kiri 30% -->
-		<div id="sidebar" class="w-[20%] p-4 border-r border-gray-300 overflow-auto">
-			<h2 class="text-xl font-semibold mb-4">Sidebar / Summary</h2>
-			<div id="summary" class="space-y-4"></div>
-		</div>
-
-		<!-- Kanan 70% -->
-		<div id="mainContent" class="flex-1 p-4 overflow-auto">
-			<h2 class="text-xl font-semibold mb-4">Main Content</h2>
-			<p>Tempat konten lain bisa ditaruh di sini...</p>
-		</div>
-
+  <!-- Konten kanan -->
+  <div id="mainContent" class="flex-1 p-4 overflow-auto">
+    <h2 class="text-xl font-semibold mb-4">Main Content</h2>
+    <p>Tempat konten lain bisa ditaruh di sini...</p>
+  </div>
     <!-- Libraries -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- <script src="https://unpkg.com/lucide@latest"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
@@ -46,10 +50,89 @@
     <script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
 
     <script src="./script.js"></script>
+
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+      import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+      const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
+      const db = getDatabase(app);
+      Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+    </script>
+
+
+    <!-- <script src="https://unpkg.com/lucide@latest"></script> -->
+
     <script>
-      data 
-      
-      lucide.createIcons();
+      // lucide.createIcons();
+
+      var data = {};
+      let fbsSvc;
+            
+      function cariById(id) {
+        return data.nmMkt.find(item => item.id_mkt === String(id)) || null;
+      }
+
+      $(function () {
+        fbsSvc = new Fbs(db);
+
+        fbsSvc.gDt('/user','',(d)=>{
+          const filteredArray = $.map(d, function (val) {
+            return {
+              usr: val.usr,
+              mkt: val.mkt,
+              id_mkt: val.id_mkt
+            };
+          });
+          data.nmMkt = filteredArray;
+          // console.log(filteredArray);
+
+          // Contoh penggunaan
+          // let hasil = cariById(14);
+          // console.log(hasil)
+
+
+
+        prosesDataSJ(
+            'https://cdn.weva.my.id/apix/dtSj',
+            { tgl: '2025-08-05' },
+            (result) => {
+                console.log('Hasil:', result);
+                renderElemenSummary(result.summary);
+                // Simpan ke variabel, proses lanjut di sini
+            }
+        );
+
+
+          /*
+          const storageKey = "summary_tgl_2025-08-05";
+
+          // Cek apakah data sudah ada di localStorage
+          const savedSummary = localStorage.getItem(storageKey);
+
+          if (savedSummary) {
+              console.log("Load dari localStorage");
+              const parsedSummary = JSON.parse(savedSummary);
+              renderElemenSummary(parsedSummary);
+          } else {
+              console.log("Load dari API");
+              prosesDataSJ(
+                  'https://cdn.weva.my.id/apix/dtSj',
+                  { tgl: '2025-08-05' },
+                  (result) => {
+                      console.log('Hasil:', result);
+                      renderElemenSummary(result.summary);
+                      // Simpan ke localStorage
+                      localStorage.setItem(storageKey, JSON.stringify(result.summary));
+                  }
+              );
+          }
+          */
+
+
+        })
+      });
+      /*
       $(()=>{
         prosesDataSJ(
             'https://cdn.weva.my.id/apix/dtSj',
@@ -61,6 +144,11 @@
             }
         );
       })
+      */
+
+      $(() => {
+      });
+
     </script>
   </body>
 </html>
