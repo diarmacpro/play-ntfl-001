@@ -79,23 +79,66 @@ function renderDetailByIdSj(idSj) {
         return;
     }
 
+    const headerDetail = `
+        <div class="flex justify-between items-center border-b border-gray-200 py-1 text-sm">
+            <span class="w-[6%] font-mono">Id</span>
+            <span class="w-[33.5%]">Barang</span>
+            <span class="w-[10%]">Helper</span>
+            <span class="w-[2.5%]">Hbs</span>
+            <span class="w-[4%]">Lt#Rl</span>
+            <span class="w-[6%]">Q|Bs</span>
+            <span class="w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
+            <span class="w-[5%]">Loc</span>
+            <span class="w-[6%]">Ekspd</span>
+            <span class="w-[4%]">Note</span>
+            <span class="w-[4%] text-center"><i class="bi bi-box-arrow-up"></i></span>
+            <span class="w-[9%]">Aksi</span>
+        </div>
+    `;
+
+    // Masukkan header
+    detailContainer.insertAdjacentHTML('beforeend', headerDetail);
+
+    // Masukkan setiap row
     dataDetail.forEach(item => {
         const row = document.createElement('div');
         row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm';
 
         row.innerHTML = `
-            <span class="w-[15%] font-mono">${item.id_stock}</span>
-            <span class="w-[35%]">${item.k}</span>
-            <span class="w-[10%]">${item.lot}</span>
-            <span class="w-[8%]">${item.rol}</span>
-            <span class="w-[8%]">${item.rak}</span>
-            <span class="w-[8%]">${item.kol}</span>
-            <span class="w-[8%] text-center">${item.c_o}</span>
+            <span class="border-r border-gray-300 w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
+            <span class="border-r border-gray-300 w-[33.5%]">${item.k}</span>
+            <span class="border-r border-gray-300 w-[10%]">${item.id_hlp ?? ''}</span>
+            <span class="border-r border-gray-300 w-[2.5%] text-center">
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                </label>
+            </span>
+            <span class="border-r border-gray-300 w-[4%]">${item.lot}#${item.rol}</span>
+            <span class="border-r border-gray-300 w-[6%]">${item.qty} ${item.q_bs ?? ''}</span>
+            <span class="border-r border-gray-300 w-[2%] text-center">${item.ge}</span>
+            <span class="border-r border-gray-300 w-[5%]">${item.rak} ${item.kol}</span>
+            <span class="border-r border-gray-300 w-[6%]">${item.ekspedisi}</span>
+            <span class="border-r border-gray-300 w-[4%]">${item.notes}</span>
+            <span class="border-r border-gray-300 w-[4%] text-center">${item.c_o}</span>
+            <span class="w-[9%]">
+                <div class="flex gap-1">
+                    <button class="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-yellow-600">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <button class="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </span>
         `;
 
         detailContainer.appendChild(row);
     });
 }
+
 
 
 function renderElemenSummary(data) {
@@ -110,8 +153,8 @@ function renderElemenSummary(data) {
 
 	// Loop setiap id_sj
 	_.forEach(sortedData, (item) => {
-		const rtrText = item.rtr === 0 ? 'hidden' : ``;
-		const ekspedisiText = item.ekspedisi === 1 ? '' : 'hidden';
+		const rtrText = parseInt(item.rtr,10) === 0 ? 'hidden' : ``;
+		const ekspedisiText = parseInt(item.ekspedisi,10) !== 0 ? '' : 'hidden';
 		const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
 		
 		function getStatusColor(status) {
