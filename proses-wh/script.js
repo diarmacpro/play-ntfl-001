@@ -81,65 +81,199 @@ function renderDetailByIdSj(idSj) {
 
     const headerDetail = `
         <div class="flex justify-between items-center border-b border-gray-200 py-1 text-sm">
-            <span class="w-[6%] font-mono">Id</span>
-            <span class="w-[33.5%]">Barang</span>
-            <span class="w-[10%]">Helper</span>
-            <span class="w-[2.5%]">Hbs</span>
-            <span class="w-[4%]">Lt#Rl</span>
-            <span class="w-[6%]">Q|Bs</span>
-            <span class="w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
-            <span class="w-[5%]">Loc</span>
-            <span class="w-[6%]">Ekspd</span>
-            <span class="w-[4%]">Note</span>
-            <span class="w-[4%] text-center"><i class="bi bi-box-arrow-up"></i></span>
-            <span class="w-[9%]">Aksi</span>
+            <span class="text-center bg-blue-200 w-[6%] font-mono">Id</span>
+            <span class="text-center bg-blue-100 w-[33.5%]"><i class="bi bi-boxes"></i></span>
+            <span class="text-center bg-blue-200 w-[10%]"><i class="bi bi-person-up"></i></span>
+            <span class="text-center bg-blue-100 w-[3.5%]"><i class="bi bi-toggles2"></i></span>
+            <span class="text-center bg-blue-200 w-[5%]"><i class="bi bi-box-seam-fill"></i></span>
+            <span class="text-center bg-blue-200 w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
+            <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-geo-alt-fill"></i></span>
+            <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-123"></i></span>
+            <span class="text-center bg-blue-200 w-[11%]"><i class="bi bi-123"></i></span>
+            <span class="text-center bg-blue-100 w-[4%] text-center"><i class="bi bi-box-arrow-up"></i></span>
+            <span class="text-center bg-blue-200 w-[13%]"><i class="bi bi-google-play"></i></span>
         </div>
     `;
 
     // Masukkan header
     detailContainer.insertAdjacentHTML('beforeend', headerDetail);
 
-    // Masukkan setiap row
-    dataDetail.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm';
+		// Array penampung semua data yang mau digabung
+		let ekspedisiArray = [];
+		let stampSjArray = [];
 
-        row.innerHTML = `
-            <span class="border-r border-gray-300 w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
-            <span class="border-r border-gray-300 w-[33.5%]">${item.k}</span>
-            <span class="border-r border-gray-300 w-[10%]">${item.id_hlp ?? ''}</span>
-            <span class="border-r border-gray-300 w-[2.5%] text-center">
-                <label class="inline-flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 rounded">
-                </label>
-            </span>
-            <span class="border-r border-gray-300 w-[4%]">${item.lot}#${item.rol}</span>
-            <span class="border-r border-gray-300 w-[6%]">${item.qty} ${item.q_bs ?? ''}</span>
-            <span class="border-r border-gray-300 w-[2%] text-center">${item.ge}</span>
-            <span class="border-r border-gray-300 w-[5%]">${item.rak} ${item.kol}</span>
-            <span class="border-r border-gray-300 w-[6%]">${item.ekspedisi}</span>
-            <span class="border-r border-gray-300 w-[4%]">${item.notes}</span>
-            <span class="border-r border-gray-300 w-[4%] text-center">${item.c_o}</span>
-            <span class="w-[9%]">
-                <div class="flex gap-1">
-                    <button class="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-yellow-600">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    <button class="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                        <i class="bi bi-plus-lg"></i>
-                    </button>
-                </div>
-            </span>
-        `;
+		// Masukkan setiap row
+		dataDetail.forEach(item => {
+				// Push ekspedisi & notes ke array gabungan
+				ekspedisiArray.push(item.ekspedisi ?? '');
+				stampSjArray.push(item.stamp_sj ?? '');
+				
 
-        detailContainer.appendChild(row);
-    });
+				// Buat row di tampilan
+				const row = document.createElement('div');
+				row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm';
+
+				row.innerHTML = `
+						<!-- Modal -->
+						<div id="alertModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+							<div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-6 relative">
+								
+								<!-- Tombol Close -->
+								<button id="alertBtn" 
+												class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
+									<i class="bi bi-x-lg text-lg"></i>
+								</button>
+								
+								<!-- Judul -->
+								<h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">Notes</h2>
+								
+								<!-- Isi Pesan -->
+								<p id="alertMessage" class="text-gray-700 text-sm leading-relaxed text-center"></p>
+								
+							</div>
+						</div>
+
+						<span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
+						<span class="w-[33.5%]">${item.k}</span>
+						<span class="w-[10%]">${item.id_hlp ?? ''}</span>
+						<span class="text-center w-[3.5%] text-center">
+								<label class="inline-flex items-center space-x-2 cursor-pointer">
+										<input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+								</label>
+						</span>
+						<span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
+						<span class="text-center w-[2%] text-center">${item.ge}</span>
+						<span class="text-center w-[6%]">${item.rak} ${item.kol}</span>
+						<span class="w-[6%] px-2">
+
+							<input class="w-full px-2 py-1 border border-gray-300 rounded-md 
+														focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+														disabled:bg-gray-100 disabled:cursor-not-allowed" placeholder="Qty" value="${item.qty} ${item.q_bs ?? ''}">
+							</span>
+						<span class="w-[11%] px-2">
+							<input class="w-full px-2 py-1 border border-gray-300 rounded-md 
+														focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+														disabled:bg-gray-100 disabled:cursor-not-allowed" placeholder="Bs">
+						</span>
+						<span class="text-center w-[4%] text-center">${item.c_o}</span>
+						<span class="w-[13%]">
+								<div class=" flex justify-center items-center gap-1">
+										<button class="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+												<i class="bi bi-pencil-square"></i>
+										</button>
+										<button class="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+												<i class="bi bi-trash"></i>
+										</button>
+										<button class="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
+												<i class="bi bi-plus-lg"></i>
+										</button>
+										<button 
+											onclick="showAlert('${item.notes}', 7000)" 
+											class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+											${item.notes == '' || item.notes == null ? 'disabled' : ''}>
+											<i class="bi bi-file-text-fill"></i>
+										</button>
+								</div>
+						</span>
+				`;
+
+				detailContainer.appendChild(row);
+		});
+
+		// Contoh masukkan hasil ke footer
+		const detailAksi = `
+			<div class="mt-4 text-lg text-black">
+				<div class="flex justify-end">
+					<button class="px-2 py-1 bg-yellow-300 text-black rounded hover:bg-yellow-400">
+						Simpan <i class="bi bi-lock-fill"></i>
+					</button>
+				</div>
+			</div>
+		`;
+
+		detailContainer.insertAdjacentHTML('beforeend', detailAksi);
+
+
+		// stampSjArray
+		// Filter nilai kosong & join
+		let hasilGabunganEkspedisi = [...new Set(
+				ekspedisiArray.filter(v => v && v.trim() !== '')
+		)].join(', ');
+		// Filter nilai kosong & join
+		let hasilGabunganStampSj = formatStampRange(stampSjArray);
+
+
+
+
+		let ekspedisiVal;
+		if(hasilGabunganEkspedisi !== '' && hasilGabunganEkspedisi !== null){
+			ekspedisiVal = `Ekspedisi : <b>${hasilGabunganEkspedisi}</b><br>`;
+		}else{
+			ekspedisiVal = '';
+		}
+
+
+console.log(hasilGabunganStampSj);
+
+		const footerDetail = `
+				<div class="mt-4 text-lg text-gray-500">
+						${ekspedisiVal}
+						${hasilGabunganStampSj}
+						<hr>
+				</div>
+		`;
+
+		
+		detailContainer.insertAdjacentHTML('beforeend', footerDetail);
+
 }
 
+function formatStampRange(stampArray) {
+  const [minStamp, maxStamp] = getMinMaxStamp(stampArray);
 
+  if (!minStamp) return '';
+
+  const minFormatted = formatTanggalJakarta(minStamp);
+  const maxFormatted = formatTanggalJakarta(maxStamp);
+
+  return (minStamp === maxStamp)
+    ? `Stamp SJ : <b>${minFormatted}</b><br>`
+    : `Stamp SJ : <b>${minFormatted} ~ ${maxFormatted}</b><br>`;
+}
+
+function getMinMaxStamp(stampArray) {
+  // Filter unik & valid
+  const filtered = [...new Set(
+    stampArray.filter(v => v && v.trim() !== '')
+  )];
+
+  if (filtered.length === 0) return [];
+
+  // Urutkan berdasarkan waktu
+  filtered.sort((a, b) => new Date(a) - new Date(b));
+
+  // Ambil min & max
+  return [filtered[0], filtered[filtered.length - 1]];
+}
+
+function formatTanggalJakarta(isoString) {
+  const options = {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  };
+
+  const formatter = new Intl.DateTimeFormat('id-ID', options);
+  const parts = formatter.formatToParts(new Date(isoString));
+
+  const get = type => parts.find(p => p.type === type)?.value;
+
+  return `${get('day')} ${get('month')} ${get('year')}, ${get('hour')}:${get('minute')} WIB`;
+}
 
 function renderElemenSummary(data) {
 	const container = document.getElementById('summary');
@@ -198,7 +332,7 @@ function renderElemenSummary(data) {
 			// const hasil = cariByIdSj(idSj);
 			
     	renderDetailByIdSj(idSj);
-			console.log('Klik data ID SJ:', idSj, '=>', hasil);
+			// console.log('Klik data ID SJ:', idSj, '=>', hasil);
 		});
 
 		container.appendChild(card);
