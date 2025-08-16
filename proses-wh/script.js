@@ -68,165 +68,153 @@ function prosesDataSJ(url, params, callback) {
 	});
 }
 
-function renderDetailByIdSj(idSj) {
-    const detailContainer = document.getElementById('detail');
-    detailContainer.innerHTML = ''; // bersihkan isi
+function tentukanStatus(status) {
+  const { d_mgr, d_wh, d_finish } = status;
 
-    const dataDetail = cariByIdSj(idSj);
-
-    if (!dataDetail || dataDetail.length === 0) {
-        detailContainer.innerHTML = '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
-        return;
-    }
-
-    const headerDetail = `
-        <div class="flex justify-between items-center border-b border-gray-200 py-1 text-sm">
-            <span class="text-center bg-blue-200 w-[6%] font-mono">Id</span>
-            <span class="text-center bg-blue-100 w-[33.5%]"><i class="bi bi-boxes"></i></span>
-            <span class="text-center bg-blue-200 w-[10%]"><i class="bi bi-person-up"></i></span>
-            <span class="text-center bg-blue-100 w-[3.5%]"><i class="bi bi-toggles2"></i></span>
-            <span class="text-center bg-blue-200 w-[5%]"><i class="bi bi-box-seam-fill"></i></span>
-            <span class="text-center bg-blue-200 w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
-            <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-geo-alt-fill"></i></span>
-            <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-123"></i></span>
-            <span class="text-center bg-blue-200 w-[11%]"><i class="bi bi-123"></i></span>
-            <span class="text-center bg-blue-100 w-[4%] text-center"><i class="bi bi-box-arrow-up"></i></span>
-            <span class="text-center bg-blue-200 w-[13%]"><i class="bi bi-google-play"></i></span>
-        </div>
-    `;
-
-    // Masukkan header
-    detailContainer.insertAdjacentHTML('beforeend', headerDetail);
-
-		// Array penampung semua data yang mau digabung
-		let ekspedisiArray = [];
-		let stampSjArray = [];
-
-		// Masukkan setiap row
-		dataDetail.forEach(item => {
-				// Push ekspedisi & notes ke array gabungan
-				ekspedisiArray.push(item.ekspedisi ?? '');
-				stampSjArray.push(item.stamp_sj ?? '');
-				
-
-				// Buat row di tampilan
-				const row = document.createElement('div');
-				row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm';
-
-				row.innerHTML = `
-						<!-- Modal -->
-						<div id="alertModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
-							<div class="bg-white rounded-lg shadow-lg w-96 max-w-full p-6 relative">
-								
-								<!-- Tombol Close -->
-								<button id="alertBtn" 
-												class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none">
-									<i class="bi bi-x-lg text-lg"></i>
-								</button>
-								
-								<!-- Judul -->
-								<h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">Notes</h2>
-								
-								<!-- Isi Pesan -->
-								<p id="alertMessage" class="text-gray-700 text-sm leading-relaxed text-center"></p>
-								
-							</div>
-						</div>
-
-						<span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
-						<span class="w-[33.5%]">${item.k}</span>
-						<span class="w-[10%]">${item.id_hlp ?? ''}</span>
-						<span class="text-center w-[3.5%] text-center">
-								<label class="inline-flex items-center space-x-2 cursor-pointer">
-										<input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600 rounded">
-								</label>
-						</span>
-						<span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
-						<span class="text-center w-[2%] text-center">${item.ge}</span>
-						<span class="text-center w-[6%]">${item.rak} ${item.kol}</span>
-						<span class="w-[6%] px-2">
-
-							<input class="w-full px-2 py-1 border border-gray-300 rounded-md 
-														focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-														disabled:bg-gray-100 disabled:cursor-not-allowed" placeholder="Qty" value="${item.qty} ${item.q_bs ?? ''}">
-							</span>
-						<span class="w-[11%] px-2">
-							<input class="w-full px-2 py-1 border border-gray-300 rounded-md 
-														focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-														disabled:bg-gray-100 disabled:cursor-not-allowed" placeholder="Bs">
-						</span>
-						<span class="text-center w-[4%] text-center">${item.c_o}</span>
-						<span class="w-[13%]">
-								<div class=" flex justify-center items-center gap-1">
-										<button class="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-												<i class="bi bi-pencil-square"></i>
-										</button>
-										<button class="flex items-center gap-1 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-												<i class="bi bi-trash"></i>
-										</button>
-										<button class="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-												<i class="bi bi-plus-lg"></i>
-										</button>
-										<button 
-											onclick="showAlert('${item.notes}', 7000)" 
-											class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
-											${item.notes == '' || item.notes == null ? 'disabled' : ''}>
-											<i class="bi bi-file-text-fill"></i>
-										</button>
-								</div>
-						</span>
-				`;
-
-				detailContainer.appendChild(row);
-		});
-
-		// Contoh masukkan hasil ke footer
-		const detailAksi = `
-			<div class="mt-4 text-lg text-black">
-				<div class="flex justify-end">
-					<button class="px-2 py-1 bg-yellow-300 text-black rounded hover:bg-yellow-400">
-						Simpan <i class="bi bi-lock-fill"></i>
-					</button>
-				</div>
-			</div>
-		`;
-
-		detailContainer.insertAdjacentHTML('beforeend', detailAksi);
-
-
-		// stampSjArray
-		// Filter nilai kosong & join
-		let hasilGabunganEkspedisi = [...new Set(
-				ekspedisiArray.filter(v => v && v.trim() !== '')
-		)].join(', ');
-		// Filter nilai kosong & join
-		let hasilGabunganStampSj = formatStampRange(stampSjArray);
-
-
-
-
-		let ekspedisiVal;
-		if(hasilGabunganEkspedisi !== '' && hasilGabunganEkspedisi !== null){
-			ekspedisiVal = `Ekspedisi : <b>${hasilGabunganEkspedisi}</b><br>`;
-		}else{
-			ekspedisiVal = '';
-		}
-
-
-console.log(hasilGabunganStampSj);
-
-		const footerDetail = `
-				<div class="mt-4 text-lg text-gray-500">
-						${ekspedisiVal}
-						${hasilGabunganStampSj}
-						<hr>
-				</div>
-		`;
-
-		
-		detailContainer.insertAdjacentHTML('beforeend', footerDetail);
-
+  if (d_mgr && d_wh && d_finish) {
+    return "red-500";
+  } else if (!d_finish && d_mgr && d_wh) {
+    return "yellow-400";
+  } else if (d_mgr && !d_wh && !d_finish) {
+    return "green-500";
+  } else {
+		return "";
+	}
+  return null; // default jika tidak cocok
 }
+
+function cekPerPropertiStamp(tglPerItemDetail, jmlData) {
+  let hasil = {};
+  for (let key in tglPerItemDetail) {
+    const total = tglPerItemDetail[key].reduce((a, b) => a + b, 0);
+    hasil[key] = (total === jmlData);
+  }
+  return hasil;
+}
+
+function renderDetailByIdSj(idSj) {
+  const detailContainer = document.getElementById('detail');
+  detailContainer.innerHTML = ''; // reset isi
+
+  const dataDetail = cariByIdSj(idSj);
+
+	const jmlData = dataDetail.length;
+
+  if (!dataDetail || dataDetail.length === 0) {
+    detailContainer.innerHTML = '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
+    return;
+  }
+
+  // wrapper utama flex-col, full width
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flex flex-col border rounded-lg h-[500px] w-full';
+
+  // ========== HEADER ==========
+  const header = document.createElement('div');
+  header.className = 'flex-shrink-0 w-full';
+  header.innerHTML = `
+    <div class="flex justify-between items-center border-b border-gray-200 py-1 text-sm bg-gray-50 w-full">
+      <span class="text-center bg-blue-200 w-[6%] font-mono"><i class="bi bi-123"></i></span>
+      <span class="text-center bg-blue-100 w-[33%]"><i class="bi bi-box-seam-fill"></i></span>
+      <span class="text-center bg-blue-200 w-[10%]"><i class="bi bi-person-up"></i></span>
+      <span class="text-center bg-blue-100 w-[4%]"><i class="bi bi-toggles2"></i></span>
+      <span class="text-center bg-blue-200 w-[5%]"><i class="bi bi-hash"></i></span>
+      <span class="text-center bg-blue-200 w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
+      <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-geo-alt-fill"></i></span>
+      <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-layers-fill"></i></span>
+      <span class="text-center bg-blue-200 w-[11%]"><i class="bi bi-stack"></i></span>
+      <span class="text-center bg-blue-100 w-[4%]"><i class="bi bi-box-arrow-up"></i></span>
+      <span class="text-center bg-blue-200 w-[13%]"><i class="bi bi-google-play"></i></span>
+    </div>
+  `;
+  wrapper.appendChild(header);
+
+  // ========== CONTENT (scroll, full width) ==========
+  const content = document.createElement('div');
+  content.className = 'flex-1 overflow-auto w-full';
+
+  let ekspedisiArray = [];
+  let stampSjArray = [];
+
+	let tglPerItemDetail = {
+	d_mgr: [],
+	d_wh: [],
+	d_finish: []
+	};
+
+
+  dataDetail.forEach(item => {
+    ekspedisiArray.push(item.ekspedisi ?? '');
+    stampSjArray.push(item.stamp_sj ?? '');
+
+		tglPerItemDetail.d_mgr.push(item.d_mgr ? 1 : 0);
+		tglPerItemDetail.d_wh.push(item.d_wh ? 1 : 0);
+		tglPerItemDetail.d_finish.push(item.d_finish ? 1 : 0);
+     
+    const row = document.createElement('div');
+    row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm w-full';
+    row.innerHTML = `
+      <span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
+      <span class="w-[33%] truncate">${item.k}</span>
+      <span class="w-[10%] truncate">${item.id_hlp ?? ''}</span>
+      <span class="text-center w-[4%]">
+
+<input type="checkbox" class="custom-checkbox" />
+	  </span>
+      <span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
+      <span class="text-center w-[2%]">${item.ge}</span>
+      <span class="text-center w-[6%]">${item.rak} ${item.kol}</span>
+      <span class="w-[6%] px-1">
+        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs" 
+               value="${item.qty} ${item.q_bs ?? ''}" placeholder="Qty">
+      </span>
+      <span class="w-[11%] px-1">
+        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs" placeholder="Bs">
+      </span>
+      <span class="text-center w-[4%]">${item.c_o}</span>
+      <span class="w-[13%] flex justify-center gap-1">
+        <button class="px-1 py-0.5 bg-blue-500 text-white rounded"><i class="bi bi-pencil-square"></i></button>
+        <button class="px-1 py-0.5 bg-red-500 text-white rounded"><i class="bi bi-trash"></i></button>
+        <button class="px-1 py-0.5 bg-green-500 text-white rounded"><i class="bi bi-plus-lg"></i></button>
+        <button onclick="showAlert('${item.notes}',7000)" 
+          class="px-1 py-0.5 bg-blue-600 text-white rounded ${!item.notes ? 'disabled:bg-gray-400 disabled:cursor-not-allowed' : ''}" 
+          ${!item.notes ? 'disabled' : ''}>
+          <i class="bi bi-file-text-fill"></i>
+        </button>
+      </span>
+    `;
+    content.appendChild(row);
+  });
+
+	console.log(tentukanStatus(cekPerPropertiStamp(tglPerItemDetail, jmlData)))
+
+	// console.log(tglPerItemDetail);
+
+  wrapper.appendChild(content);
+
+  // ========== FOOTER ==========
+  const footer = document.createElement('div');
+  footer.className = 'flex-shrink-0 mt-2 text-lg text-gray-600 w-full';
+
+  let hasilGabunganEkspedisi = [...new Set(ekspedisiArray.filter(v => v && v.trim() !== ''))].join(', ');
+  let hasilGabunganStampSj = formatStampRange(stampSjArray);
+
+  footer.innerHTML = `
+    ${hasilGabunganEkspedisi ? `Ekspedisi : <b>${hasilGabunganEkspedisi}</b><br>` : ''}
+    ${hasilGabunganStampSj}
+    <hr class="my-2">
+    <div class="flex justify-end">
+      <button class="px-2 py-1 bg-yellow-300 text-black rounded hover:bg-yellow-400">
+        Simpan <i class="bi bi-lock-fill"></i>
+      </button>
+    </div>
+  `;
+  wrapper.appendChild(footer);
+
+  // masukkan ke detail
+  detailContainer.appendChild(wrapper);
+}
+
 
 function formatStampRange(stampArray) {
   const [minStamp, maxStamp] = getMinMaxStamp(stampArray);
@@ -291,24 +279,24 @@ function renderElemenSummary(data) {
 		const ekspedisiText = parseInt(item.ekspedisi,10) !== 0 ? '' : 'hidden';
 		const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
 		
-		function getStatusColor(status) {
-			switch (status) {
-				case 1: return 'green';
-				case 2: return 'yellow';
-				case 3: return 'red';
-				case 4: return 'black';
-				default: return 'gray';
-			}
-		}
+function getStatusClass(status) {
+  switch (status) {
+    case 1: return "bg-green-500/80 text-black";
+    case 2: return "bg-yellow-500/80 text-black";
+    case 3: return "bg-red-500/80 text-white";
+    case 4: return "bg-gray-900/80 text-white";
+    default: return "bg-gray-500/80 text-black";
+  }
+}
 
 		const card = document.createElement('div');
-		card.className = 'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-colors duration-300';
+		card.className = 'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-none';
 		card.setAttribute('data-id-sj', item.id_sj); // <-- tambahkan attribute
 		const jamMenit = item.stamp.split(':').slice(0, 2).join(':');
 
 		card.innerHTML = `
 			<div class="flex items-center w-full">
-				<span class="text-sm text-gray-500 w-[15%]">${jamMenit}</span>
+				<span class="px-2 py-1 rounded-lg mr-1 text-xs font-medium shadow-sm ${getStatusClass(item.status_sj)}">${jamMenit}</span>
 
 				<span class="w-[25%]">
 					${item.id_sj} (<span class="font-bold">${item.jml_item}</span>)
@@ -329,11 +317,19 @@ function renderElemenSummary(data) {
 		// Tambahkan event click
 		card.addEventListener('click', function () {
 			const idSj = this.getAttribute('data-id-sj');
-			// const hasil = cariByIdSj(idSj);
-			
-    	renderDetailByIdSj(idSj);
-			// console.log('Klik data ID SJ:', idSj, '=>', hasil);
+
+			// Hapus tanda aktif dari semua card
+			document.querySelectorAll('#summary > div').forEach(el => {
+				el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
+			});
+
+			// Tambahkan tanda aktif ke card yang diklik
+			this.classList.add('bg-yellow-200', 'border', 'border-yellow-500');
+
+			// Render detail
+			renderDetailByIdSj(idSj);
 		});
+
 
 		container.appendChild(card);
 	});
