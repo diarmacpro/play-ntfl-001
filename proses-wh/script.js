@@ -1,3 +1,31 @@
+function gtHlp(param) {
+  if (param === undefined || param === null || param === '') return null;
+
+  // cek apakah param angka murni
+  if (/^\d+$/.test(param)) {
+    const num = Number(param);
+
+    // cari persis
+    const exact = data.helper.find(h => h.id_hlp === num);
+    if (exact) return exact;
+
+    // cari terdekat
+    return data.helper.reduce((nearest, curr) => {
+      return Math.abs(curr.id_hlp - num) < Math.abs(nearest.id_hlp - num)
+        ? curr
+        : nearest;
+    });
+  } else {
+    // jika string, cari berdasarkan hlp (case-insensitive)
+    const lowerParam = String(param).toLowerCase();
+    const found = data.helper.filter(h => h.hlp.toLowerCase().includes(lowerParam));
+
+    return found.length > 0 ? found[0] : null; // hanya ambil yang pertama
+  }
+}
+
+
+
 function prosesDataSJ(url, params, callback) {
 	pR(url, params, (e, d) => {
 		const grouped = _.chain(d.data)
@@ -114,17 +142,17 @@ function renderDetailByIdSj(idSj) {
   header.className = 'flex-shrink-0 w-full';
   header.innerHTML = `
     <div class="flex justify-between items-center border-b border-gray-200 py-1 text-sm bg-gray-50 w-full">
-      <span class="text-center bg-blue-200 w-[6%] font-mono"><i class="bi bi-123"></i></span>
-      <span class="text-center bg-blue-100 w-[33%]"><i class="bi bi-box-seam-fill"></i></span>
-      <span class="text-center bg-blue-200 w-[10%]"><i class="bi bi-person-up"></i></span>
-      <span class="text-center bg-blue-100 w-[4%]"><i class="bi bi-toggles2"></i></span>
-      <span class="text-center bg-blue-200 w-[5%]"><i class="bi bi-hash"></i></span>
-      <span class="text-center bg-blue-200 w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
-      <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-geo-alt-fill"></i></span>
-      <span class="text-center bg-blue-100 w-[6%]"><i class="bi bi-layers-fill"></i></span>
-      <span class="text-center bg-blue-200 w-[11%]"><i class="bi bi-stack"></i></span>
-      <span class="text-center bg-blue-100 w-[4%]"><i class="bi bi-box-arrow-up"></i></span>
-      <span class="text-center bg-blue-200 w-[13%]"><i class="bi bi-google-play"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[6%] font-mono"><i class="bi bi-123"></i></span>
+      <span class="text-center text-xl bg-blue-100 w-[33%]"><i class="bi bi-box-seam-fill"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[10%]"><i class="bi bi-person-up"></i></span>
+      <span class="text-center text-xl bg-blue-100 w-[4%]"><i class="bi bi-toggles2"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[5%]"><i class="bi bi-hash"></i></span>
+      <span class="text-center text-xl bg-blue-100 w-[2%]"><i class="bi bi-arrow-down-up"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[6%]"><i class="bi bi-geo-alt-fill"></i></span>
+      <span class="text-center text-xl bg-blue-100 w-[6%]"><i class="bi bi-layers-fill"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[11%]"><i class="bi bi-stack"></i></span>
+      <span class="text-center text-xl bg-blue-100 w-[4%]"><i class="bi bi-box-arrow-up"></i></span>
+      <span class="text-center text-xl bg-blue-200 w-[13%]"><i class="bi bi-google-play"></i></span>
     </div>
   `;
   wrapper.appendChild(header);
@@ -156,11 +184,12 @@ function renderDetailByIdSj(idSj) {
     row.innerHTML = `
       <span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
       <span class="w-[33%] truncate">${item.k}</span>
-      <span class="w-[10%] truncate">${item.id_hlp ?? ''}</span>
+      <span class="w-[10%] truncate">
+        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs input-hlp" data-hlp="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).id_hlp : ''}" value="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).hlp : ''}">
+      </span>
       <span class="text-center w-[4%]">
-
-<input type="checkbox" class="custom-checkbox" />
-	  </span>
+        <input type="checkbox" class="custom-checkbox" />
+      </span>
       <span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
       <span class="text-center w-[2%]">${item.ge}</span>
       <span class="text-center w-[6%]">${item.rak} ${item.kol}</span>
@@ -173,7 +202,7 @@ function renderDetailByIdSj(idSj) {
       </span>
       <span class="text-center w-[4%]">${item.c_o}</span>
       <span class="w-[13%] flex justify-center gap-1">
-        <button class="px-1 py-0.5 bg-blue-500 text-white rounded"><i class="bi bi-pencil-square"></i></button>
+        <button class="px-1 py-0.5 bg-yellow-600 text-white rounded"><i class="bi bi-repeat"></i></button>
         <button class="px-1 py-0.5 bg-red-500 text-white rounded"><i class="bi bi-trash"></i></button>
         <button class="px-1 py-0.5 bg-green-500 text-white rounded"><i class="bi bi-plus-lg"></i></button>
         <button onclick="showAlert('${item.notes}',7000)" 
@@ -186,7 +215,7 @@ function renderDetailByIdSj(idSj) {
     content.appendChild(row);
   });
 
-	console.log(tentukanStatus(cekPerPropertiStamp(tglPerItemDetail, jmlData)))
+	// console.log(tentukanStatus(cekPerPropertiStamp(tglPerItemDetail, jmlData)))
 
 	// console.log(tglPerItemDetail);
 
@@ -284,8 +313,8 @@ function getStatusClass(status) {
     case 1: return "bg-green-500/80 text-black";
     case 2: return "bg-yellow-500/80 text-black";
     case 3: return "bg-red-500/80 text-white";
-    case 4: return "bg-gray-900/80 text-white";
-    default: return "bg-gray-500/80 text-black";
+    case 4: return "bg-blue-600/80 text-white";
+    default: return "bg-gray-500/80 text-white";
   }
 }
 
@@ -317,6 +346,9 @@ function getStatusClass(status) {
 		// Tambahkan event click
 		card.addEventListener('click', function () {
 			const idSj = this.getAttribute('data-id-sj');
+      
+      console.log(cariByIdSj(idSj));
+
 
 			// Hapus tanda aktif dari semua card
 			document.querySelectorAll('#summary > div').forEach(el => {

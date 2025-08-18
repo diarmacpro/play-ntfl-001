@@ -79,8 +79,32 @@
     }
     </style>
 
+
+<style>
+  @keyframes shakeOpacity {
+    0%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.85; }
+    50% { opacity: 0.7; }
+  }
+
+  .shake {
+    animation: shakeOpacity 0.4s ease-in-out;
+  }
+</style>
+
   </head>
  <body class="h-screen flex">
+
+<div id="alertModal" 
+     class="hidden fixed top-4 left-1/2 -translate-x-1/2 
+            bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg 
+            flex items-center justify-between gap-3 z-50 text-4xl">
+  <span id="alertMessage"></span>
+  <button id="alertBtn" class="shadow shadow-sm shadow-red-300 p-2 bg-red-600 border border-red-700 rounded-xl text-white hover:shadow-none hover:text-gray-200">
+    <i class="bi bi-x-lg"></i>
+  </button>
+</div>
+
 
     <!-- Sidebar kiri -->
     <!-- Pastikan sudah load Bootstrap Icons CSS -->
@@ -138,16 +162,24 @@
       import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
       const app = initializeApp({ databaseURL: "https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app" });
       const db = getDatabase(app);
-      Object.assign(window, { db, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+
+      const app2 = initializeApp({ databaseURL: "https://stk-wv-default-rtdb.asia-southeast1.firebasedatabase.app" },"app2");
+      const db2 = getDatabase(app2);
+
+      Object.assign(window, { db, db2, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
     </script>
 
 <script>
   var data = {};
-  let fbsSvc;
+  let fbsSvc,fbsSvcX;
 
   // Cari data marketing by ID
   function cariById(id) {
     return data.nmMkt.find(item => item.id_mkt === String(id)) || null;
+  }
+
+  function nmHlp(id) {
+    return data.helper.find(item => item.id_hlp === id) || null;
   }
 
   // Fungsi filter berdasarkan input
@@ -219,6 +251,47 @@
 
     // Load data marketing & data SJ
     fbsSvc = new Fbs(db);
+    fbsSvcX = new Fbs(db2);
+
+    // fbsSvcX.gDt('layer2','',(d)=>{
+    //   let arr = [];
+
+    //   if (Array.isArray(d)) {
+    //     arr = d;
+    //   } else if (d && typeof d === 'object') {
+    //     arr = Object.values(d);
+    //   } else {
+    //     console.warn('Data layer2 tidak valid:', d);
+    //   }
+
+    //   // group berdasarkan id_kain
+    //   data.layer2 = arr.reduce((groups, item) => {
+    //     const key = item.id_kain || 'unknown'; // default 'unknown' kalau tidak ada id_kain
+    //     if (!groups[key]) groups[key] = [];
+    //     groups[key].push(item);
+    //     return groups;
+    //   }, {});
+    // });
+
+    fbsSvcX.gDt('app/data/helper','',(d)=>{
+      let arr = [];
+
+      if (Array.isArray(d)) {
+        arr = d;
+      } else if (d && typeof d === 'object') {
+        arr = Object.values(d);
+      } else {
+        console.warn('Data helper tidak valid:', d);
+      }
+
+      data.helper = arr
+        .filter(val => val.stts !== '' && val.stts !== 0) // filter stts kosong atau 0
+        .map(val => ({
+          hlp: val.hlp || '',
+          id_hlp: val.id_hlp || ''
+        }));
+    })
+
     fbsSvc.gDt('/user', '', (d) => {
       let arr = [];
 
@@ -243,49 +316,73 @@
 
 
 <script>
-  function showAlert(message, duration = 3000) {
-    const modal = document.getElementById('alertModal');
-    const msg = document.getElementById('alertMessage');
-    const btnClose = document.getElementById('alertBtn');
+// simpan timer di luar supaya bisa di-clear saat dipanggil lagi
+let alertTimer = null;
+let alertCountdown = null;
 
-    let timeLeft = Math.ceil(duration / 1000); // hitungan mundur dalam detik
-    msg.textContent = message;
+function showAlert(message, duration = 3000) {
+  const modal = document.getElementById('alertModal');
+  const msg = document.getElementById('alertMessage');
+  const btnClose = document.getElementById('alertBtn');
+
+  if (!modal || !msg || !btnClose) return;
+
+  // clear timer lama
+  if (alertTimer) clearTimeout(alertTimer);
+  if (alertCountdown) clearInterval(alertCountdown);
+
+  let timeLeft = Math.ceil(duration / 1000);
+  msg.textContent = message;
+  btnClose.innerHTML = `<i class="bi bi-x-lg"></i> (${timeLeft})`;
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex', 'opacity-0');
+
+  // fade-in
+  setTimeout(() => {
+    modal.classList.remove('opacity-0');
+
+    // 🔥 tambahkan animasi getar
+    modal.classList.add('shake');
+    setTimeout(() => modal.classList.remove('shake'), 300); // hapus setelah animasi selesai
+  }, 10);
+
+  // countdown
+  alertCountdown = setInterval(() => {
+    timeLeft--;
     btnClose.innerHTML = `<i class="bi bi-x-lg"></i> (${timeLeft})`;
+    if (timeLeft <= 0) clearInterval(alertCountdown);
+  }, 1000);
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex', 'opacity-0'); // mulai dari transparan
+  // auto close
+  alertTimer = setTimeout(() => {
+    closeAlert();
+    clearInterval(alertCountdown);
+  }, duration);
 
-    // Fade-in
-    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+  // tombol close
+  btnClose.onclick = () => {
+    clearTimeout(alertTimer);
+    clearInterval(alertCountdown);
+    closeAlert();
+  };
 
-    // Update countdown tiap 1 detik
-    const countdown = setInterval(() => {
-      timeLeft--;
-      btnClose.innerHTML = `<i class="bi bi-x-lg"></i> (${timeLeft})`;
-      if (timeLeft <= 0) clearInterval(countdown);
-    }, 1000);
-
-    // Auto close
-    const timer = setTimeout(() => {
-      closeAlert();
-      clearInterval(countdown);
-    }, duration);
-
-    // Tombol close manual
-    btnClose.onclick = () => {
-      clearTimeout(timer);
-      clearInterval(countdown);
-      closeAlert();
-    };
-
-    function closeAlert() {
-      modal.classList.add('opacity-0'); // fade-out
-      setTimeout(() => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }, 300); // sesuai durasi transisi CSS
-    }
+  function closeAlert() {
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }, 300);
   }
+}
+
+
+  $(document).on("keypress", ".input-hlp", function (e) {
+    if (e.which === 13) {
+      console.log("Enter ditekan, value:", $(this).val());
+    }
+  });
+
 </script>
 
   </body>
