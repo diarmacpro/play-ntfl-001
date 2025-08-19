@@ -170,8 +170,11 @@ function renderDetailByIdSj(idSj) {
 	d_finish: []
 	};
 
+  // console.log("---------------",dataDetail);
 
   dataDetail.forEach(item => {
+    const habis = item.hapus ? (item.hapus == 1 ? 1 : 0) : 0;
+
     ekspedisiArray.push(item.ekspedisi ?? '');
     stampSjArray.push(item.stamp_sj ?? '');
 
@@ -185,31 +188,47 @@ function renderDetailByIdSj(idSj) {
       <span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
       <span class="w-[33%] truncate">${item.k}</span>
       <span class="w-[10%] truncate">
-        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs input-hlp" data-hlp="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).id_hlp : ''}" value="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).hlp : ''}">
+        <input class="w-full px-1 py-0.5 border border-gray-300 text-xs input-hlp" data-hlp="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).id_hlp : ''}" value="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).hlp : ''}">
       </span>
       <span class="text-center w-[4%]">
-        <input type="checkbox" class="custom-checkbox" />
+        <input type="checkbox" class="custom-checkbox" ${item.habis == 1 ? 'checked' : (item.ge == 'g' ? 'checked' : '')} ${item.ge == 'g' ? 'disabled' : ''}/>
       </span>
       <span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
       <span class="text-center w-[2%]">${item.ge}</span>
       <span class="text-center w-[6%]">${item.rak} ${item.kol}</span>
       <span class="w-[6%] px-1">
-        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs" 
+        <input class="w-full px-1 py-0.5 border border-gray-300 text-xs" 
                value="${item.qty} ${item.q_bs ?? ''}" placeholder="Qty">
       </span>
       <span class="w-[11%] px-1">
-        <input class="w-full px-1 py-0.5 border border-gray-300 rounded-md text-xs" placeholder="Bs">
+        <input class="w-full px-1 py-0.5 border border-gray-300 text-xs" placeholder="Bs">
       </span>
       <span class="text-center w-[4%]">${item.c_o}</span>
       <span class="w-[13%] flex justify-center gap-1">
-        <button class="px-1 py-0.5 bg-yellow-600 text-white rounded"><i class="bi bi-repeat"></i></button>
-        <button class="px-1 py-0.5 bg-red-500 text-white rounded"><i class="bi bi-trash"></i></button>
-        <button class="px-1 py-0.5 bg-green-500 text-white rounded"><i class="bi bi-plus-lg"></i></button>
+        <button class="px-1 py-0.5 bg-yellow-600 text-white rounded 
+                      hover:bg-yellow-700 active:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">
+          <i class="bi bi-repeat"></i>
+        </button>
+
+        <button class="px-1 py-0.5 bg-red-500 text-white rounded 
+                      hover:bg-red-600 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+          <i class="bi bi-trash"></i>
+        </button>
+
+        <button class="px-1 py-0.5 bg-green-500 text-white rounded 
+                      hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition open-layer-2"
+                      data-id-kain="${item.id_kain}">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+
         <button onclick="showAlert('${item.notes}',7000)" 
-          class="px-1 py-0.5 bg-blue-600 text-white rounded ${!item.notes ? 'disabled:bg-gray-400 disabled:cursor-not-allowed' : ''}" 
-          ${!item.notes ? 'disabled' : ''}>
+                class="px-1 py-0.5 bg-blue-600 text-white rounded 
+                      hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 
+                      transition ${!item.notes ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400 active:bg-gray-400' : ''}" 
+                ${!item.notes ? 'disabled' : ''}>
           <i class="bi bi-file-text-fill"></i>
         </button>
+
       </span>
     `;
     content.appendChild(row);
@@ -242,6 +261,8 @@ function renderDetailByIdSj(idSj) {
 
   // masukkan ke detail
   detailContainer.appendChild(wrapper);
+
+  listenerLayer2();
 }
 
 
@@ -347,7 +368,8 @@ function getStatusClass(status) {
 		card.addEventListener('click', function () {
 			const idSj = this.getAttribute('data-id-sj');
       
-      console.log(cariByIdSj(idSj));
+      // console.log(cariByIdSj(idSj));
+      tempData = cariByIdSj(idSj);
 
 
 			// Hapus tanda aktif dari semua card
