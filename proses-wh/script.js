@@ -1,3 +1,46 @@
+function clearJumlahDataSummary(){
+  $('#col1Text').text('');
+  $('#col2Text').text('');
+  $('#col3Text').text('');
+  $('#col4Text').text('');
+}
+
+function renderJumlahDataSummary() {
+  // console.log("Jumlah Hasil");
+
+  // Reset semua properti ke 0
+  countSumaryData.totalData = 0;
+  countSumaryData.totalOnline = 0;
+  countSumaryData.totalRetur = 0;
+  countSumaryData.totalEkspedisi = 0;
+
+  // Gunakan data.hasil_filter jika ada dan tidak kosong, jika tidak gunakan data.dataside
+  const sourceData = (data.hasil_filter && Object.keys(data.hasil_filter).length > 0)
+    ? data.hasil_filter
+    : data.dataside;
+
+  // Loop untuk menghitung
+  for (const key in sourceData) {
+    const item = sourceData[key];
+    countSumaryData.totalData += 1;
+    if (item.onoff === 1) countSumaryData.totalOnline += 1;
+    if (item.rtr !== 0) countSumaryData.totalRetur += 1;
+    if (item.ekspedisi !== 0) countSumaryData.totalEkspedisi += 1;
+  }
+
+  // Update tampilan UI
+  $('#col1Text').text(countSumaryData.totalData);
+  $('#col2Text').text(`${countSumaryData.totalOnline}`);
+  $('#col3Text').text(countSumaryData.totalEkspedisi);
+  $('#col4Text').text(countSumaryData.totalRetur);
+
+  return countSumaryData; // opsional
+}
+
+
+
+
+
 function gtHlp(param) {
   if (param === undefined || param === null || param === '') return null;
 
@@ -261,7 +304,7 @@ function renderDetailByIdSj(idSj) {
 
   // masukkan ke detail
   detailContainer.appendChild(wrapper);
-
+  
   listenerLayer2();
 }
 
@@ -314,6 +357,7 @@ function formatTanggalJakarta(isoString) {
 }
 
 function renderElemenSummary(data) {
+  clearJumlahDataSummary();
 	const container = document.getElementById('summary');
 	container.innerHTML = ''; // clear dulu
 
@@ -329,15 +373,15 @@ function renderElemenSummary(data) {
 		const ekspedisiText = parseInt(item.ekspedisi,10) !== 0 ? '' : 'hidden';
 		const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
 		
-function getStatusClass(status) {
-  switch (status) {
-    case 1: return "bg-green-500/80 text-black";
-    case 2: return "bg-yellow-500/80 text-black";
-    case 3: return "bg-red-500/80 text-white";
-    case 4: return "bg-blue-600/80 text-white";
-    default: return "bg-gray-500/80 text-white";
+  function getStatusClass(status) {
+    switch (status) {
+      case 1: return "bg-green-500/80 text-black";
+      case 2: return "bg-yellow-500/80 text-black";
+      case 3: return "bg-red-500/80 text-white";
+      case 4: return "bg-blue-600/80 text-white";
+      default: return "bg-gray-500/80 text-white";
+    }
   }
-}
 
 		const card = document.createElement('div');
 		card.className = 'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-none';
@@ -388,8 +432,12 @@ function getStatusClass(status) {
 		container.appendChild(card);
 	});
 
+  
+  renderJumlahDataSummary();
+
 	if (_.isEmpty(sortedData)) {
 		container.innerHTML = '<p class="text-gray-500 italic">Tidak ada data SJ.</p>';
+    clearJumlahDataSummary();
 	}
 }
 
