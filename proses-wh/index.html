@@ -205,10 +205,53 @@
 
 
     <!-- Konten kanan -->
-    <div id="mainContent" class="flex-1 p-4 overflow-auto">
-      <h2 class="text-xl font-semibold mb-4">Detail Items</h2>
-      <div id="detail"></div>
-    </div>
+<div id="mainContent" class="flex-1 p-4 overflow-auto">
+  <!-- Toolbar -->
+<!-- Wrapper utama -->
+<div class="flex items-center justify-between mb-4">
+  <!-- Toolbar Buttons (kiri) -->
+  <div class="flex gap-4">
+    <!-- Dashboard -->
+    <button class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 shadow">
+      <i class="bi bi-speedometer2 text-xl"></i>
+      <span class="text-[10px] mt-1">Dashboard</span>
+    </button>
+
+    <!-- Plus -->
+    <button class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 active:scale-95 shadow">
+      <i class="bi bi-plus-circle text-xl"></i>
+      <span class="text-[10px] mt-1">Tambah</span>
+    </button>
+
+    <!-- Report -->
+    <button class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-600 active:scale-95 shadow">
+      <i class="bi bi-file-earmark-bar-graph text-xl"></i>
+      <span class="text-[10px] mt-1">Report</span>
+    </button>
+
+    <!-- User -->
+    <button class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-600 active:scale-95 shadow">
+      <i class="bi bi-person text-xl"></i>
+      <span class="text-[10px] mt-1">User</span>
+    </button>
+  </div>
+
+  <!-- Tombol kanan (small actions) -->
+  <div class="flex gap-2">
+    <button onclick="reloadFetch()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-yellow-600 text-white hover:bg-yellow-700 active:scale-95 shadow-lg">
+      <i class="bi bi-arrow-clockwise text-lg"></i>
+    </button>
+    <button onclick="closeDetail()"  class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-lg">
+      <i class="bi bi-x-lg text-lg"></i>
+    </button>
+  </div>
+</div>
+
+
+  <!-- Detail Section -->
+  <div id="detail"></div>
+</div>
+
 
 
 <!-- Modal -->
@@ -342,6 +385,34 @@
     return data.result.raw.filter(item => Number(item.id_sj) === targetId);
   }
 
+function ambilDataBarang(cb) {
+  fbsSvcX.gDt('kain','',(d)=>{
+    let hasil = Object.values(d)   
+      .flat()                      
+      .map(item => ({
+        c_e: item.c_e,
+        c_g: item.c_g,
+        c_h: item.c_h,
+        e:   item.e,
+        g:   item.g,
+        ik:  item.ik,
+        k:   item.k,
+        kd_jns: item.kd_jns,
+        kd_wrn: item.kd_wrn,
+        s:   item.s
+      }));
+
+    // simpan ke dalam variabel global data
+    data["kain"] = hasil;
+
+    // kalau ada callback, panggil dengan hasil
+    if (typeof cb === "function") {
+      cb(hasil);
+    }
+  });
+}
+
+
   function getDtStock(id, callback) {
     fbsSvcX.gDt(`layer2/${id}`, '', (d) => {
       // filter data: buang yang stts == 'h'
@@ -444,6 +515,10 @@
       }));
 
       loadDataSJ(initDate);
+
+      ambilDataBarang((d)=>{
+        console.log(data.kain);
+      })
     });
   });
 </script>

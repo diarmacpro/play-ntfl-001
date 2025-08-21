@@ -34,6 +34,8 @@ function renderJumlahDataSummary() {
   $('#col3Text').text(countSumaryData.totalEkspedisi);
   $('#col4Text').text(countSumaryData.totalRetur);
 
+  renderDashboard();
+
   return countSumaryData; // opsional
 }
 
@@ -249,7 +251,7 @@ function renderDetailByIdSj(idSj) {
       <span class="text-center w-[4%]">${item.c_o}</span>
       <span class="w-[13%] flex justify-center gap-1">
         <button class="px-1 py-0.5 bg-yellow-600 text-white rounded 
-                      hover:bg-yellow-700 active:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">
+                      hover:bg-yellow-700 active:bg-yellow-800 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition switch-item">
           <i class="bi bi-repeat"></i>
         </button>
 
@@ -306,6 +308,7 @@ function renderDetailByIdSj(idSj) {
   detailContainer.appendChild(wrapper);
   
   listenerLayer2();
+  listenerSwitchItem();
 }
 
 
@@ -441,3 +444,39 @@ function renderElemenSummary(data) {
 	}
 }
 
+function cariData(data, keyword) {
+  // pecah keyword jadi kata-kata, kecilkan huruf semua
+  let terms = keyword.toLowerCase().split(/\s+/).filter(Boolean);
+
+  return data.filter(item => {
+    let target = `${item.ik} ${item.k}`.toLowerCase();
+    // cek semua terms ada di target (walau acak urutannya)
+    return terms.every(t => target.includes(t));
+  });
+}
+
+function listenerSwitchItem(){
+  
+  $(document).on("click", ".switch-item", function () {
+    console.log("Listener Switch Item Placeholder");
+  });
+
+}
+
+function reloadFetch(){
+  console.log("Reload Fetch");
+}
+
+function closeDetail(){
+  tempData = {};
+  console.log("Close Detail");
+  document.querySelectorAll('#summary > div').forEach(el => {
+    el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
+  });
+  renderDashboard();
+}
+
+function renderDashboard(){
+  $('#detail').html('');
+  console.log("Dashboard Render");
+}
