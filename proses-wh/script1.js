@@ -1,4 +1,4 @@
-function clearJumlahDataSummary() {
+function clearJumlahDataSummary(){
   $('#col1Text').text('');
   $('#col2Text').text('');
   $('#col3Text').text('');
@@ -15,10 +15,9 @@ function renderJumlahDataSummary() {
   countSumaryData.totalEkspedisi = 0;
 
   // Gunakan data.hasil_filter jika ada dan tidak kosong, jika tidak gunakan data.dataside
-  const sourceData =
-    data.hasil_filter && Object.keys(data.hasil_filter).length > 0
-      ? data.hasil_filter
-      : data.dataside;
+  const sourceData = (data.hasil_filter && Object.keys(data.hasil_filter).length > 0)
+    ? data.hasil_filter
+    : data.dataside;
 
   // Loop untuk menghitung
   for (const key in sourceData) {
@@ -40,6 +39,10 @@ function renderJumlahDataSummary() {
   return countSumaryData; // opsional
 }
 
+
+
+
+
 function gtHlp(param) {
   if (param === undefined || param === null || param === '') return null;
 
@@ -48,7 +51,7 @@ function gtHlp(param) {
     const num = Number(param);
 
     // cari persis
-    const exact = data.helper.find((h) => h.id_hlp === num);
+    const exact = data.helper.find(h => h.id_hlp === num);
     if (exact) return exact;
 
     // cari terdekat
@@ -60,97 +63,96 @@ function gtHlp(param) {
   } else {
     // jika string, cari berdasarkan hlp (case-insensitive)
     const lowerParam = String(param).toLowerCase();
-    const found = data.helper.filter((h) =>
-      h.hlp.toLowerCase().includes(lowerParam)
-    );
+    const found = data.helper.filter(h => h.hlp.toLowerCase().includes(lowerParam));
 
     return found.length > 0 ? found[0] : null; // hanya ambil yang pertama
   }
 }
 
+
+
 function prosesDataSJ(url, params, callback) {
-  pR(url, params, (e, d) => {
-    const grouped = _.chain(d.data)
-      .groupBy('id_sj')
-      .mapValues((sjGroup) =>
-        _.groupBy(sjGroup, (item) => item.id_mkt ?? 'null')
-      )
-      .value();
+	pR(url, params, (e, d) => {
+		const grouped = _.chain(d.data)
+			.groupBy('id_sj')
+			.mapValues(sjGroup =>
+				_.groupBy(sjGroup, item => item.id_mkt ?? 'null')
+			)
+			.value();
 
-    // Pisahkan berdasarkan jumlah id_mkt
-    const [singleMkt, multipleMkt] = _.partition(
-      Object.entries(grouped),
-      ([, mktGroup]) => Object.keys(mktGroup).length === 1
-    );
+		// Pisahkan berdasarkan jumlah id_mkt
+		const [singleMkt, multipleMkt] = _.partition(
+			Object.entries(grouped),
+			([, mktGroup]) => Object.keys(mktGroup).length === 1
+		);
 
-    const singleMktObj = Object.fromEntries(singleMkt);
-    const multipleMktObj = Object.fromEntries(multipleMkt);
+		const singleMktObj = Object.fromEntries(singleMkt);
+		const multipleMktObj = Object.fromEntries(multipleMkt);
 
-    const summary = {};
+		const summary = {};
 
-    Object.entries(singleMktObj).forEach(([id_sj, itemsByMkt]) => {
-      const id_mkt = Object.keys(itemsByMkt)[0];
-      const items = itemsByMkt[id_mkt];
+		Object.entries(singleMktObj).forEach(([id_sj, itemsByMkt]) => {
+			const id_mkt = Object.keys(itemsByMkt)[0];
+			const items = itemsByMkt[id_mkt];
 
-      // Ambil waktu dari stamp_sj
-      const stamp_sj_time = (() => {
-        const s = items[0]?.stamp_sj;
-        if (!s) return '';
-        return new Date(s).toTimeString().split(' ')[0];
-      })();
+			// Ambil waktu dari stamp_sj
+			const stamp_sj_time = (() => {
+				const s = items[0]?.stamp_sj;
+				if (!s) return '';
+				return new Date(s).toTimeString().split(' ')[0];
+			})();
 
-      // Hitung status_sj
-      const status_sj = (() => {
-        const status = {
-          d_mgr: items[0]?.d_mgr,
-          d_wh: items[0]?.d_wh,
-          d_finish: items[0]?.d_finish,
-        };
-        if (status.d_mgr && !status.d_wh && !status.d_finish) return 1;
-        if (status.d_mgr && status.d_wh && !status.d_finish) return 2;
-        if (status.d_mgr && status.d_wh && status.d_finish) return 3;
-        return 4;
-      })();
+			// Hitung status_sj
+			const status_sj = (() => {
+				const status = {
+					d_mgr: items[0]?.d_mgr,
+					d_wh: items[0]?.d_wh,
+					d_finish: items[0]?.d_finish
+				};
+				if (status.d_mgr && !status.d_wh && !status.d_finish) return 1;
+				if (status.d_mgr && status.d_wh && !status.d_finish) return 2;
+				if (status.d_mgr && status.d_wh && status.d_finish) return 3;
+				return 4;
+			})();
 
-      // Hitung jumlah properti valid, skip jika rtr/onOff = 0
-      const countValid = (key) =>
-        items.filter(
-          (item) =>
-            item[key] != null &&
-            item[key] !== '' &&
-            !(['rtr', 'onOff'].includes(key) && item[key] === 0)
-        ).length;
+			// Hitung jumlah properti valid, skip jika rtr/onOff = 0
+			const countValid = (key) =>
+				items.filter(item =>
+					item[key] != null &&
+					item[key] !== '' &&
+					!(['rtr', 'onOff'].includes(key) && item[key] === 0)
+				).length;
 
-      summary[id_sj] = {
-        id_sj: Number(id_sj),
-        id_mkt: Number(id_mkt),
-        mkt: cariById(Number(id_mkt)).mkt,
-        jml_item: items.length,
-        stamp: stamp_sj_time,
-        status_sj,
-        rtr: countValid('rtr'),
-        onoff: countValid('onOff'),
-        ekspedisi: countValid('ekspedisi'),
-      };
-    });
+			summary[id_sj] = {
+				id_sj: Number(id_sj),
+				id_mkt: Number(id_mkt),
+				mkt: cariById(Number(id_mkt)).mkt,
+				jml_item: items.length,
+				stamp: stamp_sj_time,
+				status_sj,
+				rtr: countValid('rtr'),
+				onoff: countValid('onOff'),
+				ekspedisi: countValid('ekspedisi')
+			};
+		});
 
-    const res = { raw: d.data, summary, singleMktObj, multipleMktObj };
-    if (callback) callback(res);
-  });
+		const res = { raw:d.data, summary, singleMktObj, multipleMktObj };
+		if (callback) callback(res);
+	});
 }
 
 function tentukanStatus(status) {
   const { d_mgr, d_wh, d_finish } = status;
 
   if (d_mgr && d_wh && d_finish) {
-    return 'red-500';
+    return "red-500";
   } else if (!d_finish && d_mgr && d_wh) {
-    return 'yellow-400';
+    return "yellow-400";
   } else if (d_mgr && !d_wh && !d_finish) {
-    return 'green-500';
+    return "green-500";
   } else {
-    return '';
-  }
+		return "";
+	}
   return null; // default jika tidak cocok
 }
 
@@ -158,7 +160,7 @@ function cekPerPropertiStamp(tglPerItemDetail, jmlData) {
   let hasil = {};
   for (let key in tglPerItemDetail) {
     const total = tglPerItemDetail[key].reduce((a, b) => a + b, 0);
-    hasil[key] = total === jmlData;
+    hasil[key] = (total === jmlData);
   }
   return hasil;
 }
@@ -169,11 +171,10 @@ function renderDetailByIdSj(idSj) {
 
   const dataDetail = cariByIdSj(idSj);
 
-  const jmlData = dataDetail.length;
+	const jmlData = dataDetail.length;
 
   if (!dataDetail || dataDetail.length === 0) {
-    detailContainer.innerHTML =
-      '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
+    detailContainer.innerHTML = '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
     return;
   }
 
@@ -208,41 +209,34 @@ function renderDetailByIdSj(idSj) {
   let ekspedisiArray = [];
   let stampSjArray = [];
 
-  let tglPerItemDetail = {
-    d_mgr: [],
-    d_wh: [],
-    d_finish: [],
-  };
+	let tglPerItemDetail = {
+	d_mgr: [],
+	d_wh: [],
+	d_finish: []
+	};
 
   // console.log("---------------",dataDetail);
 
-  dataDetail.forEach((item) => {
+  dataDetail.forEach(item => {
     const habis = item.hapus ? (item.hapus == 1 ? 1 : 0) : 0;
 
     ekspedisiArray.push(item.ekspedisi ?? '');
     stampSjArray.push(item.stamp_sj ?? '');
 
-    tglPerItemDetail.d_mgr.push(item.d_mgr ? 1 : 0);
-    tglPerItemDetail.d_wh.push(item.d_wh ? 1 : 0);
-    tglPerItemDetail.d_finish.push(item.d_finish ? 1 : 0);
-
+		tglPerItemDetail.d_mgr.push(item.d_mgr ? 1 : 0);
+		tglPerItemDetail.d_wh.push(item.d_wh ? 1 : 0);
+		tglPerItemDetail.d_finish.push(item.d_finish ? 1 : 0);
+     
     const row = document.createElement('div');
-    row.className =
-      'flex justify-between items-center border-b border-gray-200 py-1 text-sm w-full';
+    row.className = 'flex justify-between items-center border-b border-gray-200 py-1 text-sm w-full';
     row.innerHTML = `
-      <span class="w-[6%] font-mono">${item.id_stock}${
-      item.rtr == 0 ? '' : ' <b>R</b>'
-    }</span>
+      <span class="w-[6%] font-mono">${item.id_stock}${item.rtr == 0 ? '' : ' <b>R</b>'}</span>
       <span class="w-[33%] truncate">${item.k}</span>
       <span class="w-[10%] truncate">
-        <input class="w-full px-1 py-0.5 border border-gray-300 text-xs input-hlp" data-hlp="${
-          nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).id_hlp : ''
-        }" value="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).hlp : ''}">
+        <input class="w-full px-1 py-0.5 border border-gray-300 text-xs input-hlp" data-hlp="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).id_hlp : ''}" value="${nmHlp(item.id_hlp) ? nmHlp(item.id_hlp).hlp : ''}">
       </span>
       <span class="text-center w-[4%]">
-        <input type="checkbox" class="custom-checkbox" ${
-          item.habis == 1 ? 'checked' : item.ge == 'g' ? 'checked' : ''
-        } ${item.ge == 'g' ? 'disabled' : ''}/>
+        <input type="checkbox" class="custom-checkbox" ${item.habis == 1 ? 'checked' : (item.ge == 'g' ? 'checked' : '')} ${item.ge == 'g' ? 'disabled' : ''}/>
       </span>
       <span class="text-center w-[5%]">${item.lot}#${item.rol}</span>
       <span class="text-center w-[2%]">${item.ge}</span>
@@ -275,11 +269,7 @@ function renderDetailByIdSj(idSj) {
         <button onclick="showAlert('${item.notes}',7000)" 
                 class="px-1 py-0.5 bg-blue-600 text-white rounded 
                       hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 
-                      transition ${
-                        !item.notes
-                          ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400 active:bg-gray-400'
-                          : ''
-                      }" 
+                      transition ${!item.notes ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400 active:bg-gray-400' : ''}" 
                 ${!item.notes ? 'disabled' : ''}>
           <i class="bi bi-file-text-fill"></i>
         </button>
@@ -289,9 +279,9 @@ function renderDetailByIdSj(idSj) {
     content.appendChild(row);
   });
 
-  // console.log(tentukanStatus(cekPerPropertiStamp(tglPerItemDetail, jmlData)))
+	// console.log(tentukanStatus(cekPerPropertiStamp(tglPerItemDetail, jmlData)))
 
-  // console.log(tglPerItemDetail);
+	// console.log(tglPerItemDetail);
 
   wrapper.appendChild(content);
 
@@ -299,17 +289,11 @@ function renderDetailByIdSj(idSj) {
   const footer = document.createElement('div');
   footer.className = 'flex-shrink-0 mt-2 text-lg text-gray-600 w-full';
 
-  let hasilGabunganEkspedisi = [
-    ...new Set(ekspedisiArray.filter((v) => v && v.trim() !== '')),
-  ].join(', ');
+  let hasilGabunganEkspedisi = [...new Set(ekspedisiArray.filter(v => v && v.trim() !== ''))].join(', ');
   let hasilGabunganStampSj = formatStampRange(stampSjArray);
 
   footer.innerHTML = `
-    ${
-      hasilGabunganEkspedisi
-        ? `Ekspedisi : <b>${hasilGabunganEkspedisi}</b><br>`
-        : ''
-    }
+    ${hasilGabunganEkspedisi ? `Ekspedisi : <b>${hasilGabunganEkspedisi}</b><br>` : ''}
     ${hasilGabunganStampSj}
     <hr class="my-2">
     <div class="flex justify-end">
@@ -322,8 +306,11 @@ function renderDetailByIdSj(idSj) {
 
   // masukkan ke detail
   detailContainer.appendChild(wrapper);
-
+  
+  listenerLayer2();
+  listenerSwitchItem();
 }
+
 
 function formatStampRange(stampArray) {
   const [minStamp, maxStamp] = getMinMaxStamp(stampArray);
@@ -333,14 +320,16 @@ function formatStampRange(stampArray) {
   const minFormatted = formatTanggalJakarta(minStamp);
   const maxFormatted = formatTanggalJakarta(maxStamp);
 
-  return minStamp === maxStamp
+  return (minStamp === maxStamp)
     ? `Stamp SJ : <b>${minFormatted}</b><br>`
     : `Stamp SJ : <b>${minFormatted} ~ ${maxFormatted}</b><br>`;
 }
 
 function getMinMaxStamp(stampArray) {
   // Filter unik & valid
-  const filtered = [...new Set(stampArray.filter((v) => v && v.trim() !== ''))];
+  const filtered = [...new Set(
+    stampArray.filter(v => v && v.trim() !== '')
+  )];
 
   if (filtered.length === 0) return [];
 
@@ -359,62 +348,52 @@ function formatTanggalJakarta(isoString) {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hour12: false
   };
 
   const formatter = new Intl.DateTimeFormat('id-ID', options);
   const parts = formatter.formatToParts(new Date(isoString));
 
-  const get = (type) => parts.find((p) => p.type === type)?.value;
+  const get = type => parts.find(p => p.type === type)?.value;
 
-  return `${get('day')} ${get('month')} ${get('year')}, ${get('hour')}:${get(
-    'minute'
-  )} WIB`;
+  return `${get('day')} ${get('month')} ${get('year')}, ${get('hour')}:${get('minute')} WIB`;
 }
 
 function renderElemenSummary(data) {
   clearJumlahDataSummary();
-  const container = document.getElementById('summary');
-  container.innerHTML = ''; // clear dulu
+	const container = document.getElementById('summary');
+	container.innerHTML = ''; // clear dulu
 
-  // Pastikan data jadi array dan urutkan descending berdasarkan id_sj
-  const sortedData = _.sortBy(
-    Array.isArray(data) ? data : Object.values(data),
-    (item) => Number(item.id_sj)
-  ).reverse(); // reverse biar yang paling besar di atas
+	// Pastikan data jadi array dan urutkan descending berdasarkan id_sj
+	const sortedData = _.sortBy(
+		Array.isArray(data) ? data : Object.values(data),
+		item => Number(item.id_sj)
+	).reverse(); // reverse biar yang paling besar di atas
 
-  // Loop setiap id_sj
-  _.forEach(sortedData, (item) => {
-    const rtrText = parseInt(item.rtr, 10) === 0 ? 'hidden' : ``;
-    const ekspedisiText = parseInt(item.ekspedisi, 10) !== 0 ? '' : 'hidden';
-    const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
-
-    function getStatusClass(status) {
-      switch (status) {
-        case 1:
-          return 'bg-green-500/80 text-black';
-        case 2:
-          return 'bg-yellow-500/80 text-black';
-        case 3:
-          return 'bg-red-500/80 text-white';
-        case 4:
-          return 'bg-blue-600/80 text-white';
-        default:
-          return 'bg-gray-500/80 text-white';
-      }
+	// Loop setiap id_sj
+	_.forEach(sortedData, (item) => {
+		const rtrText = parseInt(item.rtr,10) === 0 ? 'hidden' : ``;
+		const ekspedisiText = parseInt(item.ekspedisi,10) !== 0 ? '' : 'hidden';
+		const onoffText = item.onoff === 1 ? 'green-600' : 'red-600';
+		
+  function getStatusClass(status) {
+    switch (status) {
+      case 1: return "bg-green-500/80 text-black";
+      case 2: return "bg-yellow-500/80 text-black";
+      case 3: return "bg-red-500/80 text-white";
+      case 4: return "bg-blue-600/80 text-white";
+      default: return "bg-gray-500/80 text-white";
     }
+  }
 
-    const card = document.createElement('div');
-    card.className =
-      'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-none';
-    card.setAttribute('data-id-sj', item.id_sj); // <-- tambahkan attribute
-    const jamMenit = item.stamp.split(':').slice(0, 2).join(':');
+		const card = document.createElement('div');
+		card.className = 'rounded py-1 px-2 cursor-pointer bg-white hover:bg-blue-200 transition-none';
+		card.setAttribute('data-id-sj', item.id_sj); // <-- tambahkan attribute
+		const jamMenit = item.stamp.split(':').slice(0, 2).join(':');
 
-    card.innerHTML = `
+		card.innerHTML = `
 			<div class="flex items-center w-full">
-				<span class="px-2 py-1 rounded-lg mr-1 text-xs font-medium shadow-sm ${getStatusClass(
-          item.status_sj
-        )}">${jamMenit}</span>
+				<span class="px-2 py-1 rounded-lg mr-1 text-xs font-medium shadow-sm ${getStatusClass(item.status_sj)}">${jamMenit}</span>
 
 				<span class="w-[25%]">
 					${item.id_sj} (<span class="font-bold">${item.jml_item}</span>)
@@ -432,113 +411,72 @@ function renderElemenSummary(data) {
 			</div>
 		`;
 
-    // Tambahkan event click
-    card.addEventListener('click', function () {
-      const idSj = this.getAttribute('data-id-sj');
-
+		// Tambahkan event click
+		card.addEventListener('click', function () {
+			const idSj = this.getAttribute('data-id-sj');
+      
       // console.log(cariByIdSj(idSj));
       tempData = cariByIdSj(idSj);
 
-      // Hapus tanda aktif dari semua card
-      document.querySelectorAll('#summary > div').forEach((el) => {
-        el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
-      });
 
-      // Tambahkan tanda aktif ke card yang diklik
-      this.classList.add('bg-yellow-200', 'border', 'border-yellow-500');
+			// Hapus tanda aktif dari semua card
+			document.querySelectorAll('#summary > div').forEach(el => {
+				el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
+			});
 
-      // Render detail
-      renderDetailByIdSj(idSj);
-    });
+			// Tambahkan tanda aktif ke card yang diklik
+			this.classList.add('bg-yellow-200', 'border', 'border-yellow-500');
 
-    container.appendChild(card);
-  });
+			// Render detail
+			renderDetailByIdSj(idSj);
+		});
 
+
+		container.appendChild(card);
+	});
+
+  
   renderJumlahDataSummary();
 
-  if (_.isEmpty(sortedData)) {
-    container.innerHTML =
-      '<p class="text-gray-500 italic">Tidak ada data SJ.</p>';
+	if (_.isEmpty(sortedData)) {
+		container.innerHTML = '<p class="text-gray-500 italic">Tidak ada data SJ.</p>';
     clearJumlahDataSummary();
-  }
+	}
 }
 
 function cariData(data, keyword) {
   // pecah keyword jadi kata-kata, kecilkan huruf semua
   let terms = keyword.toLowerCase().split(/\s+/).filter(Boolean);
 
-  return data.filter((item) => {
+  return data.filter(item => {
     let target = `${item.ik} ${item.k}`.toLowerCase();
     // cek semua terms ada di target (walau acak urutannya)
-    return terms.every((t) => target.includes(t));
+    return terms.every(t => target.includes(t));
   });
 }
 
-function reloadFetch() {
-  console.log('Reload Fetch');
+function listenerSwitchItem(){
+  
+  $(document).on("click", ".switch-item", function () {
+    console.log("Listener Switch Item Placeholder");
+  });
+
 }
 
-function closeDetail() {
+function reloadFetch(){
+  console.log("Reload Fetch");
+}
+
+function closeDetail(){
   tempData = {};
-  console.log('Close Detail');
-  document.querySelectorAll('#summary > div').forEach((el) => {
+  console.log("Close Detail");
+  document.querySelectorAll('#summary > div').forEach(el => {
     el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
   });
   renderDashboard();
 }
 
-function renderDashboard() {
+function renderDashboard(){
   $('#detail').html('');
-  console.log('Dashboard Render');
-}
-
-// Global Event Handlers
-function switchItemHandler() {
-  console.log('Listener Switch Item Placeholder');
-}
-
-function openLayer2Handler() {
-  console.log('Listener Layer2');
-  const idKain = $(this).data('id-kain');
-  $('#layer-2-modal').removeClass('hidden');
-  tampilkanPilihanStockLain(idKain);
-}
-
-function closeLayer2Handler() {
-  $('#layer-2-modal').addClass('hidden');
-}
-
-function modalBackdropHandler(e) {
-  if (e.target.id === 'layer-2-modal') {
-    $('#layer-2-modal').addClass('hidden');
-  }
-}
-
-function addItemHandler() {
-  const idStock = $(this).data('id');
-  const idKain = $(this).data('id-kain');
-  console.log(idStock, idKain);
-}
-
-function helperInputHandler(e) {
-  if (e.which === 13) {
-    console.log('Enter ditekan, value:', $(this).val());
-  }
-}
-
-// Initialize all event listeners once
-function initializeEventListeners() {
-  // Switch Item Listener
-  $(document).on('click', '.switch-item', switchItemHandler);
-  
-  // Layer 2 Modal Listeners
-  $(document).on('click', '.open-layer-2', openLayer2Handler);
-  $(document).on('click', '#close-layer-2, #close-btn-layer-2', closeLayer2Handler);
-  $(document).on('click', '#layer-2-modal', modalBackdropHandler);
-  
-  // Add Items Listener
-  $(document).on('click', '.item-stock-alternatif', addItemHandler);
-  
-  // Helper Input Listener
-  $(document).on('keypress', '.input-hlp', helperInputHandler);
+  console.log("Dashboard Render");
 }
