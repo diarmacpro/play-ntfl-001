@@ -518,9 +518,7 @@ function renderAktivitasTerbaru() {
           Aktivitas Terbaru
         </h2>
         <div class="text-sm text-gray-500">
-          Total: <span id="totalCount" class="font-bold">${
-            rawData.length
-          }</span> aktivitas
+          Total: <span id="totalCount" class="font-bold">${rawData.length}</span> aktivitas
         </div>
       </div>
       
@@ -670,16 +668,8 @@ function renderDashboard() {
           <i class="bi bi-tags-fill text-purple-600 mr-2"></i>
           Rekap Qty by Satuan
         </h3>
-        <div class="space-y-3 mb-6">
+        <div class="space-y-3">
           ${generatePropertySChart(analytics.propertyS)}
-        </div>
-
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="bi bi-tags-fill text-green-600 mr-2"></i>
-          Rekap G & E
-        </h3>
-        <div class="space-y-4">
-          ${generateGeRecap(rawData)}
         </div>
       </div>
 
@@ -689,7 +679,7 @@ function renderDashboard() {
           <i class="bi bi-person-badge-fill text-indigo-600 mr-2"></i>
           Rekap GE by Marketing
         </h3>
-        <div class="max-h-100 overflow-y-auto">
+        <div class="max-h-80 overflow-y-auto">
           ${generateGeByMarketingChart(analytics.geByMarketing)}
         </div>
       </div>
@@ -948,26 +938,23 @@ function generateGeByMarketingChart(geByMarketing) {
         return a.localeCompare(b);
       });
 
-const geBreakdown = sortedGeData
-  .map(([ge, count]) => {
-    const geLabel = ge.toUpperCase();
-    if (geLabel === 'G') {
-      return `<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-bold text-xs">${geLabel}: ${count}</span>`;
-    }
-    return `<span class="font-bold">${geLabel}: ${count}</span>`;
-  })
-  .join(' | ');
-
+      const geBreakdown = sortedGeData
+        .map(
+          ([ge, count]) =>
+            `<span class="font-bold">${ge.toUpperCase()}: ${count}</span>`
+        )
+        .join(' | ');
 
       return `
 <div class="flex items-center mb-3">
   <!-- Kolom 1: 40% align start -->
   <div class="w-[40%] flex items-center">
-    <span class="">${marketingName}</span>
+    <i class="bi bi-person-badge text-indigo-600 mr-3"></i>
+    <span class="font-medium">${marketingName}</span>
   </div>
 
   <!-- Kolom 2: 40% align end -->
-  <div class="w-[40%] text-right text-xs text-gray-600 me-2">
+  <div class="w-[40%] text-right text-xs text-gray-600">
     ${geBreakdown}
   </div>
 
@@ -983,76 +970,6 @@ const geBreakdown = sortedGeData
     .join('');
 }
 
-function generateGeRecap(rawData) {
-  if (!rawData || rawData.length === 0) {
-    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data GE</p></div>';
-  }
-
-  // Hitung total G dan E dari data.result.raw
-  const geStats = rawData.reduce((acc, item) => {
-    if (item.ge) {
-      const ge = item.ge.toLowerCase();
-      if (ge === 'g') {
-        acc.g += 1;
-      } else if (ge === 'e') {
-        acc.e += 1;
-      }
-      acc.total += 1;
-    }
-    return acc;
-  }, { g: 0, e: 0, total: 0 });
-
-  const gPercentage = geStats.total > 0 ? Math.round((geStats.g / geStats.total) * 100) : 0;
-  const ePercentage = geStats.total > 0 ? Math.round((geStats.e / geStats.total) * 100) : 0;
-
-  return `
-    <div class="space-y-4">
-
-
-      <!-- G Stats -->
-      <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-            G
-          </div>
-          <div>
-            <div class="font-semibold text-green-800">Grosir</div>
-            <div class="text-sm text-green-600">${gPercentage}% dari total</div>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-green-700">${geStats.g}</div>
-      </div>
-
-      <!-- E Stats -->
-      <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-            E
-          </div>
-          <div>
-            <div class="font-semibold text-blue-800">Ecer</div>
-            <div class="text-sm text-blue-600">${ePercentage}% dari total</div>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-blue-700">${geStats.e}</div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="space-y-2">
-        <div class="flex justify-between text-sm text-gray-600">
-          <span>Rasio : G | E</span>
-          <span>${gPercentage}% : ${ePercentage}%</span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div class="h-full flex">
-            <div class="bg-green-500 transition-all duration-300" style="width: ${gPercentage}%"></div>
-            <div class="bg-blue-500 transition-all duration-300" style="width: ${ePercentage}%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
 function generateRecentActivity(recentData) {
   return recentData
     .map((item) => {
@@ -1281,9 +1198,9 @@ function initializeActivitySearch(originalData) {
 
   if (!searchInput || !tableBody || !totalCount) return;
 
-  searchInput.addEventListener('input', function () {
+  searchInput.addEventListener('input', function() {
     const searchTerm = this.value.toLowerCase().trim();
-
+    
     if (!searchTerm) {
       // Show all data if search is empty
       tableBody.innerHTML = generateDetailedRecentActivity(originalData);
@@ -1292,11 +1209,9 @@ function initializeActivitySearch(originalData) {
     }
 
     // Split search terms for flexible matching
-    const searchTerms = searchTerm
-      .split(/\s+/)
-      .filter((term) => term.length > 0);
-
-    const filteredData = originalData.filter((item) => {
+    const searchTerms = searchTerm.split(/\s+/).filter(term => term.length > 0);
+    
+    const filteredData = originalData.filter(item => {
       const status = getItemStatus(item);
       const marketing = cariById(item.id_mkt);
       const time = new Date(item.stamp_sj).toLocaleString('id-ID', {
@@ -1305,24 +1220,22 @@ function initializeActivitySearch(originalData) {
         hour: '2-digit',
         minute: '2-digit',
       });
-
+      
       // Create searchable text combining all fields
       const searchableText = [
-        time, // waktu
-        item.id_sj, // sj
-        marketing ? marketing.mkt : '', // marketing
-        item.k, // item name
-        item.id_stock, // id_stock
-        status, // status
-        item.ekspedisi || '', // ekspedisi
-        `${item.rak} ${item.kol}`, // lokasi
-        `${item.qty} ${item.ge}`, // qty
-      ]
-        .join(' ')
-        .toLowerCase();
-
+        time,                                    // waktu
+        item.id_sj,                             // sj
+        marketing ? marketing.mkt : '',         // marketing
+        item.k,                                 // item name
+        item.id_stock,                          // id_stock
+        status,                                 // status
+        item.ekspedisi || '',                   // ekspedisi
+        `${item.rak} ${item.kol}`,             // lokasi
+        `${item.qty} ${item.ge}`               // qty
+      ].join(' ').toLowerCase();
+      
       // Check if all search terms are found in the searchable text
-      return searchTerms.every((term) => searchableText.includes(term));
+      return searchTerms.every(term => searchableText.includes(term));
     });
 
     // Update table with filtered results

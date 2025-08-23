@@ -486,133 +486,6 @@ function closeDetail() {
   renderDashboard();
 }
 
-function renderAktivitasTerbaru() {
-  const detailContainer = document.getElementById('detail');
-  detailContainer.innerHTML = '';
-
-  if (!data.result || !data.result.raw) {
-    detailContainer.innerHTML = `
-      <div class="flex items-center justify-center h-96">
-        <div class="text-center">
-          <i class="bi bi-clock-history text-6xl text-gray-300 mb-4"></i>
-          <p class="text-gray-500 text-lg">Tidak ada data aktivitas</p>
-          <p class="text-gray-400 text-sm">Pilih tanggal atau muat data terlebih dahulu</p>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const rawData = data.result.raw;
-
-  // Sort by timestamp (newest first)
-  const sortedData = rawData.sort(
-    (a, b) => new Date(b.stamp_sj) - new Date(a.stamp_sj)
-  );
-
-  detailContainer.innerHTML = `
-    <div class="bg-white rounded-xl shadow-lg p-6 h-full">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold flex items-center">
-          <i class="bi bi-clock-history text-orange-600 mr-3 text-3xl"></i>
-          Aktivitas Terbaru
-        </h2>
-        <div class="text-sm text-gray-500">
-          Total: <span id="totalCount" class="font-bold">${
-            rawData.length
-          }</span> aktivitas
-        </div>
-      </div>
-      
-      <!-- Search Bar -->
-      <div class="mb-4">
-        <div class="relative">
-          <input 
-            type="text" 
-            id="searchActivity" 
-            placeholder="Cari berdasarkan waktu, SJ, marketing, item, status, ekspedisi, lokasi, qty, atau ID stock..."
-            class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          >
-          <i class="bi bi-search absolute left-3 top-3 text-gray-400"></i>
-        </div>
-      </div>
-      
-      <div class="overflow-auto h-[calc(100%-100px)]">
-        <table id="activityTable" class="w-full text-sm">
-          <thead class="bg-gray-50 sticky top-0">
-            <tr>
-              <th class="px-4 py-3 text-left font-semibold">Waktu</th>
-              <th class="px-4 py-3 text-left font-semibold">SJ</th>
-              <th class="px-4 py-3 text-left font-semibold">Marketing</th>
-              <th class="px-4 py-3 text-left font-semibold">Kain</th>
-              <th class="px-4 py-3 text-left font-semibold">Qty</th>
-              <th class="px-4 py-3 text-left font-semibold">Status</th>
-              <th class="px-4 py-3 text-left font-semibold">Ekspedisi</th>
-              <th class="px-4 py-3 text-left font-semibold">Lokasi</th>
-            </tr>
-          </thead>
-          <tbody id="activityTableBody">
-            ${generateDetailedRecentActivity(sortedData)}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  // Initialize search functionality
-  initializeActivitySearch(sortedData);
-}
-
-function generateDetailedRecentActivity(rawData) {
-  return rawData
-    .map((item, index) => {
-      const status = getItemStatus(item);
-      const statusColors = {
-        Selesai: 'bg-red-100 text-red-800',
-        'Diproses WH': 'bg-yellow-100 text-yellow-800',
-        'Disetujui SPV': 'bg-green-100 text-green-800',
-        Pending: 'bg-blue-100 text-blue-800',
-      };
-
-      const marketing = cariById(item.id_mkt);
-      const time = new Date(item.stamp_sj).toLocaleString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-
-      const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-
-      return `
-        <tr class="${rowClass} border-b hover:bg-blue-50 transition-colors">
-          <td class="px-4 py-3 font-mono text-xs">${time}</td>
-          <td class="px-4 py-3 font-bold text-blue-600">${item.id_sj}</td>
-          <td class="px-4 py-3">${marketing ? marketing.mkt : 'Unknown'}</td>
-          <td class="px-4 py-3 truncate max-w-xs" title="${item.k}">${
-        item.k
-      }</td>
-          <td class="px-4 py-3 font-mono">
-            <span class="font-bold">${item.qty}</span> 
-            <span class="text-gray-600">${item.ge}</span>
-          </td>
-          <td class="px-4 py-3">
-            <span class="px-2 py-1 rounded-full text-xs font-medium ${
-              statusColors[status]
-            }">
-              ${status}
-            </span>
-          </td>
-          <td class="px-4 py-3 text-sm">${item.ekspedisi || '-'}</td>
-          <td class="px-4 py-3 text-sm">
-            <span class="font-mono">${item.rak} ${item.kol}</span>
-          </td>
-        </tr>
-      `;
-    })
-    .join('');
-}
-
 function renderDashboard() {
   const detailContainer = document.getElementById('detail');
   detailContainer.innerHTML = '';
@@ -664,37 +537,39 @@ function renderDashboard() {
         </div>
       </div>
 
-      <!-- Rekap Properti S -->
+      <!--  -->
       <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="bi bi-tags-fill text-purple-600 mr-2"></i>
-          Rekap Qty by Satuan
-        </h3>
-        <div class="space-y-3 mb-6">
-          ${generatePropertySChart(analytics.propertyS)}
-        </div>
-
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="bi bi-tags-fill text-green-600 mr-2"></i>
-          Rekap G & E
-        </h3>
-        <div class="space-y-4">
-          ${generateGeRecap(rawData)}
-        </div>
       </div>
 
-      <!-- Rekap GE by Marketing -->
+      <!--  -->
       <div class="bg-white rounded-xl shadow-lg p-6">
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="bi bi-person-badge-fill text-indigo-600 mr-2"></i>
-          Rekap GE by Marketing
-        </h3>
-        <div class="max-h-100 overflow-y-auto">
-          ${generateGeByMarketingChart(analytics.geByMarketing)}
-        </div>
       </div>
     </div>
 
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mt-6">
+      <h3 class="text-lg font-semibold mb-4 flex items-center">
+        <i class="bi bi-clock-history text-orange-600 mr-2"></i>
+        Aktivitas Terbaru
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left">Waktu</th>
+              <th class="px-4 py-2 text-left">SJ</th>
+              <th class="px-4 py-2 text-left">Marketing</th>
+              <th class="px-4 py-2 text-left">Item</th>
+              <th class="px-4 py-2 text-left">Status</th>
+              <th class="px-4 py-2 text-left">Ekspedisi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${generateRecentActivity(rawData.slice(0, 10))}
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -705,59 +580,30 @@ function renderDashboard() {
 function generateAnalytics(rawData) {
   const analytics = {
     totalItems: rawData.length,
-    totalSJ: new Set(rawData.map((item) => item.id_sj)).size,
-    totalMarketing: new Set(rawData.map((item) => item.id_mkt)).size,
+    totalSJ: new Set(rawData.map(item => item.id_sj)).size,
+    totalMarketing: new Set(rawData.map(item => item.id_mkt)).size,
     statusDistribution: {},
     ekspedisiStats: {},
-    efficiency: 0,
+    efficiency: 0
   };
 
   // Status distribution
-  rawData.forEach((item) => {
+  rawData.forEach(item => {
     const status = getItemStatus(item);
-    analytics.statusDistribution[status] =
-      (analytics.statusDistribution[status] || 0) + 1;
+    analytics.statusDistribution[status] = (analytics.statusDistribution[status] || 0) + 1;
   });
 
   // Ekspedisi stats
-  rawData.forEach((item) => {
+  rawData.forEach(item => {
     if (item.ekspedisi && item.ekspedisi.trim()) {
       const ekspedisi = item.ekspedisi.split('|')[0].trim();
-      analytics.ekspedisiStats[ekspedisi] =
-        (analytics.ekspedisiStats[ekspedisi] || 0) + 1;
+      analytics.ekspedisiStats[ekspedisi] = (analytics.ekspedisiStats[ekspedisi] || 0) + 1;
     }
   });
 
   // Calculate efficiency (finished items / total items)
-  const finishedItems = rawData.filter((item) => item.d_finish).length;
+  const finishedItems = rawData.filter(item => item.d_finish).length;
   analytics.efficiency = Math.round((finishedItems / rawData.length) * 100);
-
-  // Property S stats
-  rawData.forEach((item) => {
-    if (item.s && item.s.trim()) {
-      const propertyS = item.s.trim();
-      analytics.propertyS = analytics.propertyS || {};
-      analytics.propertyS[propertyS] =
-        (analytics.propertyS[propertyS] || 0) + 1;
-    }
-  });
-
-  // GE by Marketing stats
-  rawData.forEach((item) => {
-    if (item.ge && item.id_mkt) {
-      const marketing = cariById(item.id_mkt);
-      const marketingName = marketing ? marketing.mkt : `ID: ${item.id_mkt}`;
-
-      analytics.geByMarketing = analytics.geByMarketing || {};
-      if (!analytics.geByMarketing[marketingName]) {
-        analytics.geByMarketing[marketingName] = {};
-      }
-
-      const ge = item.ge.trim();
-      analytics.geByMarketing[marketingName][ge] =
-        (analytics.geByMarketing[marketingName][ge] || 0) + 1;
-    }
-  });
 
   return analytics;
 }
@@ -775,31 +621,29 @@ function generateMetricCards(analytics) {
       title: 'Item`s',
       value: analytics.totalItems,
       icon: 'bi-box-seam',
-      color: 'blue',
+      color: 'blue'
     },
     {
       title: 'S.J.',
       value: analytics.totalSJ,
       icon: 'bi-file-earmark-text',
-      color: 'green',
+      color: 'green'
     },
     {
       title: 'PIC',
       value: analytics.totalMarketing,
       icon: 'bi-people',
-      color: 'purple',
+      color: 'purple'
     },
     {
       title: 'Finish',
       value: `${analytics.efficiency}%`,
       icon: 'bi-speedometer2',
-      color: 'orange',
-    },
+      color: 'orange'
+    }
   ];
 
-  return metrics
-    .map(
-      (metric) => `
+  return metrics.map(metric => `
     <div class="bg-white rounded-xl shadow-lg p-2 hover:shadow-xl transition-shadow">
       <div class="flex items-center justify-between">
         <div>
@@ -811,27 +655,21 @@ function generateMetricCards(analytics) {
         </div>
       </div>
     </div>
-  `
-    )
-    .join('');
+  `).join('');
 }
 
 function generateStatusChart(statusDistribution) {
-  const total = Object.values(statusDistribution).reduce(
-    (sum, count) => sum + count,
-    0
-  );
+  const total = Object.values(statusDistribution).reduce((sum, count) => sum + count, 0);
   const colors = {
-    Selesai: 'bg-red-500',
+    'Selesai': 'bg-red-500',
     'Diproses WH': 'bg-yellow-500',
     'Disetujui SPV': 'bg-green-500',
-    Pending: 'bg-blue-500',
+    'Pending': 'bg-blue-500'
   };
 
-  return Object.entries(statusDistribution)
-    .map(([status, count]) => {
-      const percentage = Math.round((count / total) * 100);
-      return `
+  return Object.entries(statusDistribution).map(([status, count]) => {
+    const percentage = Math.round((count / total) * 100);
+    return `
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center">
           <div class="w-4 h-4 ${colors[status]} rounded mr-3"></div>
@@ -845,18 +683,15 @@ function generateStatusChart(statusDistribution) {
         </div>
       </div>
     `;
-    })
-    .join('');
+  }).join('');
 }
 
 function generateEkspedisiList(ekspedisiStats) {
   const sortedEkspedisi = Object.entries(ekspedisiStats)
-    .sort(([, a], [, b]) => b - a)
+    .sort(([,a], [,b]) => b - a)
     .slice(0, 5);
 
-  return sortedEkspedisi
-    .map(
-      ([ekspedisi, count]) => `
+  return sortedEkspedisi.map(([ekspedisi, count]) => `
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center">
         <i class="bi bi-truck text-blue-600 mr-3"></i>
@@ -866,228 +701,40 @@ function generateEkspedisiList(ekspedisiStats) {
         ${count}
       </span>
     </div>
-  `
-    )
-    .join('');
+  `).join('');
 }
 
-function generatePropertySChart(propertyS) {
-  if (!propertyS || Object.keys(propertyS).length === 0) {
-    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data properti S</p></div>';
-  }
-
-  const total = Object.values(propertyS).reduce((sum, count) => sum + count, 0);
-  const colors = [
-    'bg-blue-500',
-    'bg-green-500',
-    'bg-yellow-500',
-    'bg-red-500',
-    'bg-purple-500',
-    'bg-pink-500',
-    'bg-indigo-500',
-    'bg-gray-500',
-  ];
-
-  return Object.entries(propertyS)
-    .sort(([, a], [, b]) => b - a)
-    .map(([property, count], index) => {
-      const percentage = Math.round((count / total) * 100);
-      const colorClass = colors[index % colors.length];
-
-      return `
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center">
-            <div class="w-4 h-4 ${colorClass} rounded mr-3"></div>
-            <span class="text-sm text-gray-700 font-medium">${property}</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
-              <div class="${colorClass} h-2 rounded-full" style="width: ${percentage}%"></div>
-            </div>
-            <span class="text-sm font-medium">${count}</span>
-          </div>
-        </div>
-      `;
-    })
-    .join('');
-}
-
-function generateGeByMarketingChart(geByMarketing) {
-  if (!geByMarketing || Object.keys(geByMarketing).length === 0) {
-    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data GE by Marketing</p></div>';
-  }
-
-  return Object.entries(geByMarketing)
-    .sort(([, a], [, b]) => {
-      const totalA = Object.values(a).reduce((sum, count) => sum + count, 0);
-      const totalB = Object.values(b).reduce((sum, count) => sum + count, 0);
-      return totalB - totalA;
-    })
-    .map(([marketingName, geData]) => {
-      const totalForMarketing = Object.values(geData).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-
-      // Urutkan G dahulu, lalu E, lalu yang lain
-      const sortedGeData = Object.entries(geData).sort(([a], [b]) => {
-        if (a.toLowerCase() === 'g' && b.toLowerCase() !== 'g') return -1;
-        if (a.toLowerCase() !== 'g' && b.toLowerCase() === 'g') return 1;
-        if (
-          a.toLowerCase() === 'e' &&
-          b.toLowerCase() !== 'e' &&
-          b.toLowerCase() !== 'g'
-        )
-          return -1;
-        if (
-          a.toLowerCase() !== 'e' &&
-          b.toLowerCase() === 'e' &&
-          a.toLowerCase() !== 'g'
-        )
-          return 1;
-        return a.localeCompare(b);
-      });
-
-const geBreakdown = sortedGeData
-  .map(([ge, count]) => {
-    const geLabel = ge.toUpperCase();
-    if (geLabel === 'G') {
-      return `<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-bold text-xs">${geLabel}: ${count}</span>`;
-    }
-    return `<span class="font-bold">${geLabel}: ${count}</span>`;
-  })
-  .join(' | ');
-
-
-      return `
-<div class="flex items-center mb-3">
-  <!-- Kolom 1: 40% align start -->
-  <div class="w-[40%] flex items-center">
-    <span class="">${marketingName}</span>
-  </div>
-
-  <!-- Kolom 2: 40% align end -->
-  <div class="w-[40%] text-right text-xs text-gray-600 me-2">
-    ${geBreakdown}
-  </div>
-
-  <!-- Kolom 3: 10% align end -->
-  <div class="w-[10%] text-right">
-    <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
-      ${totalForMarketing}
-    </span>
-  </div>
-</div>
-      `;
-    })
-    .join('');
-}
-
-function generateGeRecap(rawData) {
-  if (!rawData || rawData.length === 0) {
-    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data GE</p></div>';
-  }
-
-  // Hitung total G dan E dari data.result.raw
-  const geStats = rawData.reduce((acc, item) => {
-    if (item.ge) {
-      const ge = item.ge.toLowerCase();
-      if (ge === 'g') {
-        acc.g += 1;
-      } else if (ge === 'e') {
-        acc.e += 1;
-      }
-      acc.total += 1;
-    }
-    return acc;
-  }, { g: 0, e: 0, total: 0 });
-
-  const gPercentage = geStats.total > 0 ? Math.round((geStats.g / geStats.total) * 100) : 0;
-  const ePercentage = geStats.total > 0 ? Math.round((geStats.e / geStats.total) * 100) : 0;
-
-  return `
-    <div class="space-y-4">
-
-
-      <!-- G Stats -->
-      <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-            G
-          </div>
-          <div>
-            <div class="font-semibold text-green-800">Grosir</div>
-            <div class="text-sm text-green-600">${gPercentage}% dari total</div>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-green-700">${geStats.g}</div>
-      </div>
-
-      <!-- E Stats -->
-      <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-            E
-          </div>
-          <div>
-            <div class="font-semibold text-blue-800">Ecer</div>
-            <div class="text-sm text-blue-600">${ePercentage}% dari total</div>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-blue-700">${geStats.e}</div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="space-y-2">
-        <div class="flex justify-between text-sm text-gray-600">
-          <span>Rasio : G | E</span>
-          <span>${gPercentage}% : ${ePercentage}%</span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div class="h-full flex">
-            <div class="bg-green-500 transition-all duration-300" style="width: ${gPercentage}%"></div>
-            <div class="bg-blue-500 transition-all duration-300" style="width: ${ePercentage}%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
 function generateRecentActivity(recentData) {
-  return recentData
-    .map((item) => {
-      const status = getItemStatus(item);
-      const statusColors = {
-        Selesai: 'bg-green-100 text-green-800',
-        'Diproses WH': 'bg-yellow-100 text-yellow-800',
-        'Disetujui SPV': 'bg-blue-100 text-blue-800',
-        Pending: 'bg-red-100 text-red-800',
-      };
+  return recentData.map(item => {
+    const status = getItemStatus(item);
+    const statusColors = {
+      'Selesai': 'bg-green-100 text-green-800',
+      'Diproses WH': 'bg-yellow-100 text-yellow-800',
+      'Disetujui SPV': 'bg-blue-100 text-blue-800',
+      'Pending': 'bg-red-100 text-red-800'
+    };
 
-      const marketing = cariById(item.id_mkt);
-      const time = new Date(item.stamp_sj).toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+    const marketing = cariById(item.id_mkt);
+    const time = new Date(item.stamp_sj).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 
-      return `
+    return `
       <tr class="border-b hover:bg-gray-50">
         <td class="px-4 py-2">${time}</td>
         <td class="px-4 py-2 font-medium">${item.id_sj}</td>
         <td class="px-4 py-2">${marketing ? marketing.mkt : 'Unknown'}</td>
         <td class="px-4 py-2 truncate max-w-xs">${item.k}</td>
         <td class="px-4 py-2">
-          <span class="px-2 py-1 rounded-full text-xs font-medium ${
-            statusColors[status]
-          }">
+          <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColors[status]}">
             ${status}
           </span>
         </td>
         <td class="px-4 py-2 text-sm">${item.ekspedisi || '-'}</td>
       </tr>
     `;
-    })
-    .join('');
+  }).join('');
 }
 
 function modalStockLainya(mode) {
@@ -1104,7 +751,7 @@ function modalStockLainya(mode) {
 
   // Generate content berdasarkan mode
   let content = '';
-
+  
   if (mode === 'tambah') {
     content = generateTambahStockContent();
   } else if (mode === 'switch') {
@@ -1271,62 +918,4 @@ function initializeEventListeners() {
 
   // Helper Input Listener
   $(document).on('keypress', '.input-hlp', helperInputHandler);
-}
-
-// Initialize activity search functionality
-function initializeActivitySearch(originalData) {
-  const searchInput = document.getElementById('searchActivity');
-  const tableBody = document.getElementById('activityTableBody');
-  const totalCount = document.getElementById('totalCount');
-
-  if (!searchInput || !tableBody || !totalCount) return;
-
-  searchInput.addEventListener('input', function () {
-    const searchTerm = this.value.toLowerCase().trim();
-
-    if (!searchTerm) {
-      // Show all data if search is empty
-      tableBody.innerHTML = generateDetailedRecentActivity(originalData);
-      totalCount.textContent = originalData.length;
-      return;
-    }
-
-    // Split search terms for flexible matching
-    const searchTerms = searchTerm
-      .split(/\s+/)
-      .filter((term) => term.length > 0);
-
-    const filteredData = originalData.filter((item) => {
-      const status = getItemStatus(item);
-      const marketing = cariById(item.id_mkt);
-      const time = new Date(item.stamp_sj).toLocaleString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-
-      // Create searchable text combining all fields
-      const searchableText = [
-        time, // waktu
-        item.id_sj, // sj
-        marketing ? marketing.mkt : '', // marketing
-        item.k, // item name
-        item.id_stock, // id_stock
-        status, // status
-        item.ekspedisi || '', // ekspedisi
-        `${item.rak} ${item.kol}`, // lokasi
-        `${item.qty} ${item.ge}`, // qty
-      ]
-        .join(' ')
-        .toLowerCase();
-
-      // Check if all search terms are found in the searchable text
-      return searchTerms.every((term) => searchableText.includes(term));
-    });
-
-    // Update table with filtered results
-    tableBody.innerHTML = generateDetailedRecentActivity(filteredData);
-    totalCount.textContent = filteredData.length;
-  });
 }
