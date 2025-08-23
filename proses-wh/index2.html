@@ -255,7 +255,6 @@
         <div class="flex gap-4">
           <!-- Dashboard -->
           <button
-            onclick="renderDashboard()"
             class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 shadow"
           >
             <i class="bi bi-speedometer2 text-xl"></i>
@@ -264,7 +263,6 @@
 
           <!-- Plus -->
           <button
-            onclick="modalStockLainya('tambah')"
             class="w-16 h-16 flex flex-col items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 active:scale-95 shadow"
           >
             <i class="bi bi-plus-circle text-xl"></i>
@@ -767,7 +765,7 @@
               </div>`;
             })
             .join('');
-
+          
           $('#modal-content-layer-2 .list-stock').html(html);
         });
       }
