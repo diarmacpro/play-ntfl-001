@@ -273,12 +273,14 @@ function renderDetailByIdSj(idSj) {
         </button>
 
         <button onclick="showAlert('${item.notes}',7000)" 
-                class="px-1 py-0.5 text-white rounded focus:outline-none focus:ring-2 transition ${
-                  !item.notes || item.notes.trim() === ''
-                    ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400 active:bg-gray-400 focus:ring-gray-300'
-                    : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:ring-green-400'
-                }" 
-                ${!item.notes || item.notes.trim() === '' ? 'disabled' : ''}>
+                class="px-1 py-0.5 bg-green-600 text-white rounded 
+                      hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 
+                      transition ${
+                        !item.notes
+                          ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400 active:bg-gray-400'
+                          : ''
+                      }" 
+                ${!item.notes ? 'disabled' : ''}>
           <i class="bi bi-file-text-fill"></i>
         </button>
 
@@ -585,15 +587,11 @@ function generateDetailedRecentActivity(rawData) {
       return `
         <tr class="${rowClass} border-b hover:bg-blue-50 transition-colors">
           <td class="px-4 w-[7%] border border-e py-3 font-mono text-xs">${time}</td>
-          <td class="px-4 w-[7%] border border-e py-3 font-bold text-blue-600">${
-            item.id_sj
-          }</td>
-          <td class="px-4 w-[14%] border border-e py-3">${
-            marketing ? marketing.mkt : 'Unknown'
-          }</td>
-          <td class="px-4 w-[40%] border border-e py-3 truncate max-w-xs" title="${
-            item.k
-          }">${item.k}</td>
+          <td class="px-4 w-[7%] border border-e py-3 font-bold text-blue-600">${item.id_sj}</td>
+          <td class="px-4 w-[14%] border border-e py-3">${marketing ? marketing.mkt : 'Unknown'}</td>
+          <td class="px-4 w-[40%] border border-e py-3 truncate max-w-xs" title="${item.k}">${
+        item.k
+      }</td>
           <td class="px-4 w-[10%] border border-e py-3 font-mono">
             <span class="font-bold">${item.qty}</span> 
             <span class="text-gray-600">${item.ge}</span>
@@ -643,7 +641,7 @@ function renderDashboard() {
   </div>
 
   <!-- Wrapper overflow agar fit height -->
-  <div class="h-[75vh] overflow-y-auto">
+  <div class="h-[73vh] overflow-y-auto">
 
 <!-- Charts Section -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -662,13 +660,14 @@ function renderDashboard() {
           ${generateGeByMarketingChart(analytics.geByMarketing)}
         </div>
 
-        <h3 class="text-lg font-semibold mb-4 flex items-center">
-          <i class="bi bi-pie-chart-fill text-blue-600 mr-2"></i>
-          Distribusi SJ
-        </h3>
-        <div id="statusChart" class="space-y-3 mb-0">
-          ${generateStatusChart(analytics.statusDistribution)}
-        </div>
+    <h3 class="text-lg font-semibold mb-4 flex items-center">
+      <i class="bi bi-truck text-green-600 mr-2"></i>
+      Ekspedisi
+    </h3>
+    <div class="max-h-[130px] overflow-y-auto space-y-3">
+      ${generateEkspedisiList(analytics.ekspedisiStats)}
+    </div>
+    
   </div>
 
   <!-- Rekap Qty, GE, Marketing -->
@@ -680,20 +679,20 @@ function renderDashboard() {
           <i class="bi bi-tags-fill text-purple-600 mr-2"></i>
           Qty by Satuan
         </h3>
-        <div class="mb-0">
+        <div class="space-y-3 mb-0">
           ${generatePropertySChart(analytics.propertyS)}
         </div>
       </div>
 
+      <!-- Rekap GE by Marketing -->
       <div>
-
-    <h3 class="text-lg font-semibold mb-4 flex items-center">
-      <i class="bi bi-truck text-green-600 mr-2"></i>
-      Ekspedisi
-    </h3>
-    <div class="h-[190px]">
-      <canvas id="ekspedisiChart"></canvas>
-    </div>
+        <h3 class="text-lg font-semibold mb-4 flex items-center">
+          <i class="bi bi-pie-chart-fill text-blue-600 mr-2"></i>
+          Distribusi SJ
+        </h3>
+        <div id="statusChart" class="space-y-3 mb-0">
+          ${generateStatusChart(analytics.statusDistribution)}
+        </div>
       </div>
     </div>
 
@@ -701,10 +700,10 @@ function renderDashboard() {
     <div class="mt-4">
       <h3 class="text-lg font-semibold mb-4 flex items-center">
         <i class="bi bi-bar-chart-fill text-red-600 mr-2"></i>
-        Grosir & Ecer by Marketing
+        Rekap Tambahan
       </h3>
-      <div id="chartGEbyMarketing" class="h-64">
-        <canvas id="geMarketingChart"></canvas>
+      <div id="chartGEbyMarketing">
+        <h1>....CC</h1>
       </div>
     </div>
   </div>
@@ -716,225 +715,6 @@ function renderDashboard() {
 </div>
 
   `;
-
-  // Initialize Chart.js after DOM is ready
-  setTimeout(() => {
-    initializeGEMarketingChart(analytics.geByMarketing);
-    initializeEkspedisiChart(analytics.ekspedisiStats);
-    if (analytics.propertyS && Object.keys(analytics.propertyS).length > 0) {
-      initializeQtySatuanChart(analytics.propertyS);
-    }
-  }, 100);
-}
-
-function initializeGEMarketingChart(geByMarketing) {
-  const canvas = document.getElementById('geMarketingChart');
-  if (!canvas || !geByMarketing) return;
-
-  const ctx = canvas.getContext('2d');
-
-  // Destroy existing chart if it exists
-  if (window.geChart) {
-    window.geChart.destroy();
-  }
-
-  // Prepare data for Chart.js
-  const marketingNames = Object.keys(geByMarketing);
-  const gData = marketingNames.map(
-    (name) => geByMarketing[name]['G'] || geByMarketing[name]['g'] || 0
-  );
-  const eData = marketingNames.map(
-    (name) => geByMarketing[name]['E'] || geByMarketing[name]['e'] || 0
-  );
-
-  // Create the chart
-  window.geChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: marketingNames,
-      datasets: [
-        {
-          label: 'Grosir (G)',
-          data: gData,
-          borderColor: 'rgb(239, 68, 68)', // red-500
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          borderWidth: 3,
-          fill: false,
-          tension: 0.4,
-          pointBackgroundColor: 'rgb(239, 68, 68)',
-          pointBorderColor: 'rgb(239, 68, 68)',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        },
-        {
-          label: 'Ecer (E)',
-          data: eData,
-          borderColor: 'rgba(59, 130, 246, 0.7)', // blue-500 with 70% opacity
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 3,
-          fill: false,
-          tension: 0.4,
-          pointBackgroundColor: 'rgba(59, 130, 246, 0.7)',
-          pointBorderColor: 'rgba(59, 130, 246, 0.7)',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: 'Grosir & Ecer by Marketing',
-          font: {
-            size: 16,
-            weight: 'bold',
-          },
-        },
-        legend: {
-          display: true,
-          position: 'top',
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)',
-          },
-          ticks: {
-            stepSize: 1,
-          },
-        },
-        x: {
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)',
-          },
-          ticks: {
-            maxRotation: 45,
-            minRotation: 0,
-          },
-        },
-      },
-      interaction: {
-        intersect: false,
-        mode: 'index',
-      },
-      hover: {
-        animationDuration: 200,
-      },
-      animation: {
-        duration: 1000,
-        easing: 'easeInOutQuart',
-      },
-    },
-  });
-}
-
-function initializeQtySatuanChart(propertyS) {
-  const canvas = document.getElementById('qtySatuanChart');
-  if (!canvas || !propertyS || Object.keys(propertyS).length === 0) return;
-
-  const ctx = canvas.getContext('2d');
-
-  // Destroy existing chart if it exists
-  if (
-    window.qtySatuanChart &&
-    typeof window.qtySatuanChart.destroy === 'function'
-  ) {
-    window.qtySatuanChart.destroy();
-  }
-  window.qtySatuanChart = null;
-
-  // Prepare data for Chart.js
-  const sortedData = Object.entries(propertyS).sort(([, a], [, b]) => b - a);
-  const labels = sortedData.map(([property]) => property);
-  const data = sortedData.map(([, count]) => count);
-
-  // Define colors for the pie chart
-  const colors = [
-    'rgba(59, 130, 246, 0.8)', // blue-500
-    'rgba(34, 197, 94, 0.8)', // green-500
-    'rgba(234, 179, 8, 0.8)', // yellow-500
-    'rgba(239, 68, 68, 0.8)', // red-500
-    'rgba(147, 51, 234, 0.8)', // purple-500
-    'rgba(236, 72, 153, 0.8)', // pink-500
-    'rgba(99, 102, 241, 0.8)', // indigo-500
-    'rgba(107, 114, 128, 0.8)', // gray-500
-  ];
-
-  const borderColors = [
-    'rgb(59, 130, 246)', // blue-500
-    'rgb(34, 197, 94)', // green-500
-    'rgb(234, 179, 8)', // yellow-500
-    'rgb(239, 68, 68)', // red-500
-    'rgb(147, 51, 234)', // purple-500
-    'rgb(236, 72, 153)', // pink-500
-    'rgb(99, 102, 241)', // indigo-500
-    'rgb(107, 114, 128)', // gray-500
-  ];
-
-  // Create the pie chart
-  window.qtySatuanChart = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          data: data,
-          backgroundColor: colors.slice(0, labels.length),
-          borderColor: borderColors.slice(0, labels.length),
-          borderWidth: 2,
-          hoverOffset: 4,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: 'Qty by Satuan',
-          font: {
-            size: 14,
-            weight: 'bold',
-          },
-        },
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: {
-            padding: 15,
-            usePointStyle: true,
-            font: {
-              size: 12,
-            },
-          },
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const label = context.label || '';
-              const value = context.parsed;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = Math.round((value / total) * 100);
-              return `${label}: ${value} (${percentage}%)`;
-            },
-          },
-        },
-      },
-      animation: {
-        duration: 1000,
-        easing: 'easeInOutQuart',
-      },
-      hover: {
-        animationDuration: 200,
-      },
-    },
-  });
 }
 
 function generateAnalytics(rawData) {
@@ -944,7 +724,6 @@ function generateAnalytics(rawData) {
     totalMarketing: new Set(rawData.map((item) => item.id_mkt)).size,
     statusDistribution: {},
     ekspedisiStats: {},
-    propertyS: {},
     efficiency: 0,
   };
 
@@ -959,12 +738,8 @@ function generateAnalytics(rawData) {
   rawData.forEach((item) => {
     if (item.ekspedisi && item.ekspedisi.trim()) {
       const ekspedisi = item.ekspedisi.split('|')[0].trim();
-
-      // Normalize ekspedisi name to Camel Case and group JNT variants
-      let normalizedEkspedisi = normalizeEkspedisiName(ekspedisi);
-
-      analytics.ekspedisiStats[normalizedEkspedisi] =
-        (analytics.ekspedisiStats[normalizedEkspedisi] || 0) + 1;
+      analytics.ekspedisiStats[ekspedisi] =
+        (analytics.ekspedisiStats[ekspedisi] || 0) + 1;
     }
   });
 
@@ -976,6 +751,7 @@ function generateAnalytics(rawData) {
   rawData.forEach((item) => {
     if (item.s && item.s.trim()) {
       const propertyS = item.s.trim();
+      analytics.propertyS = analytics.propertyS || {};
       analytics.propertyS[propertyS] =
         (analytics.propertyS[propertyS] || 0) + 1;
     }
@@ -999,154 +775,6 @@ function generateAnalytics(rawData) {
   });
 
   return analytics;
-}
-
-// Function to normalize ekspedisi names to Camel Case and group JNT variants
-function normalizeEkspedisiName(ekspedisi) {
-  if (!ekspedisi || typeof ekspedisi !== 'string') return 'Unknown';
-
-  const trimmed = ekspedisi.trim();
-
-  // Group JNT variants (case insensitive)
-  if (trimmed.toLowerCase() === 'jnt' || trimmed.toLowerCase() === 'j&t') {
-    return 'JNT';
-  }
-
-  // Convert to Camel Case
-  return trimmed
-    .toLowerCase()
-    .split(/[\s\-_]+/)
-    .map((word, index) => {
-      if (index === 0) {
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      }
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(' ');
-}
-
-// Initialize Ekspedisi Bar Chart
-function initializeEkspedisiChart(ekspedisiStats) {
-  const canvas = document.getElementById('ekspedisiChart');
-  if (!canvas || !ekspedisiStats || Object.keys(ekspedisiStats).length === 0)
-    return;
-
-  const ctx = canvas.getContext('2d');
-
-  // Set canvas to maximum height
-  canvas.style.height = '100%';
-  canvas.style.maxHeight = '100vh';
-
-  // Destroy existing chart if it exists
-  if (
-    window.ekspedisiChart &&
-    typeof window.ekspedisiChart.destroy === 'function'
-  ) {
-    window.ekspedisiChart.destroy();
-  }
-
-  // Sort ekspedisi by count (descending) and take top 8
-  const sortedEkspedisi = Object.entries(ekspedisiStats)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 8);
-
-  const labels = sortedEkspedisi.map(([name]) => name);
-  const data = sortedEkspedisi.map(([, count]) => count);
-
-  // Generate colors for bars
-  const colors = [
-    'rgba(34, 197, 94, 0.8)', // green-500
-    'rgba(59, 130, 246, 0.8)', // blue-500
-    'rgba(239, 68, 68, 0.8)', // red-500
-    'rgba(234, 179, 8, 0.8)', // yellow-500
-    'rgba(147, 51, 234, 0.8)', // purple-500
-    'rgba(236, 72, 153, 0.8)', // pink-500
-    'rgba(99, 102, 241, 0.8)', // indigo-500
-    'rgba(107, 114, 128, 0.8)', // gray-500
-  ];
-
-  const borderColors = [
-    'rgb(34, 197, 94)', // green-500
-    'rgb(59, 130, 246)', // blue-500
-    'rgb(239, 68, 68)', // red-500
-    'rgb(234, 179, 8)', // yellow-500
-    'rgb(147, 51, 234)', // purple-500
-    'rgb(236, 72, 153)', // pink-500
-    'rgb(99, 102, 241)', // indigo-500
-    'rgb(107, 114, 128)', // gray-500
-  ];
-
-  // Create the bar chart
-  window.ekspedisiChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Jumlah Pengiriman',
-          data: data,
-          backgroundColor: colors.slice(0, labels.length),
-          borderColor: borderColors.slice(0, labels.length),
-          borderWidth: 2,
-          borderRadius: 4,
-          borderSkipped: false,
-        },
-      ],
-    },
-    options: {
-      maintainAspectRatio: false,
-      responsive: true,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${context.parsed.y} pengiriman`;
-            },
-          },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)',
-          },
-          ticks: {
-            stepSize: 10,
-            font: {
-              size: 10,
-            },
-          },
-        },
-        x: {
-          grid: {
-            display: true,
-          },
-          ticks: {
-            maxRotation: 45,
-            minRotation: 0,
-            font: {
-              size: 10,
-            },
-          },
-        },
-      },
-      interaction: {
-        intersect: false,
-        mode: 'index',
-      },
-      hover: {
-        animationDuration: 200,
-      },
-      animation: {
-        duration: 1000,
-        easing: 'easeInOutQuart',
-      },
-    },
-  });
 }
 
 function getItemStatus(item) {
@@ -1260,15 +888,46 @@ function generateEkspedisiList(ekspedisiStats) {
 
 function generatePropertySChart(propertyS) {
   if (!propertyS || Object.keys(propertyS).length === 0) {
-    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data Qty by Satuan</p></div>';
+    return '<div class="text-center py-8 text-gray-500"><i class="bi bi-inbox text-4xl mb-2"></i><p>Tidak ada data properti S</p></div>';
   }
 
-  return `
-    <div class="h-48">
-      <canvas id="qtySatuanChart"></canvas>
-    </div>
-  `;
+  const total = Object.values(propertyS).reduce((sum, count) => sum + count, 0);
+  const colors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-red-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-indigo-500',
+    'bg-gray-500',
+  ];
+
+  return Object.entries(propertyS)
+    .sort(([, a], [, b]) => b - a)
+    .map(([property, count], index) => {
+      const percentage = Math.round((count / total) * 100);
+      const colorClass = colors[index % colors.length];
+
+      return `
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center">
+            <div class="w-4 h-4 ${colorClass} rounded mr-3"></div>
+            <span class="text-sm text-gray-700 font-medium">${property}</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
+              <div class="${colorClass} h-2 rounded-full" style="width: ${percentage}%"></div>
+            </div>
+            <span class="text-sm font-medium">${count}</span>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
 }
+
+
 
 function generateGeByMarketingChart(geByMarketing) {
   if (!geByMarketing || Object.keys(geByMarketing).length === 0) {
@@ -1276,50 +935,46 @@ function generateGeByMarketingChart(geByMarketing) {
   }
 
   // Hitung total G dan E untuk setiap marketing, pastikan G dan E selalu ada
-  const marketingWithTotals = Object.entries(geByMarketing).map(
-    ([marketingName, geData]) => {
-      const gCount = geData['g'] || geData['G'] || 0;
-      const eCount = geData['e'] || geData['E'] || 0;
-      const totalForMarketing = Object.values(geData).reduce(
-        (sum, count) => sum + count,
-        0
-      );
-
-      return {
-        marketingName,
-        geData: {
-          G: gCount,
-          E: eCount,
-          ...geData,
-        },
-        gCount,
-        eCount,
-        totalForMarketing,
-      };
-    }
-  );
+  const marketingWithTotals = Object.entries(geByMarketing).map(([marketingName, geData]) => {
+    const gCount = geData['g'] || geData['G'] || 0;
+    const eCount = geData['e'] || geData['E'] || 0;
+    const totalForMarketing = Object.values(geData).reduce((sum, count) => sum + count, 0);
+    
+    return {
+      marketingName,
+      geData: {
+        G: gCount,
+        E: eCount,
+        ...geData
+      },
+      gCount,
+      eCount,
+      totalForMarketing
+    };
+  });
 
   // Urutkan berdasarkan G tertinggi, lalu total tertinggi
-  const sortedMarketing = marketingWithTotals.sort((a, b) => {
-    if (b.gCount !== a.gCount) {
-      return b.gCount - a.gCount; // G tertinggi dulu
-    }
-    return b.totalForMarketing - a.totalForMarketing; // lalu total tertinggi
-  });
+  const sortedMarketing = marketingWithTotals
+    .sort((a, b) => {
+      if (b.gCount !== a.gCount) {
+        return b.gCount - a.gCount; // G tertinggi dulu
+      }
+      return b.totalForMarketing - a.totalForMarketing; // lalu total tertinggi
+    });
 
   return sortedMarketing
     .map(({ marketingName, geData, totalForMarketing }) => {
       // Pastikan G dan E selalu ditampilkan, bahkan jika 0
       const gCount = geData['G'] || 0;
       const eCount = geData['E'] || 0;
-
+      
       // Buat array untuk menampilkan G dan E dulu, lalu yang lain
       const displayOrder = [];
-
+      
       // Selalu tampilkan G dan E dulu
       displayOrder.push(['G', gCount]);
       displayOrder.push(['E', eCount]);
-
+      
       // Tambahkan yang lain (selain G dan E)
       Object.entries(geData).forEach(([ge, count]) => {
         if (ge.toUpperCase() !== 'G' && ge.toUpperCase() !== 'E') {
@@ -1366,26 +1021,21 @@ function generateGeRecap(rawData) {
   }
 
   // Hitung total G dan E dari data.result.raw
-  const geStats = rawData.reduce(
-    (acc, item) => {
-      if (item.ge) {
-        const ge = item.ge.toLowerCase();
-        if (ge === 'g') {
-          acc.g += 1;
-        } else if (ge === 'e') {
-          acc.e += 1;
-        }
-        acc.total += 1;
+  const geStats = rawData.reduce((acc, item) => {
+    if (item.ge) {
+      const ge = item.ge.toLowerCase();
+      if (ge === 'g') {
+        acc.g += 1;
+      } else if (ge === 'e') {
+        acc.e += 1;
       }
-      return acc;
-    },
-    { g: 0, e: 0, total: 0 }
-  );
+      acc.total += 1;
+    }
+    return acc;
+  }, { g: 0, e: 0, total: 0 });
 
-  const gPercentage =
-    geStats.total > 0 ? Math.round((geStats.g / geStats.total) * 100) : 0;
-  const ePercentage =
-    geStats.total > 0 ? Math.round((geStats.e / geStats.total) * 100) : 0;
+  const gPercentage = geStats.total > 0 ? Math.round((geStats.g / geStats.total) * 100) : 0;
+  const ePercentage = geStats.total > 0 ? Math.round((geStats.e / geStats.total) * 100) : 0;
 
   return `
     <div class="space-y-4">
