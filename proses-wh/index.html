@@ -127,6 +127,45 @@
     </style>
   </head>
   <body class="h-screen flex">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full mx-4">
+        <div class="text-center">
+          <div class="mb-6">
+            <i class="bi bi-arrow-clockwise text-6xl text-blue-600 animate-spin"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">Memuat Data</h3>
+          <div class="mb-4">
+            <div class="bg-gray-200 rounded-full h-3 overflow-hidden">
+              <div id="progressBar" class="bg-blue-600 h-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600 mt-2">
+              <span id="progressText">Memulai...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+          </div>
+          <div id="loadingSteps" class="text-left space-y-2">
+            <div id="step1" class="flex items-center text-sm">
+              <i class="bi bi-circle text-gray-400 mr-2"></i>
+              <span class="text-gray-600">Memuat data marketing...</span>
+            </div>
+            <div id="step2" class="flex items-center text-sm">
+              <i class="bi bi-circle text-gray-400 mr-2"></i>
+              <span class="text-gray-600">Memuat data helper...</span>
+            </div>
+            <div id="step3" class="flex items-center text-sm">
+              <i class="bi bi-circle text-gray-400 mr-2"></i>
+              <span class="text-gray-600">Memuat data barang...</span>
+            </div>
+            <div id="step4" class="flex items-center text-sm">
+              <i class="bi bi-circle text-gray-400 mr-2"></i>
+              <span class="text-gray-600">Memuat data surat jalan...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div
       id="alertModal"
       class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between gap-3 z-50 text-4xl"
@@ -309,7 +348,7 @@
             <i class="bi bi-arrow-clockwise text-lg"></i>
           </button>
           <button
-            onclick="closeDetail()"
+            onclick="renderDashboard()"
             class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-lg"
           >
             <i class="bi bi-x-lg text-lg"></i>
@@ -429,6 +468,7 @@
       var data = {};
       var tempData = {};
       let fbsSvc, fbsSvcX;
+      let isLoading = false;
 
       var countSumaryData = {
         totalData: 0,
@@ -437,6 +477,199 @@
         totalRetur: 0,
         totalEkspedisi: 0,
       };
+
+      // Loading Progress Management
+      const loadingSteps = [
+        { id: 'step1', text: 'Memuat data marketing...', weight: 25 },
+        { id: 'step2', text: 'Memuat data helper...', weight: 25 },
+        { id: 'step3', text: 'Memuat data barang...', weight: 25 },
+        { id: 'step4', text: 'Memuat data surat jalan...', weight: 25 }
+      ];
+
+      let currentProgress = 0;
+      let completedSteps = 0;
+
+      function showLoading() {
+        isLoading = true;
+        currentProgress = 0;
+        completedSteps = 0;
+        
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').textContent = 'Memulai...';
+        document.getElementById('progressPercent').textContent = '0%';
+        
+        // Reset all steps
+        loadingSteps.forEach(step => {
+          const stepElement = document.getElementById(step.id);
+          stepElement.querySelector('i').className = 'bi bi-circle text-gray-400 mr-2';
+          stepElement.querySelector('span').className = 'text-gray-600';
+        });
+      }
+
+      function updateProgress(stepId, status = 'loading') {
+        const step = loadingSteps.find(s => s.id === stepId);
+        if (!step) return;
+
+        const stepElement = document.getElementById(stepId);
+        const icon = stepElement.querySelector('i');
+        const text = stepElement.querySelector('span');
+
+        if (status === 'loading') {
+          icon.className = 'bi bi-arrow-clockwise text-blue-600 mr-2 animate-spin';
+          text.className = 'text-blue-600 font-medium';
+          document.getElementById('progressText').textContent = step.text;
+        } else if (status === 'completed') {
+          icon.className = 'bi bi-check-circle-fill text-green-600 mr-2';
+          text.className = 'text-green-600 font-medium';
+          completedSteps++;
+          currentProgress = (completedSteps / loadingSteps.length) * 100;
+          
+          document.getElementById('progressBar').style.width = currentProgress + '%';
+          document.getElementById('progressPercent').textContent = Math.round(currentProgress) + '%';
+          
+          if (completedSteps === loadingSteps.length) {
+            setTimeout(() => {
+              document.getElementById('progressText').textContent = 'Selesai!';
+              hideLoading();
+            }, 500);
+          }
+        } else if (status === 'error') {
+          icon.className = 'bi bi-x-circle-fill text-red-600 mr-2';
+          text.className = 'text-red-600 font-medium';
+        }
+      }
+
+      function hideLoading() {
+        setTimeout(() => {
+          document.getElementById('loadingOverlay').classList.add('hidden');
+          isLoading = false;
+  const initialId = gtQrl("idSj");
+  if (initialId) {
+    activateCard(initialId);
+  }
+        }, 300);
+      }
+
+      // Enhanced reload function
+      function reloadFetch() {
+        if (isLoading) {
+          showAlert('Sedang memuat data, harap tunggu...', 2000);
+          return;
+        }
+
+        showLoading();
+        loadAllData();
+      }
+
+      function loadAllData() {
+        const params = new URLSearchParams(window.location.search);
+        const currentDate = params.get('tgl') || stm('t');
+        
+        // Reset data
+        data = {};
+        tempData = {};
+        countSumaryData = {
+          totalData: 0,
+          totalOnline: 0,
+          totalOffline: 0,
+          totalRetur: 0,
+          totalEkspedisi: 0,
+        };
+
+        // Step 1: Load Marketing Data
+        updateProgress('step1', 'loading');
+        fbsSvc.gDt('/user', '', (d) => {
+          try {
+            let arr = [];
+            if (Array.isArray(d)) {
+              arr = d;
+            } else if (d && typeof d === 'object') {
+              arr = Object.values(d);
+            }
+
+            data.nmMkt = arr.map((val) => ({
+              usr: val.usr || '',
+              mkt: val.mkt || '',
+              id_mkt: val.id_mkt || '',
+            }));
+
+            updateProgress('step1', 'completed');
+            loadHelperData();
+          } catch (error) {
+            console.error('Error loading marketing data:', error);
+            updateProgress('step1', 'error');
+            showAlert('Gagal memuat data marketing', 3000);
+          }
+        });
+      }
+
+      function loadHelperData() {
+        updateProgress('step2', 'loading');
+        fbsSvcX.gDt('app/data/helper', '', (d) => {
+          try {
+            let arr = [];
+            if (Array.isArray(d)) {
+              arr = d;
+            } else if (d && typeof d === 'object') {
+              arr = Object.values(d);
+            }
+
+            data.helper = arr
+              .filter((val) => val.stts !== '' && val.stts !== 0)
+              .map((val) => ({
+                hlp: val.hlp || '',
+                id_hlp: val.id_hlp || '',
+              }));
+
+            updateProgress('step2', 'completed');
+            loadBarangData();
+          } catch (error) {
+            console.error('Error loading helper data:', error);
+            updateProgress('step2', 'error');
+            showAlert('Gagal memuat data helper', 3000);
+          }
+        });
+      }
+
+      function loadBarangData() {
+        updateProgress('step3', 'loading');
+        ambilDataBarang((hasil) => {
+          try {
+            if (hasil && hasil.length > 0) {
+              updateProgress('step3', 'completed');
+              loadSuratJalanData();
+            } else {
+              throw new Error('Data barang kosong');
+            }
+          } catch (error) {
+            console.error('Error loading barang data:', error);
+            updateProgress('step3', 'error');
+            showAlert('Gagal memuat data barang', 3000);
+          }
+        });
+      }
+
+      function loadSuratJalanData() {
+        const params = new URLSearchParams(window.location.search);
+        const currentDate = params.get('tgl') || stm('t');
+        
+        updateProgress('step4', 'loading');
+        prosesDataSJ('https://cdn.weva.my.id/apix/dtSj', { tgl: currentDate }, (result) => {
+          try {
+            data.result = result;
+            data.dataside = data.result.summary;
+            renderElemenSummary(data.dataside);
+            renderJumlahDataSummary();
+            
+            updateProgress('step4', 'completed');
+          } catch (error) {
+            console.error('Error loading surat jalan data:', error);
+            updateProgress('step4', 'error');
+            showAlert('Gagal memuat data surat jalan', 3000);
+          }
+        });
+      }
 
       // Cari data marketing by ID
       function cariById(id) {
@@ -594,6 +827,14 @@
         // Initialize all event listeners once
         initializeEventListeners();
 
+        // Show loading and start data loading process
+        showLoading();
+        loadAllData();
+      });
+    </script>
+
+    <script>
+      $(function() {
         // fbsSvcX.gDt('layer2','',(d)=>{
         //   let arr = [];
 
@@ -613,49 +854,6 @@
         //     return groups;
         //   }, {});
         // });
-
-        fbsSvcX.gDt('app/data/helper', '', (d) => {
-          let arr = [];
-
-          if (Array.isArray(d)) {
-            arr = d;
-          } else if (d && typeof d === 'object') {
-            arr = Object.values(d);
-          } else {
-            console.warn('Data helper tidak valid:', d);
-          }
-
-          data.helper = arr
-            .filter((val) => val.stts !== '' && val.stts !== 0) // filter stts kosong atau 0
-            .map((val) => ({
-              hlp: val.hlp || '',
-              id_hlp: val.id_hlp || '',
-            }));
-        });
-
-        fbsSvc.gDt('/user', '', (d) => {
-          let arr = [];
-
-          if (Array.isArray(d)) {
-            arr = d;
-          } else if (d && typeof d === 'object') {
-            arr = Object.values(d);
-          } else {
-            console.warn('Data marketing tidak valid:', d);
-          }
-
-          data.nmMkt = arr.map((val) => ({
-            usr: val.usr || '',
-            mkt: val.mkt || '',
-            id_mkt: val.id_mkt || '',
-          }));
-
-          loadDataSJ(initDate);
-
-          ambilDataBarang((d) => {
-            console.log(data.kain);
-          });
-        });
       });
     </script>
 
@@ -783,6 +981,32 @@
           $('#modal-content-layer-2 .list-stock').html(html);
         });
       }
+
+function activateCard(idSj) {
+  console.log(`Load Detail ${idSj}`);
+  if (!idSj) return;
+
+  // Update query param di URL
+  stQrl("idSj", idSj);
+
+  // Ambil data
+  tempData = cariByIdSj(idSj);
+
+  // Reset highlight
+  document.querySelectorAll("#summary > div").forEach((el) => {
+    el.classList.remove("bg-yellow-200", "border", "border-yellow-500");
+  });
+
+  // Tambahkan tanda aktif pada card yang sesuai
+  const card = document.querySelector(`#summary > div[data-id-sj="${idSj}"]`);
+  if (card) {
+    card.classList.add("bg-yellow-200", "border", "border-yellow-500");
+  }
+
+  // Render detail
+  renderDetailByIdSj(idSj);
+}
     </script>
+    
   </body>
 </html>

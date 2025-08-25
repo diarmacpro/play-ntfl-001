@@ -432,7 +432,12 @@ function renderElemenSummary(data) {
     // Tambahkan event click
     card.addEventListener('click', function () {
       const idSj = this.getAttribute('data-id-sj');
-
+      stQrl('idSj',idSj);
+      const initialId = gtQrl("idSj");
+      if (initialId) {
+        activateCard(initialId);
+      }
+      /*
       // console.log(cariByIdSj(idSj));
       tempData = cariByIdSj(idSj);
 
@@ -446,6 +451,7 @@ function renderElemenSummary(data) {
 
       // Render detail
       renderDetailByIdSj(idSj);
+      */
     });
 
     container.appendChild(card);
@@ -475,13 +481,17 @@ function reloadFetch() {
   console.log('Reload Fetch');
 }
 
-function closeDetail() {
-  tempData = {};
-  console.log('Close Detail');
+function removeSelectedItemsSumary(){
+  dlQrl('idSj');
   document.querySelectorAll('#summary > div').forEach((el) => {
     el.classList.remove('bg-yellow-200', 'border', 'border-yellow-500');
   });
-  renderDashboard();
+}
+
+function closeDetail() {
+  tempData = {};
+  console.log('Close Detail');
+  removeSelectedItemsSumary();
 }
 
 function renderAktivitasTerbaru() {
@@ -543,8 +553,8 @@ function renderAktivitasTerbaru() {
         <th class="px-4 w-[7%] border border-e py-3 text-left font-semibold">Waktu</th>
         <th class="px-4 w-[7%] border border-e py-3 text-left font-semibold">SJ</th>
         <th class="px-4 w-[14%] border border-e py-3 text-left font-semibold">Marketing</th>
-        <th class="px-4 w-[40%] border border-e py-3 text-left font-semibold">Kain</th>
-        <th class="px-4 w-[10%] border border-e py-3 text-left font-semibold">Qty</th>
+        <th class="px-4 w-[37%] border border-e py-3 text-left font-semibold">Kain</th>
+        <th class="px-4 w-[13%] border border-e py-3 text-left font-semibold">Qty</th>
         <th class="px-4 w-[14%] border border-e py-3 text-left font-semibold">Status</th>
         <th class="px-4 w-[8%] border border-e py-3 text-left font-semibold">Lokasi</th>
       </tr>
@@ -591,10 +601,10 @@ function generateDetailedRecentActivity(rawData) {
           <td class="px-4 w-[14%] border border-e py-3">${
             marketing ? marketing.mkt : 'Unknown'
           }</td>
-          <td class="px-4 w-[40%] border border-e py-3 truncate max-w-xs" title="${
+          <td class="px-4 w-[37%] border border-e py-3 truncate max-w-xs" title="${
             item.k
           }">${item.k}</td>
-          <td class="px-4 w-[10%] border border-e py-3 font-mono">
+          <td class="px-4 w-[13%] border border-e py-3 font-mono">
             <span class="font-bold">${item.qty}</span> 
             <span class="text-gray-600">${item.ge}</span>
           </td>
@@ -615,6 +625,7 @@ function generateDetailedRecentActivity(rawData) {
 }
 
 function renderDashboard() {
+  closeDetail();
   const detailContainer = document.getElementById('detail');
   detailContainer.innerHTML = '';
 
@@ -638,7 +649,7 @@ function renderDashboard() {
 <div class="space-y-6">
 
   <!-- Metrics Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-2">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-2">
     ${generateMetricCards(analytics)}
   </div>
 
@@ -1165,19 +1176,19 @@ function generateMetricCards(analytics) {
       color: 'blue',
     },
     {
-      title: 'S.J.',
+      title: 'Surat Jalan',
       value: analytics.totalSJ,
       icon: 'bi-file-earmark-text',
       color: 'green',
     },
     {
-      title: 'PIC',
+      title: 'Marketing',
       value: analytics.totalMarketing,
       icon: 'bi-people',
       color: 'purple',
     },
     {
-      title: 'Finish',
+      title: 'Selesai',
       value: `${analytics.efficiency}%`,
       icon: 'bi-speedometer2',
       color: 'orange',
@@ -1219,18 +1230,22 @@ function generateStatusChart(statusDistribution) {
     .map(([status, count]) => {
       const percentage = Math.round((count / total) * 100);
       return `
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center">
-          <div class="w-4 h-4 ${colors[status]} rounded mr-3"></div>
-          <span class="text-sm text-gray-700">${status}</span>
-        </div>
-        <div class="flex items-center">
-          <div class="w-24 bg-gray-200 rounded-full h-2 mr-3">
-            <div class="${colors[status]} h-2 rounded-full" style="width: ${percentage}%"></div>
-          </div>
-          <span class="text-sm font-medium">${count}</span>
-        </div>
-      </div>
+<div class="grid grid-cols-2 items-center mb-3 gap-4">
+  <!-- Kolom Status -->
+  <div class="flex items-center">
+    <div class="w-4 h-4 ${colors[status]} rounded mr-3"></div>
+    <span class="text-sm text-gray-700">${status}</span>
+  </div>
+
+  <!-- Kolom Progress -->
+  <div class="flex items-center">
+    <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+      <div class="${colors[status]} h-2 rounded-full" style="width: ${percentage}%"></div>
+    </div>
+    <span class="text-sm font-medium">${count}</span>
+  </div>
+</div>
+
     `;
     })
     .join('');
@@ -1344,16 +1359,15 @@ function generateGeByMarketingChart(geByMarketing) {
   </div>
 
   <!-- Kolom 2: 40% align end -->
-  <div class="w-[40%] text-right text-xs text-gray-600 me-2">
+<div class="grid grid-cols-2 w-[60%] text-xs text-gray-600 me-2">
+  <div class="text-left">
     ${geBreakdown}
   </div>
-
-  <!-- Kolom 3: 10% align end -->
-  <div class="w-[10%] text-right">
-    <span class="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
-      ${totalForMarketing}
-    </span>
+  <div class="text-right">
+    ${totalForMarketing}
   </div>
+</div>
+
 </div>
       `;
     })
