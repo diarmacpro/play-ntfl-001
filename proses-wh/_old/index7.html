@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proses WH</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <style>
+      /* Custom Checkbox Utama */
+      .custom-checkbox {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid red;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+        background-color: white;
+        transition: background 0.2s, border 0.2s;
+      }
+
+      /* Checked state */
+      .custom-checkbox:checked {
+        background-color: red;
+        border-color: red;
+      }
+
+      /* Tanda ✕ saat checked */
+      .custom-checkbox:checked::after {
+        content: '✕';
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none; /* agar tidak mengganggu klik */
+      }
+
+      /* Disabled state */
+      .custom-checkbox:disabled {
+        background-color: #fc7979; /* merah pucat */
+        border-color: #fc7979;
+        cursor: not-allowed;
+      }
+
+      /* Disabled + Checked */
+      .custom-checkbox:disabled:checked::after {
+        content: '✕';
+        color: #fff5f5; /* putih pucat */
+      }
+    </style>
+    <style>
+      /* Tooltip simple berbasis data-tooltip */
+      [data-tooltip] {
+        position: relative;
+        cursor: pointer;
+      }
+      [data-tooltip]::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 125%; /* posisi di atas elemen */
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1f2937; /* bg-gray-800 */
+        color: white;
+        padding: 4px 8px;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      [data-tooltip]:hover::after {
+        opacity: 1;
+      }
+
+      /* Transisi smooth untuk opacity */
+      #alertModal {
+        transition: opacity 0.3s ease;
+      }
+    </style>
+
+    <style>
+      .thin-scroll::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
+      }
+      .thin-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.4);
+        border-radius: 2px;
+      }
+      .thin-scroll::-webkit-scrollbar-track {
+        background: transparent;
+      }
+    </style>
+
+    <style>
+      @keyframes shakeOpacity {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        25%,
+        75% {
+          opacity: 0.85;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .shake {
+        animation: shakeOpacity 0.4s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex">
+    <div
+      id="alertModal"
+      class="hidden fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between gap-3 z-50 text-4xl"
+    >
+      <span id="alertMessage"></span>
+      <button
+        id="alertBtn"
+        class="shadow shadow-sm shadow-red-300 p-2 bg-red-600 border border-red-700 rounded-xl text-white hover:shadow-none hover:text-gray-200"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Sidebar kiri -->
+    <!-- Pastikan sudah load Bootstrap Icons CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+
+    <div
+      id="sidebar"
+      class="w-[27%] min-[1920px]:w-[20%] p-2 border-r border-gray-300 flex flex-col"
+    >
+      <!-- Wrapper Tanggal -->
+      <div class="mb-3">
+        <input
+          id="tanggalInput"
+          type="date"
+          class="w-full border border-gray-300 rounded-md px-3 py-1 text-sm h-[38px] focus:outline-none focus:ring-1 focus:ring-blue-400"
+        />
+      </div>
+
+      <!-- Header Sidebar -->
+      <h2
+        id="sidebarHeader"
+        class="text-xl font-semibold mb-2 flex-shrink-0 border-b border-gray-300 pb-2 flex items-center w-full gap-2"
+      >
+        <!-- Tombol Power -->
+        <button
+          class="px-3 py-1 border border-gray-300 rounded-md bg-white hover:bg-gray-100 flex items-center justify-center"
+          title="Power"
+        >
+          <i class="bi bi-power text-red-500 text-lg"></i>
+        </button>
+
+        <!-- Kolom Search -->
+        <input
+          id="cariDataSj"
+          type="search"
+          class="flex-1 border border-gray-300 rounded-md px-3 py-1 text-sm h-[38px] focus:outline-none focus:ring-1 focus:ring-blue-400"
+          placeholder="Cari SJ..."
+        />
+      </h2>
+
+      <!-- Header Sidebar -->
+      <h2
+        id="sidebarHeader"
+        class="text-xl font-semibold mb-4 flex-shrink-0 border-b border-gray-300 pb-2 w-full"
+      >
+        <div
+          class="grid auto-cols-max grid-flow-col gap-2 w-full justify-center"
+        >
+          <!-- Lebar fix 384px -->
+
+          <!-- Jumlah transaksi -->
+          <div
+            class="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg p-2 shadow-sm"
+          >
+            <i class="bi bi-graph-up-arrow text-red-600 text-xl"></i>
+            <div class="flex flex-col">
+              <span id="col1Text" class="text-sm font-bold text-red-700"></span>
+            </div>
+          </div>
+
+          <!-- Online -->
+          <div
+            class="flex items-center gap-2 bg-green-100 border border-green-300 rounded-lg p-2 shadow-sm"
+          >
+            <i class="bi bi-globe2 text-green-700 text-xl"></i>
+            <div class="flex flex-col">
+              <span
+                id="col2Text"
+                class="text-sm font-bold text-green-800"
+              ></span>
+            </div>
+          </div>
+
+          <!-- Ekspedisi -->
+          <div
+            class="flex items-center gap-2 bg-blue-100 border border-blue-300 rounded-lg p-2 shadow-sm"
+          >
+            <i class="bi bi-truck text-blue-600 text-xl"></i>
+            <div class="flex flex-col">
+              <span
+                id="col3Text"
+                class="text-sm font-bold text-blue-700"
+              ></span>
+            </div>
+          </div>
+
+          <!-- Retur -->
+          <div
+            class="flex items-center gap-2 bg-yellow-100 border border-yellow-300 rounded-lg p-2 shadow-sm"
+          >
+            <i class="bi bi-recycle text-yellow-600 text-xl"></i>
+            <div class="flex flex-col">
+              <span
+                id="col4Text"
+                class="text-sm font-bold text-yellow-700"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </h2>
+
+      <!-- Isi Summary -->
+      <div id="summary" class="space-y-2 flex-1 overflow-auto thin-scroll">
+        <!-- isi summary -->
+      </div>
+    </div>
+
+    <!-- Konten kanan -->
+    <div id="mainContent" class="flex-1 p-4 overflow-auto">
+      <!-- Toolbar -->
+      <!-- Wrapper utama -->
+      <div class="flex items-center justify-between mb-4">
+        <!-- Toolbar Buttons (kiri) -->
+        <div class="flex gap-4">
+          <!-- Dashboard -->
+          <button
+            onclick="renderDashboard()"
+            class="w-auto px-3 h-10 flex items-center gap-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 active:scale-95 shadow text-sm"
+          >
+            <i class="bi bi-speedometer2 text-base"></i>
+            <span>Dashboard</span>
+          </button>
+
+          <!-- Plus -->
+          <button
+            onclick="modalStockLainya('tambah')"
+            class="w-auto px-3 h-10 flex items-center gap-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-green-100 hover:text-green-600 active:scale-95 shadow text-sm"
+          >
+            <i class="bi bi-plus-circle text-base"></i>
+            <span>Tambah</span>
+          </button>
+
+          <!-- Report -->
+          <button
+            class="w-auto px-3 h-10 flex items-center gap-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-600 active:scale-95 shadow text-sm"
+          >
+            <i class="bi bi-file-earmark-bar-graph text-base"></i>
+            <span>Report</span>
+          </button>
+
+          <!-- User -->
+          <button
+            class="w-auto px-3 h-10 flex items-center gap-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-600 active:scale-95 shadow text-sm"
+          >
+            <i class="bi bi-person text-base"></i>
+            <span>User</span>
+          </button>
+
+          <!-- Aktivitas Terbaru -->
+          <button
+            onclick="renderAktivitasTerbaru()"
+            class="w-auto px-3 h-10 flex items-center gap-2 rounded-xl bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-600 active:scale-95 shadow text-sm"
+          >
+            <i class="bi bi-clock-history text-base"></i>
+            <span>Monitoring</span>
+          </button>
+        </div>
+
+        <!-- Tombol kanan (small actions) -->
+        <div class="flex gap-2">
+          <button
+            onclick="reloadFetch()"
+            class="w-10 h-10 flex items-center justify-center rounded-xl bg-yellow-600 text-white hover:bg-yellow-700 active:scale-95 shadow-lg"
+          >
+            <i class="bi bi-arrow-clockwise text-lg"></i>
+          </button>
+          <button
+            onclick="closeDetail()"
+            class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-700 active:scale-95 shadow-lg"
+          >
+            <i class="bi bi-x-lg text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Detail Section -->
+      <div id="detail"></div>
+    </div>
+
+    <!-- Modal -->
+    <div
+      id="layer-2-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-6 rounded-2xl shadow-lg w-11/12 max-w-4xl relative"
+      >
+        <!-- Tombol Close -->
+        <button
+          id="close-layer-2"
+          class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+        >
+          ✕
+        </button>
+        <h2 class="text-xl font-bold mb-4">Tambahkan Stock Lain</h2>
+        <div id="modal-content-layer-2" class="text-gray-700">
+          <!-- Konten akan diisi lewat JS -->
+          <div class="list-stock max-h-[500px] overflow-y-auto"></div>
+        </div>
+        <div class="mt-4 text-right">
+          <button
+            id="close-btn-layer-2"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Libraries -->
+    <!-- <script src="https://unpkg.com/lucide@latest"></script> -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="./script.js"></script>
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+      import {
+        getDatabase,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+      const app = initializeApp({
+        databaseURL:
+          'https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+      });
+      const db = getDatabase(app);
+
+      const app2 = initializeApp(
+        {
+          databaseURL:
+            'https://stk-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app2'
+      );
+      const db2 = getDatabase(app2);
+
+      Object.assign(window, {
+        db,
+        db2,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      });
+    </script>
+
+    <script>
+      var data = {};
+      var tempData = {};
+      let fbsSvc, fbsSvcX;
+
+      var countSumaryData = {
+        totalData: 0,
+        totalOnline: 0,
+        totalOffline: 0,
+        totalRetur: 0,
+        totalEkspedisi: 0,
+      };
+
+      // Cari data marketing by ID
+      function cariById(id) {
+        return data.nmMkt.find((item) => item.id_mkt === String(id)) || null;
+      }
+
+      function nmHlp(id) {
+        return data.helper.find((item) => item.id_hlp === id) || null;
+      }
+
+      function filterSummary(keyword) {
+        keyword = String(keyword || '')
+          .toLowerCase()
+          .trim();
+
+        // Ambil semua data dari data.dataside
+        const allData = Object.values(data.dataside || {});
+
+        // Hasil filter
+        const hasil = !keyword
+          ? allData
+          : allData.filter(
+              (item) =>
+                String(item.id_sj).toLowerCase().includes(keyword) ||
+                String(item.id_mkt).toLowerCase().includes(keyword) ||
+                String(item.jml_item).toLowerCase().includes(keyword) ||
+                String(item.mkt || '')
+                  .toLowerCase()
+                  .includes(keyword) ||
+                String(item.stamp || '')
+                  .toLowerCase()
+                  .includes(keyword)
+            );
+
+        // Simpan hasil filter ke dalam data.hasil_filter
+        data['hasil_filter'] = hasil;
+
+        return hasil; // opsional, tetap bisa digunakan langsung
+      }
+      /*
+  // Fungsi filter berdasarkan input
+  function filterSummary(keyword) {
+    keyword = String(keyword || "").toLowerCase().trim();
+
+    if (!keyword) return Object.values(data.dataside || {});
+
+    return Object.values(data.dataside || {}).filter(item =>
+      String(item.id_sj).toLowerCase().includes(keyword) ||
+      String(item.id_mkt).toLowerCase().includes(keyword) ||
+      String(item.jml_item).toLowerCase().includes(keyword) ||
+      String(item.mkt || "").toLowerCase().includes(keyword) ||
+      String(item.stamp || "").toLowerCase().includes(keyword)
+    );
+  }
+  */
+
+      // Render awal atau setelah filter
+      function renderFiltered(keyword) {
+        const filtered = filterSummary(keyword);
+        renderElemenSummary(filtered);
+        // console.log("filter")
+        renderJumlahDataSummary();
+      }
+
+      // Load data SJ sesuai tanggal
+      function loadDataSJ(tgl) {
+        prosesDataSJ('https://cdn.weva.my.id/apix/dtSj', { tgl }, (result) => {
+          data.result = result;
+          data.dataside = data.result.summary;
+          renderElemenSummary(data.dataside);
+          renderJumlahDataSummary();
+        });
+      }
+
+      function cariByIdSj(idSj) {
+        const targetId = Number(idSj); // pastikan jadi number agar presisi
+        return data.result.raw.filter(
+          (item) => Number(item.id_sj) === targetId
+        );
+      }
+
+      function ambilDataBarang(cb) {
+        fbsSvcX.gDt('kain', '', (d) => {
+          let hasil = Object.values(d)
+            .flat()
+            .map((item) => ({
+              c_e: item.c_e,
+              c_g: item.c_g,
+              c_h: item.c_h,
+              e: item.e,
+              g: item.g,
+              ik: item.ik,
+              k: item.k,
+              kd_jns: item.kd_jns,
+              kd_wrn: item.kd_wrn,
+              s: item.s,
+            }));
+
+          // simpan ke dalam variabel global data
+          data['kain'] = hasil;
+
+          // kalau ada callback, panggil dengan hasil
+          if (typeof cb === 'function') {
+            cb(hasil);
+          }
+        });
+      }
+
+      function getDtStock(id, callback) {
+        fbsSvcX.gDt(`layer2/${id}`, '', (d) => {
+          // filter data: buang yang stts == 'h'
+          let filtered = Array.isArray(d)
+            ? d.filter((item) => item.stts !== 'h')
+            : [];
+
+          data['layer2'] = filtered;
+          if (typeof callback === 'function') {
+            callback(filtered); // kirim data yang sudah difilter
+          }
+        });
+      }
+
+      $(function () {
+        // Ambil param tanggal dari URL
+        const params = new URLSearchParams(window.location.search);
+        const today = stm('t');
+        let initDate = params.get('tgl') || today;
+
+        // Jika URL tidak ada ?tgl=..., set default
+        if (!params.has('tgl')) {
+          params.set('tgl', today);
+          window.history.replaceState({}, '', `?${params.toString()}`);
+        }
+
+        // Set nilai awal input tanggal
+        $('#tanggalInput').val(initDate);
+
+        // Event input search
+        $('#cariDataSj').on('input', function () {
+          renderFiltered($(this).val());
+        });
+
+        // Event change tanggal
+        $('#tanggalInput').on('change', function () {
+          const selectedDate = $(this).val();
+          params.set('tgl', selectedDate);
+          window.history.replaceState({}, '', `?${params.toString()}`);
+          loadDataSJ(selectedDate);
+        });
+
+        // Load data marketing & data SJ
+        fbsSvc = new Fbs(db);
+        fbsSvcX = new Fbs(db2);
+
+        // Initialize all event listeners once
+        initializeEventListeners();
+
+        // fbsSvcX.gDt('layer2','',(d)=>{
+        //   let arr = [];
+
+        //   if (Array.isArray(d)) {
+        //     arr = d;
+        //   } else if (d && typeof d === 'object') {
+        //     arr = Object.values(d);
+        //   } else {
+        //     console.warn('Data layer2 tidak valid:', d);
+        //   }
+
+        //   // group berdasarkan id_kain
+        //   data.layer2 = arr.reduce((groups, item) => {
+        //     const key = item.id_kain || 'unknown'; // default 'unknown' kalau tidak ada id_kain
+        //     if (!groups[key]) groups[key] = [];
+        //     groups[key].push(item);
+        //     return groups;
+        //   }, {});
+        // });
+
+        fbsSvcX.gDt('app/data/helper', '', (d) => {
+          let arr = [];
+
+          if (Array.isArray(d)) {
+            arr = d;
+          } else if (d && typeof d === 'object') {
+            arr = Object.values(d);
+          } else {
+            console.warn('Data helper tidak valid:', d);
+          }
+
+          data.helper = arr
+            .filter((val) => val.stts !== '' && val.stts !== 0) // filter stts kosong atau 0
+            .map((val) => ({
+              hlp: val.hlp || '',
+              id_hlp: val.id_hlp || '',
+            }));
+        });
+
+        fbsSvc.gDt('/user', '', (d) => {
+          let arr = [];
+
+          if (Array.isArray(d)) {
+            arr = d;
+          } else if (d && typeof d === 'object') {
+            arr = Object.values(d);
+          } else {
+            console.warn('Data marketing tidak valid:', d);
+          }
+
+          data.nmMkt = arr.map((val) => ({
+            usr: val.usr || '',
+            mkt: val.mkt || '',
+            id_mkt: val.id_mkt || '',
+          }));
+
+          loadDataSJ(initDate);
+
+          ambilDataBarang((d) => {
+            console.log(data.kain);
+          });
+        });
+      });
+    </script>
+
+    <script>
+      // simpan timer di luar supaya bisa di-clear saat dipanggil lagi
+      let alertTimer = null;
+      let alertCountdown = null;
+
+      function tampilkanPilihanStockLain(d) {
+        // getDtStock(d,(r)=>{
+        //   console.log(data.tempOlahSj);
+        //   console.log(d,r);
+        // });
+      }
+
+      function showAlert(message, duration = 3000) {
+        const modal = document.getElementById('alertModal');
+        const msg = document.getElementById('alertMessage');
+        const btnClose = document.getElementById('alertBtn');
+
+        if (!modal || !msg || !btnClose) return;
+
+        // clear timer lama
+        if (alertTimer) clearTimeout(alertTimer);
+        if (alertCountdown) clearInterval(alertCountdown);
+
+        let timeLeft = Math.ceil(duration / 1000);
+        msg.textContent = message;
+        btnClose.innerHTML = `<i class="bi bi-x-lg"></i> (${timeLeft})`;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex', 'opacity-0');
+
+        // fade-in
+        setTimeout(() => {
+          modal.classList.remove('opacity-0');
+
+          // 🔥 tambahkan animasi getar
+          modal.classList.add('shake');
+          setTimeout(() => modal.classList.remove('shake'), 300); // hapus setelah animasi selesai
+        }, 10);
+
+        // countdown
+        alertCountdown = setInterval(() => {
+          timeLeft--;
+          btnClose.innerHTML = `<i class="bi bi-x-lg"></i> (${timeLeft})`;
+          if (timeLeft <= 0) clearInterval(alertCountdown);
+        }, 1000);
+
+        // auto close
+        alertTimer = setTimeout(() => {
+          closeAlert();
+          clearInterval(alertCountdown);
+        }, duration);
+
+        // tombol close
+        btnClose.onclick = () => {
+          clearTimeout(alertTimer);
+          clearInterval(alertCountdown);
+          closeAlert();
+        };
+
+        function closeAlert() {
+          modal.classList.add('opacity-0');
+          setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+          }, 300);
+        }
+      }
+    </script>
+
+    <script>
+      // Fungsi untuk menampilkan pilihan stock lain di modal
+      function tampilkanPilihanStockLain(id) {
+        getDtStock(id, (r) => {
+          let html = r
+            .map((item) => {
+              const outCount =
+                item.c == 0
+                  ? ''
+                  : `<span class="px-2 py-0.5 bg-red-100 text-red-700 text-lg font-semibold rounded-full shadow-sm border border-red-300">
+              <i class="bi bi-arrow-up"></i> ${item.c}
+            </span>`;
+              return `
+              <div class="item border p-2 mb-2 rounded cursor-pointer hover:bg-gray-100 text-lg flex items-center gap-1 flex-wrap item-stock-alternatif"
+                  data-id="${item.id_stock}" data-id-kain="${item.id_kain}">
+
+                <!-- ID Stock & RTR -->
+                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 font-semibold rounded-full shadow-sm border border-blue-300">
+                  #${item.id_stock} <b class='text-red-400'>${
+                item.id_rtr == '?' ? '' : 'R'
+              }</b>
+                </span>
+
+                ${item.ltrl}
+
+                <!-- LTRL & RKKL -->
+                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full shadow-sm border border-gray-300">
+                  <i class="bi bi-geo-alt-fill"></i> ${item.rkkl}
+                </span>
+
+                <!-- Quantity -->
+                <span class="px-2 py-0.5 bg-green-100 text-green-700 font-bold rounded-full shadow-sm border border-green-300">
+                  ${item.q}
+                </span>
+
+                ${outCount}
+
+                <!-- Status -->
+                <span class="px-2 py-0.5 font-medium rounded-full shadow-sm
+                  ${
+                    item.stts === 'g'
+                      ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                      : item.stts === 'e'
+                      ? 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                      : 'bg-red-100 text-red-700 border border-red-300'
+                  }">
+                  ${item.stts.toUpperCase()}
+                </span>
+              </div>`;
+            })
+            .join('');
+
+          $('#modal-content-layer-2 .list-stock').html(html);
+        });
+      }
+    </script>
+  </body>
+</html>
