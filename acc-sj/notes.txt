@@ -1,0 +1,12 @@
+sj, mkt , jml , status
+
+(attr : data-ky, data-id-kain)
+sj, id_stock, kain, ltrl, loc, q,bs
+
+
+fbsSvc2.gDt('/app/data/helper','',(d)=>{
+    console.log(d);
+})
+fbsSvc2.gDt('/user','',(d)=>{
+    console.log(d);
+})
