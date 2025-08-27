@@ -1,0 +1,55 @@
+sj, mkt , jml , status
+
+(attr : data-ky, data-id-kain)
+sj, id_stock, kain, ltrl, loc, q,bs
+
+
+fbsSvc2.gDt('/app/data/helper','',(d)=>{
+    console.log(d);
+})
+fbsSvc2.gDt('/user','',(d)=>{
+    console.log(d);
+})
+
+
+
+
+(attr : data-ky, data-id-kain)
+sj, id_stock, kain, ltrl, loc, q,bs
+
+
+"stamp_sj": "2025-08-26 08:56:08"
+"stamp": "2025-08-26 08:50:20",
+
+"ky": 112235,
+"id_sj": 49007,
+"id_stock": 45211,
+"id_kain": 2674,
+"k": "Lycra Power Wevatex Tosca, K.9",
+
+"lot": "2",
+"rol": "17",
+
+"rak": "059",
+"kol": "B",
+
+
+"ge": "e",
+
+"qty": "1.00",
+"q_bs": null,
+
+"c_o": 7,
+
+"rtr": 0,
+"notes": "",
+"onOff": 1,
+"ekspedisi": "jnt cargo",
+
+
+"bayar": 0,
+"d_create": "2025-08-26 08:50:20",
+"dlt": 0,
+"erw": 0,
+"habis": null,
+"id_mkt": 15,

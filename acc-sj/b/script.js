@@ -7,7 +7,7 @@
  * @param {function} [errorCallback] - Fungsi opsional yang akan dipanggil jika terjadi kesalahan.
  * Menerima satu argumen: objek Error.
  */
-function postToAPI(url, body, successCallback, errorCallback) {
+function gtResponseApi(url, body, successCallback, errorCallback) {
     fetch(url, {
         method: 'POST',
         headers: {
@@ -62,72 +62,3 @@ function groupBy(array, key) {
         return result;
     }, {}); // Inisialisasi sebagai objek kosong
 }
-
-
-
-function makeSummary(data) {
-    // Group by id_sj
-    const grouped = _.groupBy(data, "id_sj");
-    const summary = [];
-
-    for (const idSj in grouped) {
-        const items = grouped[idSj];
-
-        // hitung count
-        const count = items.length;
-
-        // stamp_sj ambil max
-        let maxStamp = _.max(items.map(i => i.stamp));
-        let stamp = null;
-        if (maxStamp) {
-            const hhmm = maxStamp.split(" ")[1]?.substring(0, 5); // ambil HH:ii
-            stamp = hhmm || maxStamp;
-        }
-
-        // id_sj ambil unique lalu ambil [0]
-        const idSjUnique = _.uniq(items.map(i => i.id_sj));
-        const id_sj = idSjUnique[0] || null;
-
-        // id_mkt ambil unique lalu ambil [0]
-        const idMktUnique = _.uniq(items.map(i => i.id_mkt));
-        const id_mkt = idMktUnique[0] || null;
-
-        // rtr → kalau ada selain 0 → 1, else 0 (jumlahkan)
-        const rtr = items.reduce((acc, i) => acc + (i.rtr && i.rtr != 0 ? 1 : 0), 0);
-
-        // onOff → kalau ada selain 0 → 1, else 0 (jumlahkan)
-        const onOff = items.reduce((acc, i) => acc + (i.onOff && i.onOff != 0 ? 1 : 0), 0);
-
-        // ekspedisi unique join, tapi kalau kosong semua → null
-        let ekspedisiVals = _.uniq(items.map(i => i.ekspedisi).filter(v => v && v !== "0" && v !== ""));
-        let ekspedisi = ekspedisiVals.length > 0 ? ekspedisiVals.join(", ") : null;
-
-        summary.push({
-            c: count,
-            stamp,
-            id_sj,
-            id_mkt,
-            rtr,
-            onOff,
-            ekspedisi
-        });
-    }
-
-    return summary;
-}
-
-
-
-function formatToTimeHM(dateTimeStr) {
-  if (!dateTimeStr) return null; // handle null/empty
-  const date = new Date(dateTimeStr.replace(" ", "T")); 
-  // replace spasi biar valid ISO string
-  if (isNaN(date.getTime())) return null; // handle invalid date
-
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-}
-
-// contoh
-console.log(formatToTimeHM("2025-08-26 08:50:20")); // "08:50"

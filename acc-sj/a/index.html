@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+			<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+			<title>Ably PubSub Client</title>
+	</head>
+	<body>
+		<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+		<script src="./pub-sub.js"></script>
+		<script>
+			// ------------------------------------
+			// Contoh Penggunaan Publik Client
+			// ------------------------------------
+			// Jalankan kode ini setelah dokumen dimuat.
+			document.addEventListener('DOMContentLoaded', () => {
+					// ** Ganti dengan API Key Ably Anda **
+					const API_KEY = "fGNEag.D9-iTQ:-QxlogxXs4VFnIWJEy0CbHlXKJZ7QcmNOku6rDoUUto";
+					
+					// Menginisiasi klien.
+					const ablyClient = new PubSubClient(API_KEY);
+
+					// Handler untuk pesan yang diterima.
+					const handleChatMessage = (message) => {
+							console.log('📩 Chat Message:', message.data);
+					};
+
+					const handleStatusMessage = (message) => {
+							console.log('🔔 Status Update:', message.data);
+					};
+
+					// Melakukan subscribe ke dua event berbeda di channel 'my-app-channel'.
+					// Event 'chat-message'
+					ablyClient.subscribe('my-app-channel', 'chat-message', handleChatMessage);
+
+					// Event 'status-update'
+					ablyClient.subscribe('my-app-channel', 'status-update', handleStatusMessage);
+
+					// Publish pesan setelah jeda singkat (untuk memastikan koneksi siap).
+					setTimeout(() => {
+							// Publish pesan chat
+							ablyClient.publish('my-app-channel', 'chat-message', { user: 'Alice', text: 'Halo, semua!' });
+							
+							// Publish pesan status
+							ablyClient.publish('my-app-channel', 'status-update', { user: 'System', status: 'User Alice joined the chat.' });
+					}, 2000);
+
+					// Menutup koneksi secara otomatis setelah 10 detik.
+					setTimeout(() => ablyClient.close(), 10000);
+			});
+			/*
+				// --------------------
+				// 📌 Contoh Penggunaan
+				// --------------------
+				(async () => {
+						// Menginisiasi klien dengan API Key
+						const client = new PubSubClient("fGNEag.D9-iTQ:-QxlogxXs4VFnIWJEy0CbHlXKJZ7QcmNOku6rDoUUto");
+
+						// Callback function untuk menangani pesan
+						const handleMessage = (msg) => {
+								console.log("📩 Message received:", msg.data);
+						};
+
+						// const myChannel = client.getChannel("game-updates");
+
+						// Subscribe ke channel 'get-started' dengan event 'first'
+						await client.subscribe("get-started", "first", handleMessage);
+
+						// Publish pesan setelah jeda singkat untuk memastikan koneksi siap
+						setTimeout(async () => {
+								await client.publish("get-started", "first", "Here is my first message!");
+								console.log('📤 Message published.');
+						}, 1000);
+
+						// Tutup koneksi secara otomatis setelah 5 detik
+						setTimeout(() => client.close(), 5000);
+				})();
+			*/
+		</script>
+
+	</body>
+</html>
