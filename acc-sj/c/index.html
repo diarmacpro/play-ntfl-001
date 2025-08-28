@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proses WH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <style>
+      /* Untuk browser berbasis WebKit (Chrome, Safari, Edge) */
+      .overflow-y-auto::-webkit-scrollbar {
+        width: 1px; /* Mengatur lebar scrollbar vertikal */
+      }
+
+      /* Untuk track (jalur) scrollbar */
+      .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Warna latar belakang jalur */
+      }
+
+      /* Untuk thumb (pegangan) scrollbar */
+      .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #888; /* Warna pegangan scrollbar */
+        border-radius: 1px;
+      }
+
+      /* Opsi hover (saat kursor diarahkan ke scrollbar) */
+      .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      /* Untuk browser Firefox (menggunakan properti non-standar) */
+      .overflow-y-auto {
+        scrollbar-width: 1px; /* Mengatur lebar scrollbar menjadi 'thin' (sekitar 1px) atau 'none' */
+      }
+
+      /* Style untuk item summary yang aktif */
+      .active-summary {
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+      }
+
+      .active-summary:hover {
+        background-color: rgb(239 246 255) !important; /* bg-blue-50 on hover */
+      }
+
+      /* Style untuk search match rows */
+      .search-match {
+        background-color: rgb(240 253 244) !important; /* bg-green-50 */
+        border-left: 4px solid rgb(34 197 94) !important; /* border-l-4 border-green-400 */
+      }
+
+      .search-match:hover {
+        background-color: rgb(220 252 231) !important; /* bg-green-100 on hover */
+      }
+
+      /* Override untuk memastikan search match styling tidak tertimpa */
+      tbody tr.search-match {
+        background-color: rgb(240 253 244) !important;
+        border-left: 4px solid rgb(34 197 94) !important;
+      }
+
+      tbody tr.search-match:hover {
+        background-color: rgb(220 252 231) !important;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+    <div class="flex h-screen">
+      <aside class="w-96 bg-white shadow-lg p-4 flex flex-col">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 border-b pb-2">
+          Daftar SJ
+        </h2>
+        <div id="noDataMessage" class="text-center text-gray-500 hidden mb-4">
+          Tidak ada data yang ditemukan.
+        </div>
+
+        <!-- Search Box -->
+        <div class="mb-4">
+          <div class="relative">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Cari SJ, Marketing, Waktu, atau !count..."
+              class="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+              <i class="bi bi-search text-gray-400"></i>
+            </div>
+            <button
+              id="clearSearch"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 hidden"
+            >
+              <i class="bi bi-x-circle-fill"></i>
+            </button>
+          </div>
+          <div id="searchInfo" class="text-xs text-gray-500 mt-1 hidden">
+            Menampilkan <span id="searchCount">0</span> dari
+            <span id="totalCount">0</span> hasil
+          </div>
+        </div>
+
+        <div id="summaryList" class="space-y-2 overflow-y-auto h-[90vh]"></div>
+      </aside>
+
+      <main class="flex-1 p-2 overflow-y-auto">
+        <div class="bg-white shadow-md rounded-lg p-4">
+          <div class="flex items-center justify-between mb-4">
+            <!-- Title -->
+            <h1 class="text-3xl font-bold text-gray-800">Detail Surat Jalan</h1>
+
+            <!-- Tombol Aksi -->
+            <div id="actionButtons" class="flex items-center gap-2 hidden">
+              <button
+                id="refreshButton"
+                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                title="Muat ulang data"
+              >
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+              <button
+                id="backButton"
+                class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                title="Kembali ke dashboard"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="detailContent" class="text-gray-600">
+            <h1>Dashboard</h1>
+            <p>
+              Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk
+              melihat detailnya.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="./script.js"></script>
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+      import {
+        getDatabase,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+      const app0 = initializeApp(
+        {
+          databaseURL:
+            'https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app0'
+      );
+      const db0 = getDatabase(app0);
+
+      const app1 = initializeApp(
+        {
+          databaseURL:
+            'https://main-stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app1'
+      );
+      const db1 = getDatabase(app1);
+
+      const app2 = initializeApp(
+        {
+          databaseURL:
+            'https://stk-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app2'
+      );
+      const db2 = getDatabase(app2);
+
+      Object.assign(window, {
+        db0,
+        db1,
+        db2,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      });
+    </script>
+    <script>
+      let fbsSvc0, fbsSvc1, fbsSvc2;
+      let allSjData = {}; // Variabel untuk menyimpan semua data SJ
+      let originalSummaryData = []; // Menyimpan data asli untuk pencarian
+      let filteredSummaryData = []; // Menyimpan data yang sudah difilter
+
+      // Fungsi utilitas untuk mengelompokkan array berdasarkan key
+      function groupBy(arr, key) {
+        return arr.reduce((acc, obj) => {
+          const value = obj[key];
+          (acc[value] = acc[value] || []).push(obj);
+          return acc;
+        }, {});
+      }
+
+      // Fungsi untuk merender daftar ringkasan di sidebar
+      function renderSummaryList(data) {
+        const summaryList = document.getElementById('summaryList');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const searchInfo = document.getElementById('searchInfo');
+        const searchCount = document.getElementById('searchCount');
+        const totalCount = document.getElementById('totalCount');
+
+        summaryList.innerHTML = '';
+
+        // Update search info
+        if (originalSummaryData.length > 0) {
+          searchInfo.classList.remove('hidden');
+          searchCount.textContent = data.length;
+          totalCount.textContent = originalSummaryData.length;
+        } else {
+          searchInfo.classList.add('hidden');
+        }
+        if (data.length === 0) {
+          if (originalSummaryData.length === 0) {
+            // Tampilkan pesan "Memuat data..." di dalam summaryList
+            summaryList.innerHTML =
+              '<div class="text-center text-gray-500 mb-4">Memuat data...</div>';
+          } else {
+            summaryList.innerHTML =
+              '<div class="text-center text-gray-500 mb-4">Tidak ada hasil pencarian yang cocok.</div>';
+          }
+          return;
+        }
+
+        // Menggunakan DocumentFragment untuk meminimalkan manipulasi DOM
+        const fragment = document.createDocumentFragment();
+
+        data.forEach((item) => {
+          const listItem = document.createElement('div');
+          listItem.className =
+            'summary-item rounded-full p-0 ps-2 my-1 cursor-pointer bg-white hover:bg-blue-200 transition-colors duration-200 me-2 border-2 border-transparent';
+          listItem.dataset.idSj = item.id_sj;
+          listItem.innerHTML = `
+										<div class="flex items-center w-full gap-3">
+												<span class="w-[18%] rounded-lg mr-1 font-medium text-gray-700">${
+                          item.stamp_sj_min || '-'
+                        }</span>
+												<div class="w-[28%] flex justify-between items-center">
+														<span>${item.id_sj}</span>
+														<span class="font-bold">${item.count}</span>
+												</div>
+												<div class="flex items-center w-[44%]">
+														<span class="ml-1">${item.mkt_name || '-'}</span>
+												</div>
+												<div class="flex items-center gap-1 w-[10%]">
+														<button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+																<i class="bi bi-check-circle-fill"></i>
+														</button>
+												</div>
+										</div>
+								`;
+
+          listItem.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) {
+              // Remove active class from all items
+              document.querySelectorAll('.summary-item').forEach((item) => {
+                item.classList.remove('active-summary');
+                item.classList.add('bg-white', 'border-transparent');
+                item.classList.remove('bg-blue-50', 'border-blue-300');
+              });
+
+              // Add active class to clicked item
+              listItem.classList.add('active-summary');
+              listItem.classList.remove('bg-white', 'border-transparent');
+              listItem.classList.add('bg-blue-50', 'border-blue-300');
+
+              showDetail(item.id_sj);
+            }
+          });
+          fragment.appendChild(listItem);
+        });
+
+        summaryList.appendChild(fragment);
+      }
+
+      // Fungsi untuk melakukan pencarian
+      function performSearch(query) {
+        if (!query || query.trim() === '') {
+          filteredSummaryData = [...originalSummaryData];
+          renderSummaryList(filteredSummaryData);
+          return;
+        }
+
+        const searchQuery = query.trim().toLowerCase();
+
+        // Cek apakah pencarian untuk count (dimulai dengan !)
+        if (searchQuery.startsWith('!')) {
+          const countQuery = searchQuery.substring(1);
+          if (!isNaN(countQuery) && countQuery !== '') {
+            const targetCount = parseInt(countQuery);
+            filteredSummaryData = originalSummaryData.filter(
+              (item) => item.count === targetCount
+            );
+          } else {
+            filteredSummaryData = [];
+          }
+        } else {
+          // Pencarian normal untuk semua field
+          const searchTerms = searchQuery
+            .split(/\s+/)
+            .filter((term) => term.length > 0);
+
+          filteredSummaryData = originalSummaryData.filter((item) => {
+            const searchableText = [
+              item.id_sj || '',
+              item.mkt_name || '',
+              item.stamp_sj_min || '',
+              item.count.toString(),
+            ]
+              .join(' ')
+              .toLowerCase();
+
+            // Semua term harus ditemukan (bisa dalam urutan berbeda)
+            return searchTerms.every((term) => searchableText.includes(term));
+          });
+        }
+
+        renderSummaryList(filteredSummaryData);
+      }
+
+      // Fungsi untuk menangani input pencarian
+      function setupSearchHandlers() {
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+
+        // Event listener untuk input pencarian
+        searchInput.addEventListener('input', function (e) {
+          const query = e.target.value;
+
+          // Tampilkan/sembunyikan tombol clear
+          if (query.length > 0) {
+            clearSearch.classList.remove('hidden');
+          } else {
+            clearSearch.classList.add('hidden');
+          }
+
+          // Lakukan pencarian dengan debounce
+          clearTimeout(searchInput.searchTimeout);
+          searchInput.searchTimeout = setTimeout(() => {
+            performSearch(query);
+          }, 300);
+        });
+
+        // Event listener untuk tombol clear
+        clearSearch.addEventListener('click', function () {
+          searchInput.value = '';
+          clearSearch.classList.add('hidden');
+          performSearch('');
+          searchInput.focus();
+        });
+
+        // Event listener untuk Enter key
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch(e.target.value);
+          }
+        });
+      }
+
+      window.showDetail = async function (idSj) {
+        console.log(`Fungsi showDetail dipanggil untuk ID SJ: ${idSj}`);
+
+        const detailContent = document.getElementById('detailContent');
+        const actionButtons = document.getElementById('actionButtons');
+        const selectedSj = allSjData[idSj];
+
+        // Store current idSj for search functionality
+        window.currentIdSj = idSj;
+
+        if (selectedSj && selectedSj.length > 0) {
+          // Tampilkan tombol aksi saat menampilkan detail
+          actionButtons.classList.remove('hidden');
+
+          // filter hanya properti tertentu
+          const filtered = selectedSj.map((item) => ({
+            stamp_sj: item.stamp_sj,
+            stamp: item.stamp,
+            ky: item.ky,
+            id_sj: item.id_sj,
+            id_stock: item.id_stock,
+            id_kain: item.id_kain,
+            id_mkt: item.id_mkt,
+            k: item.k,
+            lot: item.lot,
+            rol: item.rol,
+            rak: item.rak,
+            kol: item.kol,
+            ge: item.ge,
+            qty: item.qty,
+            q_bs: item.q_bs,
+            c_o: item.c_o,
+            rtr: item.rtr,
+            notes: item.notes,
+            onOff: item.onOff,
+            ekspedisi: item.ekspedisi,
+          }));
+
+          const summaryArr = makeSummary(filtered);
+          const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+
+          // ambil user data (promise → harus tunggu)
+          const userData = await new Promise((resolve, reject) => {
+            fbsSvc2.gDt('user', '', resolve, reject);
+          });
+
+          // bikin map id_mkt → mkt
+          const userMap = {};
+          for (const key in userData) {
+            if (Object.hasOwnProperty.call(userData, key)) {
+              const user = userData[key];
+              userMap[user.id_mkt] = user.mkt;
+            }
+          }
+
+          // cari nama mkt dari summaryFiltered.id_mkt
+          const mktName =
+            userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
+
+          // console.log(summaryFiltered);
+          // console.log(filtered);
+          // console.log(selectedSj);
+
+          const detailsHtml = `
+							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+							<!-- Id. S.J. -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-receipt text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Id. S.J.</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${
+                  summaryFiltered.id_sj || '-'
+                }</div>
+							</div>
+
+							<!-- Marketing -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-person-badge text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Mkt</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${mktName || '-'}</div>
+							</div>
+
+							<!-- Waktu Awal -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-clock-history text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Waktu Awal</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${
+                  summaryFiltered.stamp || '-'
+                }</div>
+							</div>
+
+							<!-- Total Item -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-collection text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Total Item</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.c}</div>
+							</div>
+							</div>
+
+							<div class="bg-white shadow-sm rounded-lg border border-gray-200">
+
+								<div class="overflow-y-auto h-[70vh]">
+									<table class="min-w-full divide-y divide-gray-200">
+										<thead class="bg-gray-50 sticky top-0 z-10">
+											<tr class="divide-x-2">
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
+											</tr>
+										</thead>
+										<tbody class="bg-white divide-y divide-gray-200">
+											${selectedSj
+                        .map(
+                          (item) => `
+												<tr class="divide-x-2">
+													<td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${
+                            item.id_stock || '-'
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
+                            item.k || '-'
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${
+                            item.rol
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${
+                            item.kol
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.qty} ${
+                            item.q_bs
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
+                            item.ket || '-'
+                          }</td>
+												</tr>
+											`
+                        )
+                        .join('')}
+											<!-- No Results Message (initially hidden) -->
+											<tr id="noResultsRow" class="hidden">
+												<td colspan="8" class="px-6 py-8 text-center">
+													<div class="flex flex-col items-center justify-center space-y-3">
+														<i class="bi bi-search text-gray-400 text-3xl"></i>
+														<div class="text-gray-500">
+															<p class="font-medium">Tidak ada hasil yang ditemukan</p>
+															<p class="text-sm">Coba gunakan kata kunci yang berbeda</p>
+														</div>
+													</div>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div class="w-full bg-white shadow-md border-b flex items-center justify-between px-4 py-2">
+									<!-- Kiri -->
+									<div class="flex items-center space-x-2">
+										<!-- Search Input (always visible) -->
+										<div class="flex items-center bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+											<div class="flex items-center pl-3">
+												<i class="bi bi-search text-gray-400"></i>
+											</div>
+											<input 
+												id="detailSearchInput"
+												type="text" 
+												placeholder="Cari dalam detail (ID, Barang, Qty, Lokasi, dll)..."
+												class="px-3 py-2 w-80 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-400 rounded-r-lg"
+											/>
+											<button 
+												id="searchClearBtn"
+												class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 hidden"
+												title="Hapus pencarian"
+											>
+												<i class="bi bi-x-circle-fill"></i>
+											</button>
+										</div>
+										
+										<!-- Search Results Info -->
+										<div id="searchResultsInfo" class="hidden text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">
+											<i class="bi bi-info-circle mr-1"></i>
+											<span id="searchResultsText">0 hasil ditemukan</span>
+										</div>
+									</div>
+
+									<!-- Kanan -->
+									<div class="flex items-center">
+										<button class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700">
+											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+										</button>
+									</div>
+								</div>
+							</div>
+						`;
+          detailContent.innerHTML = detailsHtml;
+          
+          // Setup search functionality after rendering
+          setupDetailSearch();
+        } else {
+          // Tampilkan tombol aksi meskipun data tidak ditemukan
+          actionButtons.classList.remove('hidden');
+          detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
+        }
+      };
+
+      // Fungsi untuk kembali ke dashboard
+      function showDashboard() {
+        const detailContent = document.getElementById('detailContent');
+        const actionButtons = document.getElementById('actionButtons');
+
+        // Sembunyikan tombol aksi
+        actionButtons.classList.add('hidden');
+
+        // Tampilkan konten dashboard
+        detailContent.innerHTML = `
+          <h1>Dashboard</h1>
+          <p>
+            Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk
+            melihat detailnya.
+          </p>
+        `;
+
+        // Hapus highlight dari semua summary items
+        document.querySelectorAll('.summary-item').forEach((item) => {
+          item.classList.remove('active-summary');
+          item.classList.add('bg-white', 'border-transparent');
+          item.classList.remove('bg-blue-50', 'border-blue-300');
+        });
+      }
+
+      // Fungsi utama untuk mengambil data secara paralel
+      async function fetchAndRender() {
+        // Tampilkan loading di dalam summaryList
+        const summaryList = document.getElementById('summaryList');
+        summaryList.innerHTML =
+          '<div class="text-center text-gray-500 mb-4">Memuat data...</div>';
+
+        try {
+          // Ambil data user dari Firebase
+          const fetchUserData = new Promise((resolve, reject) => {
+            fbsSvc2.gDt('user', '', resolve, reject);
+          });
+
+          // Ambil data SJ dari API
+          const fetchSjData = new Promise((resolve, reject) => {
+            postToAPI(
+              'https://app.weva.my.id/api/data-sj-awal',
+              { id_sj: true },
+              resolve,
+              reject
+            );
+          });
+
+          // Jalankan kedua permintaan secara paralel dan tunggu hasilnya
+          const [userData, d] = await Promise.all([fetchUserData, fetchSjData]);
+
+          // Map data user
+          const userMap = {};
+          for (const key in userData) {
+            if (Object.hasOwnProperty.call(userData, key)) {
+              const user = userData[key];
+              userMap[user.id_mkt] = user.mkt;
+            }
+          }
+
+          // Cek data SJ
+          if (!d || !d.data || d.data.length === 0) {
+            console.log('Tidak ada data yang ditemukan.');
+            renderSummaryList([]);
+            return;
+          }
+
+          // Proses data SJ
+          const groupedData = groupBy(d.data, 'id_sj');
+          allSjData = {};
+          const summaryArray = [];
+
+          for (const idSj in groupedData) {
+            if (Object.hasOwnProperty.call(groupedData, idSj)) {
+              const items = groupedData[idSj];
+              const firstItem = items[0];
+              const mktName = userMap[firstItem.id_mkt] || firstItem.id_mkt;
+
+              // Cari waktu minimal
+              const minTimestamp = items.reduce((min, item) => {
+                const itemFullTime = item.stamp_sj.split(' ')[1];
+                return min === null || itemFullTime < min ? itemFullTime : min;
+              }, null);
+
+              const formattedTime = minTimestamp
+                ? minTimestamp.substring(0, 5)
+                : null;
+
+              allSjData[idSj] = items;
+
+              summaryArray.push({
+                id_sj: idSj,
+                count: items.length,
+                mkt_name: mktName,
+                stamp_sj_min: formattedTime,
+              });
+            }
+          }
+
+          // Urutkan data berdasarkan waktu minimal
+          summaryArray.sort((a, b) => {
+            if (a.stamp_sj_min < b.stamp_sj_min) return -1;
+            if (a.stamp_sj_min > b.stamp_sj_min) return 1;
+            return 0;
+          });
+
+          // Simpan data asli dan filtered
+          originalSummaryData = summaryArray;
+          filteredSummaryData = [...summaryArray];
+
+          renderSummaryList(summaryArray);
+
+          // Kembali ke tampilan dashboard setelah data dimuat
+          showDashboard();
+        } catch (error) {
+          console.error('Error saat mengambil data:', error);
+
+          // Tampilkan pesan error di dalam summaryList
+          summaryList.innerHTML =
+            '<div class="text-center text-red-500 mb-4">Gagal mengambil data.</div>';
+
+          // Tetap kembali ke dashboard meskipun ada error
+          showDashboard();
+        }
+      }
+
+      $(() => {
+        fbsSvc0 = new Fbs(db0);
+        fbsSvc1 = new Fbs(db1);
+        fbsSvc2 = new Fbs(db2);
+
+        // Setup search handlers
+        setupSearchHandlers();
+
+        // Event listener untuk tombol kembali
+        document
+          .getElementById('backButton')
+          .addEventListener('click', showDashboard);
+
+        // Event listener untuk tombol refresh
+        document
+          .getElementById('refreshButton')
+          .addEventListener('click', () => {
+            console.log('Memuat ulang data...');
+            fetchAndRender();
+          });
+
+        fetchAndRender();
+      });
+    </script>
+    <script>
+      // Fungsi untuk mencari detail
+      window.cariDetail = function (idSj, keywords) {
+        const selectedSj = allSjData[idSj];
+        if (!selectedSj || selectedSj.length === 0) {
+          console.log('Data tidak ditemukan untuk ID SJ:', idSj);
+          return;
+        }
+
+        if (!keywords || keywords.trim() === '') {
+          // Reset semua highlight jika pencarian kosong
+          resetDetailSearch();
+          return;
+        }
+
+        // Properti yang akan dicari
+        const searchableProperties = [
+          'id_stock',
+          'k',
+          'lot',
+          'rol',
+          'rak',
+          'kol',
+          'ge',
+          'qty',
+          'q_bs',
+          'c_o',
+          'notes',
+          'ekspedisi'
+        ];
+        
+        const searchTerms = keywords
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((term) => term.length > 0);
+
+        // Filter data berdasarkan pencarian
+        const matchedItems = selectedSj.filter((item) => {
+          const searchableText = searchableProperties
+            .map((prop) => {
+              const value = item[prop];
+              return value !== null && value !== undefined
+                ? String(value).toLowerCase()
+                : '';
+            })
+            .join(' ');
+
+          // Semua term harus ditemukan
+          return searchTerms.every((term) => searchableText.includes(term));
+        });
+
+        // Highlight hasil pencarian
+        applyDetailSearchFilter(matchedItems, searchTerms, selectedSj.length);
+      };
+
+      // Fungsi untuk menerapkan filter pencarian detail
+      function applyDetailSearchFilter(matchedItems, searchTerms, totalItems) {
+        const tableRows = document.querySelectorAll('tbody tr');
+        const noResultsRow = document.getElementById('noResultsRow');
+        const matchedStockIds = new Set(
+          matchedItems.map((item) => String(item.id_stock))
+        );
+
+        tableRows.forEach((row, index) => {
+          // Skip the no results row
+          if (row.id === 'noResultsRow') return;
+          
+          const stockIdCell = row.querySelector('td:first-child');
+          if (stockIdCell) {
+            const stockId = stockIdCell.textContent.trim();
+
+            if (matchedStockIds.has(stockId)) {
+              // Tampilkan baris yang cocok dengan highlight
+              row.style.display = '';
+              
+              // Reset semua class background terlebih dahulu
+              row.classList.remove('bg-white', 'bg-gray-50', 'hover:bg-gray-50');
+              
+              // Tambahkan class search-match
+              row.classList.add('search-match');
+
+              // Highlight text dalam sel yang mengandung search terms
+              highlightTextInRow(row, searchTerms);
+            } else {
+              // Sembunyikan baris yang tidak cocok (eliminasi)
+              row.style.display = 'none';
+              
+              // Reset class
+              row.classList.remove('search-match');
+              row.classList.add('bg-white', 'hover:bg-gray-50');
+
+              // Remove highlight dari text
+              removeHighlightFromRow(row);
+            }
+          }
+        });
+
+        // Show/hide no results message
+        if (matchedItems.length === 0) {
+          noResultsRow.classList.remove('hidden');
+        } else {
+          noResultsRow.classList.add('hidden');
+        }
+
+        // Scroll ke hasil pertama jika ada
+        const firstMatch = document.querySelector('.search-match');
+        if (firstMatch) {
+          firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Update search info
+        updateDetailSearchInfo(matchedItems.length, totalItems);
+      }
+
+      // Fungsi untuk highlight text dalam baris
+      function highlightTextInRow(row, searchTerms) {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell) => {
+          let cellText = cell.textContent;
+          let highlightedText = cellText;
+
+          searchTerms.forEach((term) => {
+            if (term.length > 0) {
+              const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+              highlightedText = highlightedText.replace(
+                regex,
+                '<mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">$1</mark>'
+              );
+            }
+          });
+
+          if (highlightedText !== cellText) {
+            cell.innerHTML = highlightedText;
+          }
+        });
+      }
+
+      // Fungsi untuk menghapus highlight dari baris
+      function removeHighlightFromRow(row) {
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell) => {
+          // Hapus semua tag mark dan kembalikan ke text asli
+          const marks = cell.querySelectorAll('mark');
+          marks.forEach((mark) => {
+            mark.outerHTML = mark.textContent;
+          });
+        });
+      }
+
+      // Fungsi untuk reset pencarian detail
+      function resetDetailSearch() {
+        const tableRows = document.querySelectorAll('tbody tr');
+        const noResultsRow = document.getElementById('noResultsRow');
+        
+        tableRows.forEach((row) => {
+          // Skip the no results row
+          if (row.id === 'noResultsRow') return;
+          
+          // Tampilkan semua baris
+          row.style.display = '';
+          
+          // Reset class
+          row.classList.remove('search-match');
+          row.classList.add('hover:bg-gray-50');
+
+          // Remove highlight dari text
+          removeHighlightFromRow(row);
+        });
+
+        // Hide no results message
+        if (noResultsRow) {
+          noResultsRow.classList.add('hidden');
+        }
+
+        // Hide search results info
+        hideDetailSearchInfo();
+      }
+
+      // Fungsi untuk escape regex characters
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      // Fungsi untuk update search results info
+      function updateDetailSearchInfo(matchCount, totalCount) {
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+        const searchResultsText = document.getElementById('searchResultsText');
+        
+        if (searchResultsInfo && searchResultsText) {
+          searchResultsText.textContent = `${matchCount} dari ${totalCount} item ditemukan`;
+          searchResultsInfo.classList.remove('hidden');
+        }
+      }
+
+      // Fungsi untuk menyembunyikan search results info
+      function hideDetailSearchInfo() {
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+        if (searchResultsInfo) {
+          searchResultsInfo.classList.add('hidden');
+        }
+      }
+
+      // Expose resetDetailSearch ke global scope
+      window.resetDetailSearch = resetDetailSearch;
+
+      // Setup search functionality
+      function setupDetailSearch() {
+        const detailSearchInput = document.getElementById('detailSearchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
+
+        let searchTimeout;
+
+        if (!detailSearchInput) return;
+
+        // Function to clear search
+        function clearDetailSearch() {
+          detailSearchInput.value = '';
+          searchClearBtn.classList.add('hidden');
+          resetDetailSearch();
+        }
+
+        // Event listener untuk tombol clear
+        if (searchClearBtn) {
+          searchClearBtn.addEventListener('click', clearDetailSearch);
+        }
+
+        // Search input functionality
+        detailSearchInput.addEventListener('input', function (e) {
+          const keywords = e.target.value.trim();
+          
+          // Tampilkan/sembunyikan tombol clear
+          if (keywords.length > 0) {
+            searchClearBtn.classList.remove('hidden');
+          } else {
+            searchClearBtn.classList.add('hidden');
+          }
+
+          // Clear previous timeout
+          clearTimeout(searchTimeout);
+
+          // Debounce search
+          searchTimeout = setTimeout(() => {
+            if (window.currentIdSj) {
+              cariDetail(window.currentIdSj, keywords);
+            }
+          }, 200);
+        });
+
+        // Handle escape key untuk clear search
+        detailSearchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            clearDetailSearch();
+          }
+        });
+      }
+
+    </script>
+  </body>
+</html>

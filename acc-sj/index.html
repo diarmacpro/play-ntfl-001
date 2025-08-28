@@ -193,167 +193,167 @@
 						summaryList.appendChild(fragment);
 				}
 
-window.showDetail = async function(idSj) {
-    console.log(`Fungsi showDetail dipanggil untuk ID SJ: ${idSj}`);
+				window.showDetail = async function(idSj) {
+					console.log(`Fungsi showDetail dipanggil untuk ID SJ: ${idSj}`);
 
-    const detailContent = document.getElementById('detailContent');
-    const selectedSj = allSjData[idSj];
+					const detailContent = document.getElementById('detailContent');
+					const selectedSj = allSjData[idSj];
 
-    if (selectedSj && selectedSj.length > 0) {
-        // filter hanya properti tertentu
-        const filtered = selectedSj.map(item => ({
-            stamp_sj: item.stamp_sj,
-            stamp: item.stamp,
-            ky: item.ky,
-            id_sj: item.id_sj,
-            id_stock: item.id_stock,
-            id_kain: item.id_kain,
-            id_mkt: item.id_mkt,
-            k: item.k,
-            lot: item.lot,
-            rol: item.rol,
-            rak: item.rak,
-            kol: item.kol,
-            ge: item.ge,
-            qty: item.qty,
-            q_bs: item.q_bs,
-            c_o: item.c_o,
-            rtr: item.rtr,
-            notes: item.notes,
-            onOff: item.onOff,
-            ekspedisi: item.ekspedisi
-        }));
+					if (selectedSj && selectedSj.length > 0) {
+						// filter hanya properti tertentu
+						const filtered = selectedSj.map(item => ({
+							stamp_sj: item.stamp_sj,
+							stamp: item.stamp,
+							ky: item.ky,
+							id_sj: item.id_sj,
+							id_stock: item.id_stock,
+							id_kain: item.id_kain,
+							id_mkt: item.id_mkt,
+							k: item.k,
+							lot: item.lot,
+							rol: item.rol,
+							rak: item.rak,
+							kol: item.kol,
+							ge: item.ge,
+							qty: item.qty,
+							q_bs: item.q_bs,
+							c_o: item.c_o,
+							rtr: item.rtr,
+							notes: item.notes,
+							onOff: item.onOff,
+							ekspedisi: item.ekspedisi
+						}));
 
-        const summaryArr = makeSummary(filtered);
-        const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+						const summaryArr = makeSummary(filtered);
+						const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
 
-        // ambil user data (promise → harus tunggu)
-        const userData = await new Promise((resolve, reject) => {
-            fbsSvc2.gDt('user', '', resolve, reject);
-        });
+						// ambil user data (promise → harus tunggu)
+						const userData = await new Promise((resolve, reject) => {
+							fbsSvc2.gDt('user', '', resolve, reject);
+						});
 
-        // bikin map id_mkt → mkt
-        const userMap = {};
-        for (const key in userData) {
-            if (Object.hasOwnProperty.call(userData, key)) {
-                const user = userData[key];
-                userMap[user.id_mkt] = user.mkt;
-            }
-        }
+						// bikin map id_mkt → mkt
+						const userMap = {};
+						for (const key in userData) {
+							if (Object.hasOwnProperty.call(userData, key)) {
+								const user = userData[key];
+								userMap[user.id_mkt] = user.mkt;
+							}
+						}
 
-        // cari nama mkt dari summaryFiltered.id_mkt
-        const mktName = userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
+						// cari nama mkt dari summaryFiltered.id_mkt
+						const mktName = userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
 
-        console.log(summaryFiltered);
-        console.log(filtered);
-        console.log(selectedSj);
+						// console.log(summaryFiltered);
+						// console.log(filtered);
+						// console.log(selectedSj);
 
-        const detailsHtml = `
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-  <!-- Id. S.J. -->
-  <div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
-    <div class="flex items-center gap-2">
-      <i class="bi bi-receipt text-blue-600 text-lg"></i>
-      <span class="text-sm font-medium text-blue-600">Id. S.J.</span>
-    </div>
-    <div class="text-lg font-bold text-gray-900">${summaryFiltered.id_sj || '-'}</div>
-  </div>
+						const detailsHtml = `
+							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+							<!-- Id. S.J. -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-receipt text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Id. S.J.</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.id_sj || '-'}</div>
+							</div>
 
-  <!-- Marketing -->
-  <div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
-    <div class="flex items-center gap-2">
-      <i class="bi bi-person-badge text-blue-600 text-lg"></i>
-      <span class="text-sm font-medium text-blue-600">Mkt</span>
-    </div>
-    <div class="text-lg font-bold text-gray-900">${mktName || '-'}</div>
-  </div>
+							<!-- Marketing -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-person-badge text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Mkt</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${mktName || '-'}</div>
+							</div>
 
-  <!-- Waktu Awal -->
-  <div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
-    <div class="flex items-center gap-2">
-      <i class="bi bi-clock-history text-blue-600 text-lg"></i>
-      <span class="text-sm font-medium text-blue-600">Waktu Awal</span>
-    </div>
-    <div class="text-lg font-bold text-gray-900">${summaryFiltered.stamp || '-'}</div>
-  </div>
+							<!-- Waktu Awal -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-clock-history text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Waktu Awal</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.stamp || '-'}</div>
+							</div>
 
-  <!-- Total Item -->
-  <div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
-    <div class="flex items-center gap-2">
-      <i class="bi bi-collection text-blue-600 text-lg"></i>
-      <span class="text-sm font-medium text-blue-600">Total Item</span>
-    </div>
-    <div class="text-lg font-bold text-gray-900">${summaryFiltered.c}</div>
-  </div>
-</div>
+							<!-- Total Item -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-collection text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Total Item</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.c}</div>
+							</div>
+							</div>
 
-            <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+							<div class="bg-white shadow-sm rounded-lg border border-gray-200">
 
-                <div class="overflow-y-auto h-[70vh]">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky top-0 z-10">
-                            <tr class="divide-x-2">
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
-                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-																<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
-																<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-																<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
-																<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            ${selectedSj.map(item => `
-                                <tr class="divide-x-2">
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${item.id_stock || '-'}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.k || '-'}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${item.rol}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${item.kol}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.qty} ${item.q_bs}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
-                                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ket || '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
+								<div class="overflow-y-auto h-[70vh]">
+									<table class="min-w-full divide-y divide-gray-200">
+										<thead class="bg-gray-50 sticky top-0 z-10">
+											<tr class="divide-x-2">
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
+											</tr>
+										</thead>
+										<tbody class="bg-white divide-y divide-gray-200">
+											${selectedSj.map(item => `
+												<tr class="divide-x-2">
+													<td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${item.id_stock || '-'}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.k || '-'}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${item.rol}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${item.kol}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.qty} ${item.q_bs}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ket || '-'}</td>
+												</tr>
+											`).join('')}
+										</tbody>
+									</table>
+								</div>
 
-                <div class="w-full bg-white shadow-md border-b flex items-center justify-between px-4 py-2">
-                    <!-- Kiri -->
-                    <div class="flex items-center space-x-2">
-                        <button class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="bi bi-list text-xl"></i>
-                        </button>
-                        <button class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="bi bi-house-door text-xl"></i>
-                        </button>
-                        <button class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="bi bi-search text-xl"></i>
-                        </button>
-                    </div>
+								<div class="w-full bg-white shadow-md border-b flex items-center justify-between px-4 py-2">
+									<!-- Kiri -->
+									<div class="flex items-center space-x-2">
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-list text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-house-door text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-search text-xl"></i>
+										</button>
+									</div>
 
-                    <!-- Kanan -->
-                    <div class="flex items-center space-x-2">
-                        <button class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="bi bi-bell text-xl"></i>
-                        </button>
-                        <button class="p-2 rounded-lg hover:bg-gray-100">
-                            <i class="bi bi-gear text-xl"></i>
-                        </button>
-                        <button class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700">
-                            <i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        detailContent.innerHTML = detailsHtml;
-    } else {
-        detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
-    }
-};
+									<!-- Kanan -->
+									<div class="flex items-center space-x-2">
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-bell text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-gear text-xl"></i>
+										</button>
+										<button class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700">
+											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+										</button>
+									</div>
+								</div>
+							</div>
+						`;
+						detailContent.innerHTML = detailsHtml;
+					} else {
+						detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
+					}
+				};
 
 
 				// Fungsi utama untuk mengambil data secara paralel
