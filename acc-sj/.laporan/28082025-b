@@ -1,0 +1,62 @@
+------------------------------------
+
+saat saya mencari pada pencarian di sajian detail 'detailSearchInput' ---> 'dr it mil'
+menghasilkan seperti ini
+<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium"><mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">Dr</mark>mark&gt;yf<mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium"><mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">it</mark>mark&gt; <mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">Mil</mark>ano <mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium"><mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">It</mark>mark&gt;aly, K.28</mark></mark></mark></td>
+itu sungguh anomali tag html menurutku karena itu tidak wajar,
+fixed it!
+
+======
+
+Perubahan yang saya lakukan:
+
+Perbaikan highlightTextInRow:
+
+Menggunakan textContent atau innerText untuk mendapatkan text murni tanpa HTML markup
+Ini mencegah highlighting pada text yang sudah mengandung tag <mark>
+Perbaikan removeHighlightFromRow:
+
+Menggunakan textContent untuk mengembalikan cell ke text asli tanpa HTML markup
+Lebih sederhana dan efektif daripada mencari dan menghapus tag <mark> satu per satu
+Perbaikan applyDetailSearchFilter:
+
+Menambahkan removeHighlightFromRow(row) di awal loop untuk reset semua highlight sebelum menerapkan highlight baru
+Menghapus pemanggilan removeHighlightFromRow yang redundan
+Sekarang ketika Anda mencari "dr it mil", hasilnya akan bersih tanpa nested <mark> tags dan akan menampilkan highlighting yang benar seperti:
+
+
+<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500"><mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">Dr</mark>yf<mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">it</mark> <mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">Mil</mark>ano <mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">It</mark>aly, K.28</td>
+
+------------------------------------
+
+saat mencari hal pada 'searchInput' buat supaya tampilan pada 'detailContent' di reset seperti semula,
+lalu tambahkan 2 tombol di sebelah kiri dari  'searchInput' (tombol berupa icon saja : 'off' & 'reload' untuk menampilkan console log saja)
+
+======
+
+I've made the following changes:
+
+* Reset detail content during search: Modified the performSearch() function to call showDashboard() at the beginning, which resets the detail content to the default dashboard view whenever a search is performed.
+* Added control buttons: Added two icon buttons above the search input:
+  > Off button (red): Uses the bi-power icon and logs "Off button clicked" to console
+  > Reload button (blue): Uses the bi-arrow-clockwise icon and logs "Reload button clicked" to console
+* Button styling: Both buttons are styled as small square buttons (32x32px) with hover effects and appropriate colors.
+* Setup function: Added setupControlButtons() function that's called during initialization to attach event listeners to the new buttons.
+
+Now when you search in the sidebar, the detail content will automatically reset to show the dashboard, and you have two functional control buttons that will log their actions to the console when clicked.
+
+------------------------------------
+
+bhuat pada <!-- Control Buttons --> menjadi 1 baris dan fit
+kecuali 'searchInfo' yang tetap pada posisinya
+
+=========
+
+I've updated the control buttons layout to:
+* Single row layout: Used justify-between to spread the content across the full width
+* Grouped buttons: Wrapped the two buttons in a div with flex items-center gap-2 to keep them together on the left side
+* Proper spacing: The buttons are now properly aligned and take up the appropriate space
+* Maintained searchInfo position: The searchInfo div remains in its original position below the search input
+The control buttons are now neatly arranged in a single row and fit properly within the available space.
+
+------------------------------------
