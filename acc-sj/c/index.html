@@ -186,6 +186,7 @@
     ></script>
 
     <script src="./script.js"></script>
+    <script src="./auth.js"></script>
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
       import {
@@ -443,40 +444,17 @@
         if (selectedSj && selectedSj.length > 0) {
           // Tampilkan tombol aksi saat menampilkan detail
           actionButtons.classList.remove('hidden');
-
-          // filter hanya properti tertentu
-          const filtered = selectedSj.map((item) => ({
-            stamp_sj: item.stamp_sj,
-            stamp: item.stamp,
-            ky: item.ky,
-            id_sj: item.id_sj,
-            id_stock: item.id_stock,
-            id_kain: item.id_kain,
-            id_mkt: item.id_mkt,
-            k: item.k,
-            lot: item.lot,
-            rol: item.rol,
-            rak: item.rak,
-            kol: item.kol,
-            ge: item.ge,
-            qty: item.qty,
-            q_bs: item.q_bs,
-            c_o: item.c_o,
-            rtr: item.rtr,
-            notes: item.notes,
-            onOff: item.onOff,
-            ekspedisi: item.ekspedisi,
-          }));
-
-          const summaryArr = makeSummary(filtered);
+          
+          // Gunakan makeSummary untuk mendapatkan data ringkasan
+          const summaryArr = makeSummary(selectedSj);
           const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
-
-          // ambil user data (promise → harus tunggu)
+          
+          // Ambil user data untuk mendapatkan nama marketing
           const userData = await new Promise((resolve, reject) => {
             fbsSvc2.gDt('user', '', resolve, reject);
           });
-
-          // bikin map id_mkt → mkt
+          
+          // Bikin map id_mkt → mkt
           const userMap = {};
           for (const key in userData) {
             if (Object.hasOwnProperty.call(userData, key)) {
@@ -484,18 +462,14 @@
               userMap[user.id_mkt] = user.mkt;
             }
           }
+          
+          // Cari nama mkt dari summaryFiltered.id_mkt
+          const mktName = userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
 
-          // cari nama mkt dari summaryFiltered.id_mkt
-          const mktName =
-            userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
-
-          // console.log(summaryFiltered);
-          // console.log(filtered);
-          // console.log(selectedSj);
-          const qty = (qt,bs) => {
+          const qty = (qt, bs) => {
             const qbs = bs ? ` [ +${bs} ]` : '';
             return `${qt} <b class='text-red-500'>${qbs}</b>`;
-          }
+          };
           const detailsHtml = `
 							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 							<!-- Id. S.J. -->
@@ -545,14 +519,14 @@
 									<table class="min-w-full divide-y divide-gray-200">
 										<thead class="bg-gray-50 sticky top-0 z-10">
 											<tr class="divide-x-2">
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
 												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
 												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
 												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
 												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
-																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
-																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
 											</tr>
 										</thead>
 										<tbody class="bg-white divide-y divide-gray-200">
@@ -560,6 +534,9 @@
                         .map(
                           (item) => `
 												<tr class="divide-x-2">
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
+                            item.stamp ? formatToTimeHM(item.stamp) : '-'
+                          }</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${
                             item.id_stock || '-'
                           }</td>
@@ -573,11 +550,11 @@
                             item.kol
                           }</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
-													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(item.qty,item.q_bs)}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(
+                            item.qty,
+                            item.q_bs
+                          )}</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
-													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
-                            item.ket || '-'
-                          }</td>
 												</tr>
 											`
                         )
@@ -675,6 +652,40 @@
 
       // Fungsi utama untuk mengambil data secara paralel
       async function fetchAndRender() {
+        // Reset semua input pencarian dan state ke default
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const detailSearchInput = document.getElementById('detailSearchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
+        
+        // Reset sidebar search
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        if (clearSearch) {
+          clearSearch.classList.add('hidden');
+        }
+        
+        // Reset detail search jika ada
+        if (detailSearchInput) {
+          detailSearchInput.value = '';
+        }
+        if (searchClearBtn) {
+          searchClearBtn.classList.add('hidden');
+        }
+        
+        // Reset search info
+        const searchInfo = document.getElementById('searchInfo');
+        if (searchInfo) {
+          searchInfo.classList.add('hidden');
+        }
+        
+        // Reset current ID SJ
+        window.currentIdSj = null;
+        
+        // Reset ke dashboard view
+        showDashboard();
+
         // Tampilkan loading di dalam summaryList
         const summaryList = document.getElementById('summaryList');
         summaryList.innerHTML =
@@ -718,34 +729,27 @@
           // Proses data SJ
           const groupedData = groupBy(d.data, 'id_sj');
           allSjData = {};
+          
+          // Gunakan makeSummary untuk membuat ringkasan
+          const summaryFromMakeSummary = makeSummary(d.data);
           const summaryArray = [];
 
-          for (const idSj in groupedData) {
-            if (Object.hasOwnProperty.call(groupedData, idSj)) {
-              const items = groupedData[idSj];
-              const firstItem = items[0];
-              const mktName = userMap[firstItem.id_mkt] || firstItem.id_mkt;
-
-              // Cari waktu minimal
-              const minTimestamp = items.reduce((min, item) => {
-                const itemFullTime = item.stamp_sj.split(' ')[1];
-                return min === null || itemFullTime < min ? itemFullTime : min;
-              }, null);
-
-              const formattedTime = minTimestamp
-                ? minTimestamp.substring(0, 5)
-                : null;
-
-              allSjData[idSj] = items;
-
-              summaryArray.push({
-                id_sj: idSj,
-                count: items.length,
-                mkt_name: mktName,
-                stamp_sj_min: formattedTime,
-              });
-            }
-          }
+          // Proses hasil makeSummary dan tambahkan nama marketing
+          summaryFromMakeSummary.forEach((summary) => {
+            const mktName = userMap[summary.id_mkt] || summary.id_mkt;
+            
+            // Simpan data asli untuk detail
+            allSjData[summary.id_sj] = groupedData[summary.id_sj];
+            
+            summaryArray.push({
+              id_sj: summary.id_sj,
+              count: summary.c,
+              mkt_name: mktName,
+              stamp_sj_min: summary.stamp,
+              // Simpan data makeSummary untuk digunakan di detail
+              summaryData: summary
+            });
+          });
 
           // Urutkan data berdasarkan waktu minimal
           summaryArray.sort((a, b) => {
@@ -775,6 +779,11 @@
       }
 
       $(() => {
+        // Check authentication first
+        if (!initAuth()) {
+          return; // Stop execution if not authenticated
+        }
+        
         fbsSvc0 = new Fbs(db0);
         fbsSvc1 = new Fbs(db1);
         fbsSvc2 = new Fbs(db2);
@@ -788,7 +797,10 @@
         // Event listener untuk tombol kembali
         document
           .getElementById('backButton')
-          .addEventListener('click', showDashboard);
+          .addEventListener('click', () => {
+            console.log('Kembali ke dashboard dan reset ke default...');
+            fetchAndRender();
+          });
 
         // Event listener untuk tombol refresh
         document
@@ -809,7 +821,9 @@
         // Event listener untuk tombol off
         if (offButton) {
           offButton.addEventListener('click', function () {
-            console.log('Off button clicked');
+            if (confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
+              logout();
+            }
           });
         }
 
@@ -817,6 +831,7 @@
         if (reloadButton) {
           reloadButton.addEventListener('click', function () {
             console.log('Reload button clicked');
+            fetchAndRender();
           });
         }
       }
@@ -947,10 +962,10 @@
           if (!cell.dataset.originalText) {
             cell.dataset.originalText = cell.textContent || cell.innerText;
           }
-          
+
           // Reset cell content to original text first
           cell.textContent = cell.dataset.originalText;
-          
+
           // Apply highlighting using DOM manipulation instead of innerHTML
           highlightTextInCell(cell, searchTerms);
         });
@@ -959,19 +974,19 @@
       // Fungsi untuk highlight text dalam cell menggunakan DOM manipulation
       function highlightTextInCell(cell, searchTerms) {
         const originalText = cell.textContent;
-        
+
         // Jika tidak ada search terms, tidak perlu highlighting
         if (!searchTerms || searchTerms.length === 0) {
           return;
         }
-        
+
         // Buat fragment untuk menampung hasil highlighting
         const fragment = document.createDocumentFragment();
         let lastIndex = 0;
         const matches = [];
-        
+
         // Cari semua matches untuk semua search terms
-        searchTerms.forEach(term => {
+        searchTerms.forEach((term) => {
           if (term.length > 0) {
             const regex = new RegExp(escapeRegExp(term), 'gi');
             let match;
@@ -979,23 +994,23 @@
               matches.push({
                 start: match.index,
                 end: match.index + match[0].length,
-                text: match[0]
+                text: match[0],
               });
             }
           }
         });
-        
+
         // Jika tidak ada matches, tidak perlu highlighting
         if (matches.length === 0) {
           return;
         }
-        
+
         // Sort matches berdasarkan posisi
         matches.sort((a, b) => a.start - b.start);
-        
+
         // Merge overlapping matches
         const mergedMatches = [];
-        matches.forEach(match => {
+        matches.forEach((match) => {
           if (mergedMatches.length === 0) {
             mergedMatches.push(match);
           } else {
@@ -1003,36 +1018,44 @@
             if (match.start <= lastMatch.end) {
               // Overlapping, merge them
               lastMatch.end = Math.max(lastMatch.end, match.end);
-              lastMatch.text = originalText.substring(lastMatch.start, lastMatch.end);
+              lastMatch.text = originalText.substring(
+                lastMatch.start,
+                lastMatch.end
+              );
             } else {
               mergedMatches.push(match);
             }
           }
         });
-        
+
         // Build highlighted content
-        mergedMatches.forEach(match => {
+        mergedMatches.forEach((match) => {
           // Add text before match
           if (lastIndex < match.start) {
-            const textNode = document.createTextNode(originalText.substring(lastIndex, match.start));
+            const textNode = document.createTextNode(
+              originalText.substring(lastIndex, match.start)
+            );
             fragment.appendChild(textNode);
           }
-          
+
           // Add highlighted match
           const mark = document.createElement('mark');
-          mark.className = 'bg-yellow-200 text-yellow-900 px-1 rounded font-medium';
+          mark.className =
+            'bg-yellow-200 text-yellow-900 px-1 rounded font-medium';
           mark.textContent = match.text;
           fragment.appendChild(mark);
-          
+
           lastIndex = match.end;
         });
-        
+
         // Add remaining text
         if (lastIndex < originalText.length) {
-          const textNode = document.createTextNode(originalText.substring(lastIndex));
+          const textNode = document.createTextNode(
+            originalText.substring(lastIndex)
+          );
           fragment.appendChild(textNode);
         }
-        
+
         // Replace cell content with highlighted version
         cell.innerHTML = '';
         cell.appendChild(fragment);

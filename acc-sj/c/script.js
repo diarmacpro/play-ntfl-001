@@ -75,13 +75,24 @@ function makeSummary(data) {
 
         // hitung count
         const count = items.length;
-
+        
+        /*
         // stamp_sj ambil max
         let maxStamp = _.max(items.map(i => i.stamp));
         let stamp = null;
         if (maxStamp) {
             const hhmm = maxStamp.split(" ")[1]?.substring(0, 5); // ambil HH:ii
             stamp = hhmm || maxStamp;
+        }
+        */
+
+        // stamp_sj ambil min
+        let minStamp = _.min(items.map(i => i.stamp));
+        let stamp = null;
+
+        if (minStamp) {
+            const hhmm = minStamp.split(" ")[1]?.substring(0, 5); // ambil HH:ii
+            stamp = hhmm || minStamp;
         }
 
         // id_sj ambil unique lalu ambil [0]
