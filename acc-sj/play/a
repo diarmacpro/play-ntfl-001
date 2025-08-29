@@ -1,0 +1,65 @@
+**Cloudflare Worker** dengan endpoint Redis (Upstash) yang fleksibel, sebaiknya kita siapkan script yang bisa menerima request `GET`, `POST`, `PUT`, dan `DELETE` untuk operasi dasar sesuai dokumentasi **Redis Compatibility** Upstash.
+
+Contoh implementasi modular & rapi:
+
+```js
+import { Redis } from "@upstash/redis/cloudflare";
+
+const redis = new Redis({
+  url: "https://caring-goose-60846.upstash.io", // ganti dengan URL kamu
+  token: "Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY", // ganti dengan token kamu
+});
+
+export default {
+  async fetch(req) {
+    const { method, url } = req;
+    const { pathname, searchParams } = new URL(url);
+
+    try {
+      // --- GET /get?key=foo
+      if (method === "GET" && pathname === "/get") {
+        const key = searchParams.get("key");
+        if (!key) return new Response("Missing key", { status: 400 });
+        const value = await redis.get(key);
+        return Response.json({ key, value });
+      }
+
+      // --- POST /set { "key": "foo", "value": "bar" }
+      if (method === "POST" && pathname === "/set") {
+        const { key, value } = await req.json();
+        if (!key) return new Response("Missing key", { status: 400 });
+        await redis.set(key, value);
+        return Response.json({ success: true, key, value });
+      }
+
+      // --- PUT /incr { "key": "counter" }
+      if (method === "PUT" && pathname === "/incr") {
+        const { key } = await req.json();
+        if (!key) return new Response("Missing key", { status: 400 });
+        const count = await redis.incr(key);
+        return Response.json({ key, count });
+      }
+
+      // --- DELETE /del { "key": "foo" }
+      if (method === "DELETE" && pathname === "/del") {
+        const { key } = await req.json();
+        if (!key) return new Response("Missing key", { status: 400 });
+        await redis.del(key);
+        return Response.json({ success: true, key });
+      }
+
+      // Default: 404
+      return new Response("Not Found", { status: 404 });
+    } catch (err) {
+      return new Response(`Error: ${err.message}`, { status: 500 });
+    }
+  },
+};
+```
+
+🔹 Endpoint yang tersedia:
+
+* `GET /get?key=foo` → ambil data dari Redis
+* `POST /set` dengan body `{ "key": "foo", "value": "bar" }` → simpan data
+* `PUT /incr` dengan body `{ "key": "counter" }` → increment counter
+* `DELETE /del` dengan body `{ "key": "foo" }` → hapus data

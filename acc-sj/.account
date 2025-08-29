@@ -1,0 +1,43 @@
+[Uptash, Cloudflare]
+
+https://console.upstash.com/auth/sign-up
+diarmacpro.redis-wv-stk@blogger.com
+pz8)uEB%gV*IQeTG[{NF9@~.]Wa;tZy5
+
+[Redis DB]
+Name : redis-wv-stk
+Primary Region : Singapore (ap-southeast-1)
+Max Data Size : 256 MB
+commands per month : 500K
+Max Monthly Bandwidth : 10 GB
+Default Features : Persistence, REST API, TLS, Global
+
+redis-cli --tls -u redis://default:Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY@caring-goose-60846.upstash.io:6379
+TCP rediss://default:Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY@caring-goose-60846.upstash.io:6379
+Https https://caring-goose-60846.upstash.io
+Token Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY
+Token Readonly Au2uAAIgcDGv6WNvXFVhyd9gfBr2pk382mefzvEIh2GKZ6w16pg6Zg
+Port 6379
+TLS/SSL Enabled
+
+import { Redis } from "@upstash/redis/cloudflare";
+
+const redis = new Redis({
+  url: "https://caring-goose-60846.upstash.io",
+  token: "Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY",
+});
+
+export default {
+  async fetch() {
+    const count = await redis.incr("counter");
+
+    return new Response(JSON.stringify({ count }));
+  },
+};
+
+Commands (per second) 10,000
+Request Size 10 MB
+Record Size 100 MB
+Data Size 256 MB
+Concurrent Connections 10,000
+Monthly Bandwidth 50 GB

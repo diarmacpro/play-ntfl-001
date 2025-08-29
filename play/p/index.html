@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upstash Redis Demo</title>
+  <script>
+    const BASE_URL = "https://caring-goose-60846.upstash.io";
+    const AUTH_HEADER = {
+      "Authorization": "Bearer Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY",
+      "Content-Type": "application/json"
+    };
+
+    function tryParse(val) {
+      try {
+        return JSON.parse(val);
+      } catch {
+        return val; // kalau bukan JSON, anggap string biasa
+      }
+    }
+
+    async function setKey() {
+      const key = document.getElementById("key").value.trim();
+      const rawVal = document.getElementById("value").value.trim();
+      const value = tryParse(rawVal);
+
+      const res = await fetch(`${BASE_URL}/set/${key}`, {
+        method: "POST",
+        headers: AUTH_HEADER,
+        body: JSON.stringify(value)
+      });
+
+      const data = await res.json();
+      showOutput({ action: "SET", key, value, response: data });
+    }
+
+    async function getKey() {
+      const key = document.getElementById("key").value.trim();
+
+      const res = await fetch(`${BASE_URL}/get/${key}`, {
+        method: "GET",
+        headers: AUTH_HEADER
+      });
+
+      const data = await res.json();
+      let value = data.result;
+
+      // coba parse kalau ternyata string JSON
+      try {
+        value = JSON.parse(data.result);
+      } catch {}
+
+      showOutput({ action: "GET", key, value });
+    }
+
+    async function deleteKey() {
+      const key = document.getElementById("key").value.trim();
+
+      const res = await fetch(`${BASE_URL}/del/${key}`, {
+        method: "POST", // Upstash pakai POST untuk /del
+        headers: AUTH_HEADER,
+        body: JSON.stringify([key])
+      });
+
+      const data = await res.json();
+      showOutput({ action: "DEL", key, deleted: data });
+    }
+
+    function showOutput(data) {
+      document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+  <h2>Upstash Redis Demo</h2>
+
+  <div style="margin-bottom: 10px;">
+    <label>Key: <input id="key" type="text" value="my-key" /></label><br><br>
+    <label>Value: <input id="value" type="text" value='{"a":1,"b":2}' /></label>
+  </div>
+
+  <button onclick="setKey()">Set Key</button>
+  <button onclick="getKey()">Get Key</button>
+  <button onclick="deleteKey()">Delete Key</button>
+
+  <pre id="output" style="margin-top:20px; background:#f4f4f4; padding:10px; border-radius:5px;"></pre>
+</body>
+</html>

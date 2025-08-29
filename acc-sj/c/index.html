@@ -53,7 +53,9 @@
       }
 
       .search-match:hover {
-        background-color: rgb(220 252 231) !important; /* bg-green-100 on hover */
+        background-color: rgb(
+          220 252 231
+        ) !important; /* bg-green-100 on hover */
       }
 
       /* Override untuk memastikan search match styling tidak tertimpa */
@@ -89,7 +91,7 @@
                 <i class="bi bi-arrow-clockwise text-sm"></i>
               </button>
             </div>
-          </div>          
+          </div>
         </h2>
         <div id="noDataMessage" class="text-center text-gray-500 hidden mb-4">
           Tidak ada data yang ditemukan.
@@ -344,7 +346,7 @@
       function performSearch(query) {
         // Reset detail content ke dashboard saat melakukan pencarian
         showDashboard();
-        
+
         if (!query || query.trim() === '') {
           filteredSummaryData = [...originalSummaryData];
           renderSummaryList(filteredSummaryData);
@@ -490,7 +492,10 @@
           // console.log(summaryFiltered);
           // console.log(filtered);
           // console.log(selectedSj);
-
+          const qty = (qt,bs) => {
+            const qbs = bs ? ` [ +${bs} ]` : '';
+            return `${qt} <b class='text-red-500'>${qbs}</b>`;
+          }
           const detailsHtml = `
 							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 							<!-- Id. S.J. -->
@@ -568,9 +573,7 @@
                             item.kol
                           }</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
-													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.qty} ${
-                            item.q_bs
-                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(item.qty,item.q_bs)}</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
 													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
                             item.ket || '-'
@@ -635,7 +638,7 @@
 							</div>
 						`;
           detailContent.innerHTML = detailsHtml;
-          
+
           // Setup search functionality after rendering
           setupDetailSearch();
         } else {
@@ -797,22 +800,22 @@
 
         fetchAndRender();
       });
-      
+
       // Fungsi untuk setup control buttons
       function setupControlButtons() {
         const offButton = document.getElementById('offButton');
         const reloadButton = document.getElementById('reloadButton');
-        
+
         // Event listener untuk tombol off
         if (offButton) {
-          offButton.addEventListener('click', function() {
+          offButton.addEventListener('click', function () {
             console.log('Off button clicked');
           });
         }
-        
+
         // Event listener untuk tombol reload
         if (reloadButton) {
-          reloadButton.addEventListener('click', function() {
+          reloadButton.addEventListener('click', function () {
             console.log('Reload button clicked');
           });
         }
@@ -846,9 +849,9 @@
           'q_bs',
           'c_o',
           'notes',
-          'ekspedisi'
+          'ekspedisi',
         ];
-        
+
         const searchTerms = keywords
           .toLowerCase()
           .split(/\s+/)
@@ -884,10 +887,10 @@
         tableRows.forEach((row, index) => {
           // Skip the no results row
           if (row.id === 'noResultsRow') return;
-          
+
           // Reset highlight terlebih dahulu untuk menghindari nested highlighting
           removeHighlightFromRow(row);
-          
+
           const stockIdCell = row.querySelector('td:first-child');
           if (stockIdCell) {
             const stockId = stockIdCell.textContent.trim();
@@ -895,10 +898,14 @@
             if (matchedStockIds.has(stockId)) {
               // Tampilkan baris yang cocok dengan highlight
               row.style.display = '';
-              
+
               // Reset semua class background terlebih dahulu
-              row.classList.remove('bg-white', 'bg-gray-50', 'hover:bg-gray-50');
-              
+              row.classList.remove(
+                'bg-white',
+                'bg-gray-50',
+                'hover:bg-gray-50'
+              );
+
               // Tambahkan class search-match
               row.classList.add('search-match');
 
@@ -907,11 +914,10 @@
             } else {
               // Sembunyikan baris yang tidak cocok (eliminasi)
               row.style.display = 'none';
-              
+
               // Reset class
               row.classList.remove('search-match');
               row.classList.add('bg-white', 'hover:bg-gray-50');
-
             }
           }
         });
@@ -937,34 +943,109 @@
       function highlightTextInRow(row, searchTerms) {
         const cells = row.querySelectorAll('td');
         cells.forEach((cell) => {
-          // Ambil text asli tanpa HTML markup untuk menghindari nested highlighting
-          let cellText = cell.textContent || cell.innerText;
-          let highlightedText = cellText;
+          // Simpan text asli jika belum ada
+          if (!cell.dataset.originalText) {
+            cell.dataset.originalText = cell.textContent || cell.innerText;
+          }
+          
+          // Reset cell content to original text first
+          cell.textContent = cell.dataset.originalText;
+          
+          // Apply highlighting using DOM manipulation instead of innerHTML
+          highlightTextInCell(cell, searchTerms);
+        });
+      }
 
-          searchTerms.forEach((term) => {
-            if (term.length > 0) {
-              const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
-              highlightedText = highlightedText.replace(
-                regex,
-                '<mark class="bg-yellow-200 text-yellow-900 px-1 rounded font-medium">$1</mark>'
-              );
+      // Fungsi untuk highlight text dalam cell menggunakan DOM manipulation
+      function highlightTextInCell(cell, searchTerms) {
+        const originalText = cell.textContent;
+        
+        // Jika tidak ada search terms, tidak perlu highlighting
+        if (!searchTerms || searchTerms.length === 0) {
+          return;
+        }
+        
+        // Buat fragment untuk menampung hasil highlighting
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        const matches = [];
+        
+        // Cari semua matches untuk semua search terms
+        searchTerms.forEach(term => {
+          if (term.length > 0) {
+            const regex = new RegExp(escapeRegExp(term), 'gi');
+            let match;
+            while ((match = regex.exec(originalText)) !== null) {
+              matches.push({
+                start: match.index,
+                end: match.index + match[0].length,
+                text: match[0]
+              });
             }
-          });
-
-          // Hanya update innerHTML jika ada perubahan dan belum ada highlight
-          if (highlightedText !== cellText) {
-            cell.innerHTML = highlightedText;
           }
         });
+        
+        // Jika tidak ada matches, tidak perlu highlighting
+        if (matches.length === 0) {
+          return;
+        }
+        
+        // Sort matches berdasarkan posisi
+        matches.sort((a, b) => a.start - b.start);
+        
+        // Merge overlapping matches
+        const mergedMatches = [];
+        matches.forEach(match => {
+          if (mergedMatches.length === 0) {
+            mergedMatches.push(match);
+          } else {
+            const lastMatch = mergedMatches[mergedMatches.length - 1];
+            if (match.start <= lastMatch.end) {
+              // Overlapping, merge them
+              lastMatch.end = Math.max(lastMatch.end, match.end);
+              lastMatch.text = originalText.substring(lastMatch.start, lastMatch.end);
+            } else {
+              mergedMatches.push(match);
+            }
+          }
+        });
+        
+        // Build highlighted content
+        mergedMatches.forEach(match => {
+          // Add text before match
+          if (lastIndex < match.start) {
+            const textNode = document.createTextNode(originalText.substring(lastIndex, match.start));
+            fragment.appendChild(textNode);
+          }
+          
+          // Add highlighted match
+          const mark = document.createElement('mark');
+          mark.className = 'bg-yellow-200 text-yellow-900 px-1 rounded font-medium';
+          mark.textContent = match.text;
+          fragment.appendChild(mark);
+          
+          lastIndex = match.end;
+        });
+        
+        // Add remaining text
+        if (lastIndex < originalText.length) {
+          const textNode = document.createTextNode(originalText.substring(lastIndex));
+          fragment.appendChild(textNode);
+        }
+        
+        // Replace cell content with highlighted version
+        cell.innerHTML = '';
+        cell.appendChild(fragment);
       }
 
       // Fungsi untuk menghapus highlight dari baris
       function removeHighlightFromRow(row) {
         const cells = row.querySelectorAll('td');
         cells.forEach((cell) => {
-          // Simpan text asli dan hapus semua HTML markup
-          const originalText = cell.textContent || cell.innerText;
-          cell.textContent = originalText;
+          // Restore text asli dari dataset jika ada
+          if (cell.dataset.originalText) {
+            cell.textContent = cell.dataset.originalText;
+          }
         });
       }
 
@@ -972,14 +1053,14 @@
       function resetDetailSearch() {
         const tableRows = document.querySelectorAll('tbody tr');
         const noResultsRow = document.getElementById('noResultsRow');
-        
+
         tableRows.forEach((row) => {
           // Skip the no results row
           if (row.id === 'noResultsRow') return;
-          
+
           // Tampilkan semua baris
           row.style.display = '';
-          
+
           // Reset class
           row.classList.remove('search-match');
           row.classList.add('hover:bg-gray-50');
@@ -1006,7 +1087,7 @@
       function updateDetailSearchInfo(matchCount, totalCount) {
         const searchResultsInfo = document.getElementById('searchResultsInfo');
         const searchResultsText = document.getElementById('searchResultsText');
-        
+
         if (searchResultsInfo && searchResultsText) {
           searchResultsText.textContent = `${matchCount} dari ${totalCount} item ditemukan`;
           searchResultsInfo.classList.remove('hidden');
@@ -1048,7 +1129,7 @@
         // Search input functionality
         detailSearchInput.addEventListener('input', function (e) {
           const keywords = e.target.value.trim();
-          
+
           // Tampilkan/sembunyikan tombol clear
           if (keywords.length > 0) {
             searchClearBtn.classList.remove('hidden');
@@ -1074,7 +1155,6 @@
           }
         });
       }
-
     </script>
   </body>
 </html>

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upstash Redis Class Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      color: white;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #374151;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f9fafb;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .btn:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-info {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: white;
+    }
+
+    .output-container {
+      background: #1f2937;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      position: relative;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .output-title {
+      color: #e5e7eb;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .output {
+      background: #111827;
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #10b981;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #374151;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f4f6;
+      border-radius: 50%;
+      border-top-color: #667eea;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .button-group {
+        grid-template-columns: 1fr;
+      }
+      
+      .container {
+        padding: 0 16px;
+      }
+    }
+
+    .feature-badge {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 Upstash Redis Demo</h1>
+      <p>Professional Redis operations with beautiful UI</p>
+    </div>
+
+    <div class="card">
+      <div class="feature-badge">Redis Client Class</div>
+      <div class="status-indicator"></div>
+      
+      <div class="grid">
+        <div>
+          <div class="form-group">
+            <label for="key">Redis Key</label>
+            <input type="text" id="key" value="my-key" placeholder="Enter Redis key">
+          </div>
+          
+          <div class="form-group">
+            <label for="value">Value (JSON or String)</label>
+            <input type="text" id="value" value='{"name":"John","age":30}' placeholder="Enter value (JSON or text)">
+          </div>
+        </div>
+
+        <div>
+          <div class="button-group">
+            <button class="btn btn-primary" onclick="handleSet()" id="setBtn">
+              <span>Set Key</span>
+            </button>
+            <button class="btn btn-success" onclick="handleGet()" id="getBtn">
+              <span>Get Key</span>
+            </button>
+            <button class="btn btn-danger" onclick="handleDelete()" id="delBtn">
+              <span>Delete Key</span>
+            </button>
+            <button class="btn btn-info" onclick="handleExists()" id="existsBtn">
+              <span>Check Exists</span>
+            </button>
+            <button class="btn btn-secondary" onclick="handleKeys()" id="keysBtn">
+              <span>List Keys</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-container">
+        <div class="output-header">
+          <span class="output-title">📊 Response Output</span>
+          <span id="loadingIndicator"></span>
+        </div>
+        <pre id="output" class="output">Ready to perform Redis operations...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Upstash Redis Client Class
+    class UpstashRedis {
+      constructor(url, token) {
+        this.baseUrl = url;
+        this.headers = {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        };
+      }
+
+      // Helper function to parse JSON if possible
+      tryParse(value) {
+        if (typeof value !== 'string') return value;
+        
+        try {
+          return JSON.parse(value);
+        } catch {
+          return value; // Return as string if not valid JSON
+        }
+      }
+
+      // Set key-value (upsert operation)
+      async set(key, value) {
+        const parsedValue = this.tryParse(value);
+        
+        const response = await fetch(`${this.baseUrl}/set/${key}`, {
+          method: "POST",
+          headers: this.headers,
+          body: JSON.stringify(parsedValue)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to set key: ${response.statusText}`);
+        }
+
+        return await response.json();
+      }
+
+      // Get value by key
+      async get(key) {
+        const response = await fetch(`${this.baseUrl}/get/${key}`, {
+          method: "GET",
+          headers: this.headers
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get key: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return this.tryParse(data.result);
+      }
+
+      // Delete key
+      async del(key) {
+        const response = await fetch(`${this.baseUrl}/del/${key}`, {
+          method: "POST",
+          headers: this.headers,
+          body: JSON.stringify([key])
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete key: ${response.statusText}`);
+        }
+
+        return await response.json();
+      }
+
+      // Check if key exists
+      async exists(key) {
+        const response = await fetch(`${this.baseUrl}/exists/${key}`, {
+          method: "GET",
+          headers: this.headers
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to check key existence: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.result === 1;
+      }
+
+      // Get all keys matching pattern
+      async keys(pattern = "*") {
+        const response = await fetch(`${this.baseUrl}/keys/${pattern}`, {
+          method: "GET",
+          headers: this.headers
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to get keys: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.result || [];
+      }
+    }
+
+    // Initialize Redis client
+    const redis = new UpstashRedis(
+      "https://caring-goose-60846.upstash.io",
+      "Ae2uAAIncDFjNTA3ZjM2YWRmNDg0ZDJjODcyMWQ3MGNlN2IwNTcwMXAxNjA4NDY"
+    );
+
+    // UI Helper functions
+    function showLoading(show) {
+      const indicator = document.getElementById('loadingIndicator');
+      const buttons = document.querySelectorAll('.btn');
+      
+      if (show) {
+        indicator.innerHTML = '<span class="loading"></span>';
+        buttons.forEach(btn => btn.disabled = true);
+      } else {
+        indicator.innerHTML = '';
+        buttons.forEach(btn => btn.disabled = false);
+      }
+    }
+
+    function showOutput(data) {
+      const output = document.getElementById('output');
+      output.textContent = JSON.stringify(data, null, 2);
+      
+      // Add animation
+      output.style.transform = 'scale(0.95)';
+      output.style.opacity = '0.7';
+      setTimeout(() => {
+        output.style.transform = 'scale(1)';
+        output.style.opacity = '1';
+      }, 100);
+    }
+
+    function getInputs() {
+      return {
+        key: document.getElementById('key').value.trim(),
+        value: document.getElementById('value').value.trim()
+      };
+    }
+
+    // Redis operation handlers
+    async function handleSet() {
+      const { key, value } = getInputs();
+      
+      if (!key) {
+        showOutput({ error: "Key is required" });
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const result = await redis.set(key, value);
+        showOutput({ 
+          action: "SET", 
+          key, 
+          value: redis.tryParse(value), 
+          response: result,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        showOutput({ 
+          action: "SET", 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleGet() {
+      const { key } = getInputs();
+      
+      if (!key) {
+        showOutput({ error: "Key is required" });
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const result = await redis.get(key);
+        showOutput({ 
+          action: "GET", 
+          key, 
+          value: result,
+          type: typeof result,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        showOutput({ 
+          action: "GET", 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleDelete() {
+      const { key } = getInputs();
+      
+      if (!key) {
+        showOutput({ error: "Key is required" });
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const result = await redis.del(key);
+        showOutput({ 
+          action: "DELETE", 
+          key, 
+          deleted: result,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        showOutput({ 
+          action: "DELETE", 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleExists() {
+      const { key } = getInputs();
+      
+      if (!key) {
+        showOutput({ error: "Key is required" });
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const result = await redis.exists(key);
+        showOutput({ 
+          action: "EXISTS", 
+          key, 
+          exists: result,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        showOutput({ 
+          action: "EXISTS", 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleKeys() {
+      showLoading(true);
+      try {
+        const result = await redis.keys();
+        showOutput({ 
+          action: "KEYS", 
+          keys: result,
+          count: result.length,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        showOutput({ 
+          action: "KEYS", 
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case 's':
+            e.preventDefault();
+            handleSet();
+            break;
+          case 'g':
+            e.preventDefault();
+            handleGet();
+            break;
+          case 'd':
+            e.preventDefault();
+            handleDelete();
+            break;
+        }
+      }
+    });
+
+    // Add smooth transitions for output
+    document.addEventListener('DOMContentLoaded', function() {
+      const output = document.getElementById('output');
+      output.style.transition = 'all 0.3s ease';
+      
+      // Show initial welcome message
+      showOutput({
+        message: "Welcome to Upstash Redis Demo!",
+        instructions: "Use the buttons above to perform Redis operations",
+        shortcuts: {
+          "Ctrl+S": "Set Key",
+          "Ctrl+G": "Get Key", 
+          "Ctrl+D": "Delete Key"
+        },
+        timestamp: new Date().toISOString()
+      });
+    });
+  </script>
+</body>
+</html>
