@@ -100,7 +100,7 @@
       function checkAuth() {
         const isLoggedIn = localStorage.getItem('isLoggedIn');
         if (isLoggedIn === 'true') {
-          window.location.href = 'index.html';
+          window.location.href = '../';
         }
       }
 
@@ -184,7 +184,7 @@
             
             if (result.success) {
               // Redirect to main application
-              window.location.href = 'index.html';
+              window.location.href = '../';
             } else {
               showError(result.message);
             }

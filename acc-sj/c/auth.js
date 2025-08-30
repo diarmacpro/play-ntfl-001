@@ -14,13 +14,13 @@ function getCurrentUsername() {
 function logout() {
   localStorage.removeItem('isLoggedIn');
   localStorage.removeItem('username');
-  window.location.href = 'login.html';
+  window.location.href = './login';
 }
 
 // Redirect to login if not authenticated
 function requireAuth() {
   if (!isAuthenticated()) {
-    window.location.href = 'login.html';
+    window.location.href = './login';
     return false;
   }
   return true;
@@ -36,11 +36,7 @@ function initAuth() {
   // Setup logout functionality for off button
   const offButton = document.getElementById('offButton');
   if (offButton) {
-    offButton.addEventListener('click', function() {
-      if (confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
-        logout();
-      }
-    });
+    offButton.addEventListener('click', logout);
   }
   
   return true;

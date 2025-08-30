@@ -67,11 +67,46 @@
       tbody tr.search-match:hover {
         background-color: rgb(220 252 231) !important;
       }
+
+      /* Resizer styles */
+      .sidebar-resizer {
+        width: 4px;
+        background: transparent;
+        cursor: col-resize;
+        position: relative;
+        transition: background-color 0.2s ease;
+      }
+
+      .sidebar-resizer:hover {
+        background-color: #3b82f6;
+      }
+
+      .sidebar-resizer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -2px;
+        right: -2px;
+        bottom: 0;
+        background: transparent;
+      }
+
+      .sidebar-resizer.resizing {
+        background-color: #3b82f6;
+      }
+
+      /* Prevent text selection during resize */
+      .no-select {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
     </style>
   </head>
   <body class="bg-gray-100 font-sans antialiased">
     <div class="flex h-screen">
-      <aside class="w-96 bg-white shadow-lg p-4 flex flex-col">
+      <aside id="sidebar" class="bg-white shadow-lg p-4 flex flex-col" style="width: 384px; min-width: 280px; max-width: 600px;">
         <h2 class="text-2xl font-bold text-gray-800 mb-2 border-b pb-2">
           <div class="flex items-center gap-2 mb-2">
             <div class="relative flex-1">Daftar SJ</div>
@@ -127,6 +162,9 @@
 
         <div id="summaryList" class="space-y-2 overflow-y-auto h-[90vh]"></div>
       </aside>
+      
+      <!-- Sidebar Resizer -->
+      <div id="sidebarResizer" class="sidebar-resizer"></div>
 
       <main class="flex-1 p-2 overflow-y-auto">
         <div class="bg-white shadow-md rounded-lg p-4">
@@ -252,6 +290,9 @@
       let allSjData = {}; // Variabel untuk menyimpan semua data SJ
       let originalSummaryData = []; // Menyimpan data asli untuk pencarian
       let filteredSummaryData = []; // Menyimpan data yang sudah difilter
+      
+      // Global variable untuk menyimpan ukuran sidebar
+      let sidebarWidth = 384; // Default width in pixels (w-96 = 384px)
 
       // Fungsi utilitas untuk mengelompokkan array berdasarkan key
       function groupBy(arr, key) {
@@ -335,6 +376,11 @@
               listItem.classList.add('bg-blue-50', 'border-blue-300');
 
               showDetail(item.id_sj);
+            } else {
+              // Handle button click - Acc functionality
+              e.preventDefault();
+              e.stopPropagation();
+              handleSidebarAcc(item.id_sj);
             }
           });
           fragment.appendChild(listItem);
@@ -607,7 +653,7 @@
 
 									<!-- Kanan -->
 									<div class="flex items-center">
-										<button class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700">
+										<button id="accSuratJalanBtn" class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors duration-200">
 											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
 										</button>
 									</div>
@@ -618,10 +664,16 @@
 
           // Setup search functionality after rendering
           setupDetailSearch();
+          
+          // Setup Acc Surat Jalan button
+          setupAccSuratJalanButton();
         } else {
           // Tampilkan tombol aksi meskipun data tidak ditemukan
           actionButtons.classList.remove('hidden');
           detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
+          
+          // Setup Acc Surat Jalan button even when no data
+          setupAccSuratJalanButton();
         }
       };
 
@@ -778,6 +830,71 @@
         }
       }
 
+      // Setup sidebar resizer functionality
+      function setupSidebarResizer() {
+        const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        const body = document.body;
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        // Load saved width from localStorage
+        const savedWidth = localStorage.getItem('sidebarWidth');
+        if (savedWidth) {
+          sidebarWidth = parseInt(savedWidth);
+          sidebar.style.width = sidebarWidth + 'px';
+        }
+
+        resizer.addEventListener('mousedown', function(e) {
+          isResizing = true;
+          startX = e.clientX;
+          startWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+          
+          // Add visual feedback
+          resizer.classList.add('resizing');
+          body.classList.add('no-select');
+          
+          // Prevent text selection during resize
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+          if (!isResizing) return;
+          
+          const deltaX = e.clientX - startX;
+          const newWidth = startWidth + deltaX;
+          
+          // Apply min and max width constraints
+          const minWidth = 280; // Minimum width
+          const maxWidth = 600; // Maximum width
+          const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+          
+          sidebar.style.width = constrainedWidth + 'px';
+          sidebarWidth = constrainedWidth;
+          
+          // Save to localStorage
+          localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+        });
+
+        document.addEventListener('mouseup', function() {
+          if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('resizing');
+            body.classList.remove('no-select');
+          }
+        });
+
+        // Handle double-click to reset to default width
+        resizer.addEventListener('dblclick', function() {
+          const defaultWidth = 384;
+          sidebar.style.width = defaultWidth + 'px';
+          sidebarWidth = defaultWidth;
+          localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+        });
+      }
+
       $(() => {
         // Check authentication first
         if (!initAuth()) {
@@ -793,6 +910,9 @@
 
         // Setup control buttons
         setupControlButtons();
+        
+        // Setup sidebar resizer
+        setupSidebarResizer();
 
         // Event listener untuk tombol kembali
         document
@@ -817,15 +937,6 @@
       function setupControlButtons() {
         const offButton = document.getElementById('offButton');
         const reloadButton = document.getElementById('reloadButton');
-
-        // Event listener untuk tombol off
-        if (offButton) {
-          offButton.addEventListener('click', function () {
-            if (confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
-              logout();
-            }
-          });
-        }
 
         // Event listener untuk tombol reload
         if (reloadButton) {
@@ -1099,6 +1210,122 @@
 
         // Hide search results info
         hideDetailSearchInfo();
+      }
+      
+      // Fungsi untuk setup tombol Acc Surat Jalan
+      function setupAccSuratJalanButton() {
+        const accButton = document.getElementById('accSuratJalanBtn');
+        
+        if (accButton) {
+          // Remove existing event listeners to prevent duplicates
+          accButton.replaceWith(accButton.cloneNode(true));
+          const newAccButton = document.getElementById('accSuratJalanBtn');
+          
+          newAccButton.addEventListener('click', function() {
+            handleAccSuratJalan();
+          });
+        }
+      }
+      
+      // Fungsi untuk menangani klik tombol Acc Surat Jalan
+      function handleAccSuratJalan() {
+        if (!window.currentIdSj) {
+          console.log('Tidak ada Surat Jalan yang dipilih');
+          return;
+        }
+        
+        const selectedSjData = allSjData[window.currentIdSj];
+        
+        if (!selectedSjData || selectedSjData.length === 0) {
+          console.log('Data Surat Jalan tidak ditemukan untuk ID:', window.currentIdSj);
+          return;
+        }
+        
+        // Buat array berisi ky saja
+        const kyArray = selectedSjData.map(item => item.ky);
+        
+        // Buat objek dengan format yang diminta
+        const result = {
+          id_sj: window.currentIdSj,
+          ky: kyArray
+        };
+        
+        // Log hasil ke console
+        // console.log('=== ACC SURAT JALAN ===');
+        console.log(result);
+        // console.log('========================');
+        
+        // Optional: Tampilkan notifikasi visual
+        showAccNotification();
+      }
+      
+      // Fungsi untuk menampilkan notifikasi visual
+      function showAccNotification() {
+        const button = document.getElementById('accSuratJalanBtn');
+        const originalText = button.innerHTML;
+        
+        // Ubah tampilan button sementara
+        button.innerHTML = '<i class="bi bi-check2 text-lg"></i> Berhasil!';
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-green-500');
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 2 detik
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('bg-green-500');
+          button.classList.add('bg-green-600', 'hover:bg-green-700');
+          button.disabled = false;
+        }, 2000);
+      }
+      
+      // Fungsi untuk menangani klik tombol Acc di sidebar
+      function handleSidebarAcc(idSj) {
+        const selectedSjData = allSjData[idSj];
+        
+        if (!selectedSjData || selectedSjData.length === 0) {
+          console.log('Data Surat Jalan tidak ditemukan untuk ID:', idSj);
+          return;
+        }
+        
+        // Buat array berisi ky saja
+        const kyArray = selectedSjData.map(item => item.ky);
+        
+        // Buat objek dengan format yang diminta
+        const result = {
+          id_sj: idSj,
+          ky: kyArray
+        };
+        
+        // Log hasil ke console
+        console.log(result);
+        
+        // Optional: Tampilkan notifikasi visual pada button yang diklik
+        showSidebarAccNotification(idSj);
+      }
+      
+      // Fungsi untuk menampilkan notifikasi visual pada button sidebar
+      function showSidebarAccNotification(idSj) {
+        const summaryItem = document.querySelector(`[data-id-sj="${idSj}"]`);
+        if (!summaryItem) return;
+        
+        const button = summaryItem.querySelector('button');
+        if (!button) return;
+        
+        const originalClasses = button.className;
+        const originalIcon = button.innerHTML;
+        
+        // Ubah tampilan button sementara
+        button.className = 'rounded-full w-[32px] h-[32px] bg-green-500 text-white font-medium py-0 px-0 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2';
+        button.innerHTML = '<i class="bi bi-check2"></i>';
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 2 detik
+        setTimeout(() => {
+          button.className = originalClasses;
+          button.innerHTML = originalIcon;
+          button.disabled = false;
+        }, 2000);
       }
 
       // Fungsi untuk escape regex characters
