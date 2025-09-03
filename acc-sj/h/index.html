@@ -489,6 +489,8 @@
         window.currentIdSj = idSj;
 
         if (selectedSj && selectedSj.length > 0) {
+          console.log("summaryFiltered", summaryFiltered);
+
           // Tampilkan tombol aksi saat menampilkan detail
           actionButtons.classList.remove('hidden');
           
@@ -654,6 +656,12 @@
           // Setup search functionality after rendering
           setupDetailSearch();
           
+          // Reset pencarian detail setiap kali SJ baru dipilih
+          const detailSearchInput = document.getElementById('detailSearchInput');
+          const searchClearBtn = document.getElementById('searchClearBtn');
+          if (detailSearchInput) detailSearchInput.value = '';
+          if (searchClearBtn) searchClearBtn.classList.add('hidden');
+          hideDetailSearchInfo();
           // Setup Acc Surat Jalan button
           setupAccSuratJalanButton();
         } else {
@@ -1067,11 +1075,53 @@
           id_m: userData ? userData.id : null,
           id_sj: window.currentIdSj
         };
-        console.log(accData);
         
-        // Optional: Tampilkan notifikasi visual
-        showAccNotification();
+        // Kirim data ke API
+        postToAPI(
+          'https://app.weva.my.id/api/upd-sj',
+          accData,
+          (response) => {
+            console.log('Acc Surat Jalan berhasil:', response);
+            showAccNotification();
+            // Hapus data SJ dari semua variabel
+            const idSj = window.currentIdSj;
+            if (idSj) {
+              delete allSjData[idSj];
+              originalSummaryData = originalSummaryData.filter(item => item.id_sj !== idSj);
+              filteredSummaryData = filteredSummaryData.filter(item => item.id_sj !== idSj);
+              renderSummaryList(filteredSummaryData);
+              // Jika SJ yang di-ACC adalah yang sedang aktif, kembali ke dashboard
+              showDashboard();
+            }
+          },
+          (error) => {
+            console.error('Gagal Acc Surat Jalan:', error);
+            showAccErrorNotification();
+          }
+        );
       }
+      
+      // Fungsi untuk menampilkan notifikasi error
+      function showAccErrorNotification() {
+        const button = document.getElementById('accSuratJalanBtn');
+        if (!button) return;
+        
+        const originalText = button.innerHTML;
+        
+        // Ubah tampilan button untuk error
+        button.innerHTML = '<i class="bi bi-x-circle text-lg"></i> Gagal!';
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-red-500');
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 3 detik
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('bg-red-500');
+          button.classList.add('bg-green-600', 'hover:bg-green-700');
+          button.disabled = false;
+        }, 3000);
+  }
       
       // Fungsi untuk menampilkan notifikasi visual
       function showAccNotification() {
@@ -1110,11 +1160,56 @@
           id_m: userData ? userData.id : null,
           id_sj: idSj
         };
-        console.log(itemData);
         
-        // Optional: Tampilkan notifikasi visual pada button yang diklik
-        showSidebarAccNotification(idSj);
+        // Kirim data ke API
+        postToAPI(
+          'https://app.weva.my.id/api/upd-sj',
+          itemData,
+          (response) => {
+            console.log('Acc Surat Jalan berhasil:', response);
+            showSidebarAccNotification(idSj);
+            // Hapus data SJ dari semua variabel
+            if (idSj) {
+              delete allSjData[idSj];
+              originalSummaryData = originalSummaryData.filter(item => item.id_sj !== idSj);
+              filteredSummaryData = filteredSummaryData.filter(item => item.id_sj !== idSj);
+              renderSummaryList(filteredSummaryData);
+              // Jika SJ yang di-ACC adalah yang sedang aktif, kembali ke dashboard
+              if (window.currentIdSj === idSj) {
+                showDashboard();
+              }
+            }
+          },
+          (error) => {
+            console.error('Gagal Acc Surat Jalan:', error);
+            showSidebarAccErrorNotification(idSj);
+          }
+        );
       }
+      
+      // Fungsi untuk menampilkan notifikasi error pada button sidebar
+      function showSidebarAccErrorNotification(idSj) {
+        const summaryItem = document.querySelector(`[data-id-sj="${idSj}"]`);
+        if (!summaryItem) return;
+        
+        const button = summaryItem.querySelector('button');
+        if (!button) return;
+        
+        const originalClasses = button.className;
+        const originalIcon = button.innerHTML;
+        
+        // Ubah tampilan button untuk error
+        button.className = 'rounded-full w-[32px] h-[32px] bg-red-500 text-white font-medium py-0 px-0 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2';
+        button.innerHTML = '<i class="bi bi-x-circle"></i>';
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 3 detik
+        setTimeout(() => {
+          button.className = originalClasses;
+          button.innerHTML = originalIcon;
+          button.disabled = false;
+        }, 3000);
+  }
       
       // Fungsi untuk menampilkan notifikasi visual pada button sidebar
       function showSidebarAccNotification(idSj) {
