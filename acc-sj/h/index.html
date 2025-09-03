@@ -181,12 +181,7 @@
             <!-- Tombol Aksi -->
             <div id="actionButtons" class="flex items-center gap-2 hidden">
               <button
-                id="refreshButton"
-                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-                title="Muat ulang data"
-              >
-                <i class="bi bi-arrow-clockwise"></i>
-              </button>
+                <!-- refreshButton dihapus, hanya reloadButton yang digunakan -->
               <button
                 id="backButton"
                 class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
@@ -611,18 +606,6 @@
 											`
                         )
                         .join('')}
-											<!-- No Results Message (initially hidden) -->
-											<tr id="noResultsRow" class="hidden">
-												<td colspan="8" class="px-6 py-8 text-center">
-													<div class="flex flex-col items-center justify-center space-y-3">
-														<i class="bi bi-search text-gray-400 text-3xl"></i>
-														<div class="text-gray-500">
-															<p class="font-medium">Tidak ada hasil yang ditemukan</p>
-															<p class="text-sm">Coba gunakan kata kunci yang berbeda</p>
-														</div>
-													</div>
-												</td>
-											</tr>
 										</tbody>
 									</table>
 								</div>
@@ -925,18 +908,23 @@
           .getElementById('backButton')
           .addEventListener('click', () => {
             console.log('Kembali ke dashboard dan reset ke default...');
-            fetchAndRender();
+            // Hapus pemanggilan fetchAndRender()
+            // Reset tampilan ke kondisi default SPA
+            document.getElementById('detailContent').innerHTML = `
+              <h1>Dashboard</h1>
+              <p>
+                Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk
+                melihat detailnya.
+              </p>
+            `;
+            // Sembunyikan actionButtons jika perlu
+            document.getElementById('actionButtons').classList.add('hidden');
+            // ...tambahkan reset elemen lain jika diperlukan...
           });
 
-        // Event listener untuk tombol refresh
-        document
-          .getElementById('refreshButton')
-          .addEventListener('click', () => {
-            console.log('Memuat ulang data...');
-            fetchAndRender();
-          });
+  // Event listener untuk tombol reload saja
 
-        fetchAndRender();
+  // fetchAndRender dihapus, hanya dipanggil saat reloadButton diklik
       });
 
       // Fungsi untuk setup control buttons
@@ -959,29 +947,20 @@
         const selectedSj = allSjData[idSj];
         if (!selectedSj || selectedSj.length === 0) {
           console.log('Data tidak ditemukan untuk ID SJ:', idSj);
+          renderDetailTable([]); // render tabel kosong
+          updateDetailSearchInfo(0, 0);
           return;
         }
 
         if (!keywords || keywords.trim() === '') {
-          // Reset semua highlight jika pencarian kosong
-          resetDetailSearch();
+          renderDetailTable(selectedSj); // render semua data
+          hideDetailSearchInfo(); // sembunyikan info pencarian
           return;
         }
 
         // Properti yang akan dicari
         const searchableProperties = [
-          'id_stock',
-          'k',
-          'lot',
-          'rol',
-          'rak',
-          'kol',
-          'ge',
-          'qty',
-          'q_bs',
-          'c_o',
-          'notes',
-          'ekspedisi',
+          'id_stock', 'k', 'lot', 'rol', 'rak', 'kol', 'ge', 'qty', 'q_bs', 'c_o', 'notes', 'ekspedisi'
         ];
 
         const searchTerms = keywords
@@ -999,223 +978,56 @@
                 : '';
             })
             .join(' ');
-
-          // Semua term harus ditemukan
           return searchTerms.every((term) => searchableText.includes(term));
         });
 
-        // Highlight hasil pencarian
-        applyDetailSearchFilter(matchedItems, searchTerms, selectedSj.length);
+        renderDetailTable(matchedItems); // render hasil pencarian
+        updateDetailSearchInfo(matchedItems.length, selectedSj.length);
       };
 
-      // Fungsi untuk menerapkan filter pencarian detail
-      function applyDetailSearchFilter(matchedItems, searchTerms, totalItems) {
-        const tableRows = document.querySelectorAll('tbody tr');
-        const noResultsRow = document.getElementById('noResultsRow');
-        const matchedStockIds = new Set(
-          matchedItems.map((item) => String(item.id_stock))
-        );
-
-        tableRows.forEach((row, index) => {
-          // Skip the no results row
-          if (row.id === 'noResultsRow') return;
-
-          // Reset highlight terlebih dahulu untuk menghindari nested highlighting
-          removeHighlightFromRow(row);
-
-          const stockIdCell = row.querySelector('td:first-child');
-          if (stockIdCell) {
-            const stockId = stockIdCell.textContent.trim();
-
-            if (matchedStockIds.has(stockId)) {
-              // Tampilkan baris yang cocok dengan highlight
-              row.style.display = '';
-
-              // Reset semua class background terlebih dahulu
-              row.classList.remove(
-                'bg-white',
-                'bg-gray-50',
-                'hover:bg-gray-50'
-              );
-
-              // Tambahkan class search-match
-              row.classList.add('search-match');
-
-              // Highlight text dalam sel yang mengandung search terms
-              highlightTextInRow(row, searchTerms);
-            } else {
-              // Sembunyikan baris yang tidak cocok (eliminasi)
-              row.style.display = 'none';
-
-              // Reset class
-              row.classList.remove('search-match');
-              row.classList.add('bg-white', 'hover:bg-gray-50');
-            }
-          }
-        });
-
-        // Show/hide no results message
-        if (matchedItems.length === 0) {
-          noResultsRow.classList.remove('hidden');
-        } else {
-          noResultsRow.classList.add('hidden');
-        }
-
-        // Scroll ke hasil pertama jika ada
-        const firstMatch = document.querySelector('.search-match');
-        if (firstMatch) {
-          firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        // Update search info
-        updateDetailSearchInfo(matchedItems.length, totalItems);
-      }
-
-      // Fungsi untuk highlight text dalam baris
-      function highlightTextInRow(row, searchTerms) {
-        const cells = row.querySelectorAll('td');
-        cells.forEach((cell) => {
-          // Simpan text asli jika belum ada
-          if (!cell.dataset.originalText) {
-            cell.dataset.originalText = cell.textContent || cell.innerText;
-          }
-
-          // Reset cell content to original text first
-          cell.textContent = cell.dataset.originalText;
-
-          // Apply highlighting using DOM manipulation instead of innerHTML
-          highlightTextInCell(cell, searchTerms);
-        });
-      }
-
-      // Fungsi untuk highlight text dalam cell menggunakan DOM manipulation
-      function highlightTextInCell(cell, searchTerms) {
-        const originalText = cell.textContent;
-
-        // Jika tidak ada search terms, tidak perlu highlighting
-        if (!searchTerms || searchTerms.length === 0) {
+      // Fungsi untuk render ulang isi tabel detail
+      function renderDetailTable(data) {
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+        
+        const qty = (qt, bs) => {
+          const qbs = bs ? ` [ +${bs} ]` : '';
+          return `${qt} <b class='text-red-500'>${qbs}</b>`;
+        };
+        
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="px-6 py-8 text-center">
+                <div class="flex flex-col items-center justify-center space-y-3">
+                  <i class="bi bi-search text-gray-400 text-3xl"></i>
+                  <div class="text-gray-500">
+                    <p class="font-medium">Tidak ada hasil yang ditemukan</p>
+                    <p class="text-sm">Coba gunakan kata kunci yang berbeda</p>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
           return;
         }
-
-        // Buat fragment untuk menampung hasil highlighting
-        const fragment = document.createDocumentFragment();
-        let lastIndex = 0;
-        const matches = [];
-
-        // Cari semua matches untuk semua search terms
-        searchTerms.forEach((term) => {
-          if (term.length > 0) {
-            const regex = new RegExp(escapeRegExp(term), 'gi');
-            let match;
-            while ((match = regex.exec(originalText)) !== null) {
-              matches.push({
-                start: match.index,
-                end: match.index + match[0].length,
-                text: match[0],
-              });
-            }
-          }
+        
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = 'divide-x-2 hover:bg-gray-50 transition-colors duration-150';
+          row.innerHTML = `
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.stamp ? formatToTimeHM(item.stamp) : '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${item.id_stock || '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.k || '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${item.rol}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${item.kol}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(item.qty, item.q_bs)}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+          `;
+          tbody.appendChild(row);
         });
-
-        // Jika tidak ada matches, tidak perlu highlighting
-        if (matches.length === 0) {
-          return;
-        }
-
-        // Sort matches berdasarkan posisi
-        matches.sort((a, b) => a.start - b.start);
-
-        // Merge overlapping matches
-        const mergedMatches = [];
-        matches.forEach((match) => {
-          if (mergedMatches.length === 0) {
-            mergedMatches.push(match);
-          } else {
-            const lastMatch = mergedMatches[mergedMatches.length - 1];
-            if (match.start <= lastMatch.end) {
-              // Overlapping, merge them
-              lastMatch.end = Math.max(lastMatch.end, match.end);
-              lastMatch.text = originalText.substring(
-                lastMatch.start,
-                lastMatch.end
-              );
-            } else {
-              mergedMatches.push(match);
-            }
-          }
-        });
-
-        // Build highlighted content
-        mergedMatches.forEach((match) => {
-          // Add text before match
-          if (lastIndex < match.start) {
-            const textNode = document.createTextNode(
-              originalText.substring(lastIndex, match.start)
-            );
-            fragment.appendChild(textNode);
-          }
-
-          // Add highlighted match
-          const mark = document.createElement('mark');
-          mark.className =
-            'bg-yellow-200 text-yellow-900 px-1 rounded font-medium';
-          mark.textContent = match.text;
-          fragment.appendChild(mark);
-
-          lastIndex = match.end;
-        });
-
-        // Add remaining text
-        if (lastIndex < originalText.length) {
-          const textNode = document.createTextNode(
-            originalText.substring(lastIndex)
-          );
-          fragment.appendChild(textNode);
-        }
-
-        // Replace cell content with highlighted version
-        cell.innerHTML = '';
-        cell.appendChild(fragment);
-      }
-
-      // Fungsi untuk menghapus highlight dari baris
-      function removeHighlightFromRow(row) {
-        const cells = row.querySelectorAll('td');
-        cells.forEach((cell) => {
-          // Restore text asli dari dataset jika ada
-          if (cell.dataset.originalText) {
-            cell.textContent = cell.dataset.originalText;
-          }
-        });
-      }
-
-      // Fungsi untuk reset pencarian detail
-      function resetDetailSearch() {
-        const tableRows = document.querySelectorAll('tbody tr');
-        const noResultsRow = document.getElementById('noResultsRow');
-
-        tableRows.forEach((row) => {
-          // Skip the no results row
-          if (row.id === 'noResultsRow') return;
-
-          // Tampilkan semua baris
-          row.style.display = '';
-
-          // Reset class
-          row.classList.remove('search-match');
-          row.classList.add('hover:bg-gray-50');
-
-          // Remove highlight dari text
-          removeHighlightFromRow(row);
-        });
-
-        // Hide no results message
-        if (noResultsRow) {
-          noResultsRow.classList.add('hidden');
-        }
-
-        // Hide search results info
-        hideDetailSearchInfo();
       }
       
       // Fungsi untuk setup tombol Acc Surat Jalan
@@ -1355,6 +1167,20 @@
       // Expose resetDetailSearch ke global scope
       window.resetDetailSearch = resetDetailSearch;
 
+      // Fungsi untuk reset pencarian detail
+      function resetDetailSearch() {
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+        // Render ulang semua data detail jika ada
+        if (window.currentIdSj && allSjData[window.currentIdSj]) {
+          renderDetailTable(allSjData[window.currentIdSj]);
+          hideDetailSearchInfo();
+        } else {
+          tbody.innerHTML = '';
+          hideDetailSearchInfo();
+        }
+      }
+
       // Setup search functionality
       function setupDetailSearch() {
         const detailSearchInput = document.getElementById('detailSearchInput');
@@ -1405,6 +1231,30 @@
           }
         });
       }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        displayCurrentUser();
+        setTimeout(() => {
+          // Tampilkan spinner tailwind di summaryList
+          const summaryList = document.getElementById('summaryList');
+          if (summaryList) {
+            summaryList.innerHTML = `
+              <div class="flex justify-center items-center py-8">
+                <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+              </div>
+            `;
+          }
+          setTimeout(() => {
+            // Setelah 500ms, lakukan fetchAndRender
+            if (typeof fetchAndRender === 'function') {
+              fetchAndRender();
+            }
+          }, 500);
+        }, 200);
+      });
     </script>
   </body>
 </html>
