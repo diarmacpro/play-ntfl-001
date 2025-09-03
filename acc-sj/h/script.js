@@ -1,3 +1,15 @@
+function nmMkt(id_mkt) {
+  for (const key in listUsr) {
+    if (listUsr[key].id_mkt == id_mkt) {
+      return listUsr[key].mkt
+        .trim()                // hapus spasi depan & belakang
+        .replace(/\s+/g, " "); // ubah banyak spasi jadi 1
+    }
+  }
+  return null; // kalau tidak ketemu
+}
+
+
 /**
  * Fungsi reusable untuk mengambil data SJ Awal dari API
  * @param {object} body - body request

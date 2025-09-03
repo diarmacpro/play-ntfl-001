@@ -291,9 +291,12 @@
       let allSjData = {}; // Variabel untuk menyimpan semua data SJ
       let originalSummaryData = []; // Menyimpan data asli untuk pencarian
       let filteredSummaryData = []; // Menyimpan data yang sudah difilter
-      
+      let listUsr = {};
       // Global variable untuk menyimpan ukuran sidebar
       let sidebarWidth = 384; // Default width in pixels (w-96 = 384px)
+
+
+
 
       // Fungsi utilitas untuk mengelompokkan array berdasarkan key
       function groupBy(arr, key) {
@@ -489,14 +492,14 @@
         window.currentIdSj = idSj;
 
         if (selectedSj && selectedSj.length > 0) {
-          console.log("summaryFiltered", summaryFiltered);
 
           // Tampilkan tombol aksi saat menampilkan detail
           actionButtons.classList.remove('hidden');
           
           // Gunakan makeSummary untuk mendapatkan data ringkasan
           const summaryArr = makeSummary(selectedSj);
-          const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+          window.summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+          console.log("summaryFiltered", summaryFiltered);
           
           // Ambil user data untuk mendapatkan nama marketing
           const userData = await new Promise((resolve, reject) => {
@@ -873,6 +876,11 @@
           
           // Save to localStorage
           localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+
+                        window.currentSummarySj = summaryFiltered;
+              const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+              console.log("summaryFiltered", summaryFiltered);
+
         });
 
         document.addEventListener('mouseup', function() {
@@ -892,6 +900,27 @@
         });
       }
 
+      function createLogAcc(tx, idSj) {
+        const dataLog = makeSummary(allSjData[idSj])[0];
+
+        const logAcc = {
+          c: dataLog.c,
+          tm: dataLog.stamp,
+          sj: dataLog.id_sj,
+          imkt: dataLog.id_mkt,
+          rtr: dataLog.rtr,
+          onOff: dataLog.onOff,
+          eksp: dataLog.ekspedisi,
+          stm: stm("w"),
+          ipic: getCurrentUserData().id,
+          nmpic: getCurrentUserData().nm,
+          pic: getCurrentUserData().usr,
+          mkt: nmMkt(dataLog.id_mkt)
+        };
+
+        console.log(logAcc);
+      }
+
       $(() => {
         // Check authentication first
         if (!initAuth()) {
@@ -901,6 +930,14 @@
         fbsSvc0 = new Fbs(db0);
         fbsSvc1 = new Fbs(db1);
         fbsSvc2 = new Fbs(db2);
+
+
+
+        fbsSvc2.gDt('user', '', (d)=>{
+            console.log(d);
+        listUsr = d;
+        })
+        // console.log("userData", listUsr);
 
         // Setup search handlers
         setupSearchHandlers();
@@ -1085,6 +1122,7 @@
             showAccNotification();
             // Hapus data SJ dari semua variabel
             const idSj = window.currentIdSj;
+            createLogAcc("detail",accData.id_sj);
             if (idSj) {
               delete allSjData[idSj];
               originalSummaryData = originalSummaryData.filter(item => item.id_sj !== idSj);
@@ -1168,6 +1206,7 @@
           (response) => {
             console.log('Acc Surat Jalan berhasil:', response);
             showSidebarAccNotification(idSj);
+            createLogAcc("sidebar",itemData.id_sj);
             // Hapus data SJ dari semua variabel
             if (idSj) {
               delete allSjData[idSj];

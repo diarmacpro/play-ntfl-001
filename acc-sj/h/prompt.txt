@@ -1,0 +1,6 @@
+buatkan laporan profesional pekerjaan dari saya untuk atasan, dengan menulisnya pada laporan.md dari sumber seluruh bagian didalam file SPA beserta seluruh scriptnya dan berdasarkan pekerjaan yang ada pada bahan-laporan.md
+
+sertakan source code beserta penjelasan, atau tabel + penjelasan jika dibutuhkan, dan beri before after jika memungkinkan
+
+
+buat laporan-versi-1.md menjadi optimal pada file laporan-fix.md dengan merger ataupun membuang aspek yang berhubungan dengan time line, dengan tetap mempertahankan inti sari laporan yaitu source code, penjelasan, narasi, latar belakang, tindakan, hasil, tabel + penjelasan (jika ada), berfore after, dan lainya.

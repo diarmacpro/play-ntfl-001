@@ -1,0 +1,5 @@
+fbsSvc1.iDtKy(`/log-acc-awal-mgr/${stm('t')}`,{abc:"aaa",bbb:"ccc"},(d)=>{
+    console.log(d);
+})
+
+makeSummary(allSjData[48997])[0]
