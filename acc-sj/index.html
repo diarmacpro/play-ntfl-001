@@ -987,7 +987,7 @@ function dashboardRender() {
           if(data.reload == 1){
             console.log("reloadWindows");
             window.location.reload();
-            fbsSvc1.iDt('conf-acc-awal-mgr',{"reload":0},()=>{});
+            fbsSvc1.upd('conf-acc-awal-mgr','',{reload:0},()=>{});
           }
 
           if(data.login == 0){
@@ -1009,7 +1009,7 @@ function dashboardRender() {
         fbsSvc1 = new Fbs(db1);
         fbsSvc2 = new Fbs(db2);
         
-        fbsSvc1.iDt('conf-acc-awal-mgr',{"login":1},()=>{});
+        fbsSvc1.upd('conf-acc-awal-mgr','',{login:1},()=>{});
 
 fbsSvc1.gDtOn(`conf-acc-awal-mgr`,(d)=>{
   const dataConfAAM = d.val();

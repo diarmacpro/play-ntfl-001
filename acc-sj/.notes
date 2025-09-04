@@ -1,0 +1,2 @@
+fbsSvc1.upd('conf-acc-awal-mgr','',{reload:1},()=>{});
+fbsSvc1.upd('conf-acc-awal-mgr','',{login:0},()=>{});
