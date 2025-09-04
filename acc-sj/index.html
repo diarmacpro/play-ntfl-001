@@ -125,6 +125,13 @@
               >
                 <i class="bi bi-arrow-clockwise text-sm"></i>
               </button>
+              <button
+                id="autoReloadToggle"
+                class="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200"
+                title="Pause Autoload"
+              >
+                <i id="autoReloadIcon" class="bi bi-pause-fill animate-pulse text-lg"></i>
+              </button>
             </div>
           </div>
         </h2>
@@ -1442,15 +1449,17 @@ fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
           }
         }, 1000);
 
-        // Progress bar & auto reload
+        // Progress bar & auto reload toggle
         let progress = 0;
         let progressInterval = null;
+        let autoReloadActive = true;
         function startProgressBar() {
           progress = 0;
           const bar = document.getElementById('progressBar');
           if (bar) bar.style.width = '0%';
           if (progressInterval) clearInterval(progressInterval);
           progressInterval = setInterval(() => {
+            if (!autoReloadActive) return;
             progress += 1;
             if (bar) bar.style.width = (progress/60*100) + '%';
             if (progress >= 60) {
@@ -1464,6 +1473,24 @@ fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
           }, 1000);
         }
         startProgressBar();
+
+        // Toggle button handler
+        const autoReloadToggle = document.getElementById('autoReloadToggle');
+        const autoReloadIcon = document.getElementById('autoReloadIcon');
+        if (autoReloadToggle && autoReloadIcon) {
+          autoReloadToggle.addEventListener('click', function() {
+            autoReloadActive = !autoReloadActive;
+            if (autoReloadActive) {
+              autoReloadToggle.title = 'Pause Autoload';
+              autoReloadIcon.className = 'bi bi-pause-fill animate-pulse text-lg';
+              startProgressBar();
+            } else {
+              autoReloadToggle.title = 'Play Autoload';
+              autoReloadIcon.className = 'bi bi-play-fill animate-pulse text-lg';
+              if (progressInterval) clearInterval(progressInterval);
+            }
+          });
+        }
 
         setTimeout(() => {
           // Tampilkan spinner tailwind di summaryList
