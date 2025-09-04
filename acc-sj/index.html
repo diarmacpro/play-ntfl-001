@@ -911,12 +911,11 @@ function dashboardRender() {
   // header manual dengan grid tailwind
   const header = `
     <div class="grid grid-cols-6 gap-2 font-bold bg-gray-100 p-2 rounded">
-      <div>Log</div>
+      <div>Log / History</div>
       <div>SJ</div>
-      <div>Time</div>
       <div>Marketing</div>
+      <div>Item's</div>
       <div>Ekspedisi</div>
-      <div>PIC</div>
     </div>
   `;
 
@@ -935,12 +934,11 @@ function dashboardRender() {
   const rows = arr.map(items => {
     return `
       <div class="grid grid-cols-6 gap-2 border-b p-2 hover:bg-gray-50">
-        <div>${items.stm}</div>
-        <div>${items.sj} [${items.tm}]</div>
-        <div></div>
-        <div>${items.mkt}</div>
-        <div>${items.eksp}</div>
-        <div>${items.nmpic}</div>
+        <div>${items.stm} <span class='font-mono text-blue-600 font-semibold' data-usr='${items.pic}' data-id='${items.ipic}'>[${items.nmpic}]</span></div>
+        <div>${items.sj} <span class='font-mono text-blue-600 font-semibold'>[${items.tm}]</span></div>
+        <div data-id='${items.imkt}'}'>${items.mkt}</div>
+        <div>${items.c}</div>
+        <div>${items.eksp || '-'}</div>
       </div>
     `;
   }).join("");
@@ -1453,10 +1451,10 @@ fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
         let progress = 0;
         let progressInterval = null;
         let autoReloadActive = true;
-        function startProgressBar() {
-          progress = 0;
+        function startProgressBar(resume = false) {
           const bar = document.getElementById('progressBar');
-          if (bar) bar.style.width = '0%';
+          if (!resume) progress = 0;
+          if (bar) bar.style.width = (progress/60*100) + '%';
           if (progressInterval) clearInterval(progressInterval);
           progressInterval = setInterval(() => {
             if (!autoReloadActive) return;
@@ -1468,11 +1466,11 @@ fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
               // Trigger reload
               const reloadBtn = document.getElementById('reloadButton');
               if (reloadBtn) reloadBtn.click();
-              setTimeout(startProgressBar, 1000); // restart after reload
+              setTimeout(() => startProgressBar(false), 1000); // restart after reload
             }
           }, 1000);
         }
-        startProgressBar();
+        startProgressBar(false);
 
         // Toggle button handler
         const autoReloadToggle = document.getElementById('autoReloadToggle');
@@ -1483,7 +1481,7 @@ fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
             if (autoReloadActive) {
               autoReloadToggle.title = 'Pause Autoload';
               autoReloadIcon.className = 'bi bi-pause-fill animate-pulse text-lg';
-              startProgressBar();
+              startProgressBar(true); // resume, jangan reset progress
             } else {
               autoReloadToggle.title = 'Play Autoload';
               autoReloadIcon.className = 'bi bi-play-fill animate-pulse text-lg';
