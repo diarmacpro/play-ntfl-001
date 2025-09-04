@@ -164,6 +164,7 @@ async function loginUser(username, password) {
   const result = await verifyCredentials(username, password);
   
   if (result.success) {
+    console.log("Login Berhasil");
     // Store authentication data securely
     localStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.IS_LOGGED_IN, 'true');
     localStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.USERNAME, username);

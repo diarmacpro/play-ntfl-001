@@ -981,6 +981,22 @@ function dashboardRender() {
         dashboardRender();
       }
 
+      function realtimeConfigAAM(data){
+        console.log("dataConfAAMxx",data);
+        if(data){
+          if(data.reload == 1){
+            console.log("reloadWindows");
+            window.location.reload();
+            fbsSvc1.iDt('conf-acc-awal-mgr',{"reload":0},()=>{});
+          }
+
+          if(data.login == 0){
+            console.log("logout");
+            logout();
+          }
+        }
+      }
+
       var dashKonten = {};
       
       $(() => {
@@ -992,6 +1008,14 @@ function dashboardRender() {
         fbsSvc0 = new Fbs(db0);
         fbsSvc1 = new Fbs(db1);
         fbsSvc2 = new Fbs(db2);
+        
+        fbsSvc1.iDt('conf-acc-awal-mgr',{"login":1},()=>{});
+
+fbsSvc1.gDtOn(`conf-acc-awal-mgr`,(d)=>{
+  const dataConfAAM = d.val();
+  // console.log("dataConfAAM",dataConfAAM);
+  realtimeConfigAAM(dataConfAAM)
+})
 
 fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
     // console.log("Data Baru",d.val());
