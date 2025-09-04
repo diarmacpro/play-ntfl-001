@@ -3,3 +3,53 @@ fbsSvc1.iDtKy(`/log-acc-awal-mgr/${stm('t')}`,{abc:"aaa",bbb:"ccc"},(d)=>{
 })
 
 makeSummary(allSjData[48997])[0]
+
+
+fbsSvc1.gDt(`log-acc-awal-mgr/${stm('t')}`,'',(d)=>{
+    console.log(d);
+})
+
+{
+    "-OZHfND-kU5GmtKk9WJB": {
+        "c": 1,
+        "eksp": "Jnt",
+        "imkt": 1,
+        "ipic": 14,
+        "mkt": "Eka",
+        "nmpic": "Diar",
+        "onOff": 1,
+        "pic": "diar",
+        "rtr": 0,
+        "sj": 49062,
+        "stm": "10:03:05",
+        "tm": "14:44"
+    },
+    "-OZHfQsqde9pMSN81e5Q": {
+        "c": 2,
+        "eksp": "jnt cargo",
+        "imkt": 21,
+        "ipic": 14,
+        "mkt": "Rizkha",
+        "nmpic": "Diar",
+        "onOff": 2,
+        "pic": "diar",
+        "rtr": 0,
+        "sj": 49075,
+        "stm": "10:03:08",
+        "tm": "13:55"
+    },
+    "-OZHfRk78WJ265Qjclbc": {
+        "c": 2,
+        "eksp": "Indah cargo",
+        "imkt": 7,
+        "ipic": 14,
+        "mkt": "Rahmad",
+        "nmpic": "Diar",
+        "onOff": 2,
+        "pic": "diar",
+        "rtr": 0,
+        "sj": 49064,
+        "stm": "10:03:12",
+        "tm": "15:39"
+    }
+}
