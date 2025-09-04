@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Administrator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+      import {
+        getDatabase,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+
+      const app0 = initializeApp(
+        {
+          databaseURL:
+            'https://main-stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app0'
+      );
+      const db0 = getDatabase(app0);
+
+      Object.assign(window, {
+        db0,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      });
+    </script>
+    <script>
+      let fbsSvc0;
+            $(() => {
+        fbsSvc0 = new Fbs(db0);
+        
+      })
+    </script>
+  </body>
+</html>
