@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ACC WH Tahap Awal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <style>
+      /* Untuk browser berbasis WebKit (Chrome, Safari, Edge) */
+      .overflow-y-auto::-webkit-scrollbar {
+        width: 1px; /* Mengatur lebar scrollbar vertikal */
+      }
+
+      /* Untuk track (jalur) scrollbar */
+      .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f1f1f1; /* Warna latar belakang jalur */
+      }
+
+      /* Untuk thumb (pegangan) scrollbar */
+      .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #888; /* Warna pegangan scrollbar */
+        border-radius: 1px;
+      }
+
+      /* Opsi hover (saat kursor diarahkan ke scrollbar) */
+      .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      /* Untuk browser Firefox (menggunakan properti non-standar) */
+      .overflow-y-auto {
+        scrollbar-width: 1px; /* Mengatur lebar scrollbar menjadi 'thin' (sekitar 1px) atau 'none' */
+      }
+
+      /* Style untuk item summary yang aktif */
+      .active-summary {
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+      }
+
+      .active-summary:hover {
+        background-color: rgb(239 246 255) !important; /* bg-blue-50 on hover */
+      }
+
+      /* Style untuk search match rows */
+      .search-match {
+        background-color: rgb(240 253 244) !important; /* bg-green-50 */
+        border-left: 4px solid rgb(34 197 94) !important; /* border-l-4 border-green-400 */
+      }
+
+      .search-match:hover {
+        background-color: rgb(
+          220 252 231
+        ) !important; /* bg-green-100 on hover */
+      }
+
+      /* Override untuk memastikan search match styling tidak tertimpa */
+      tbody tr.search-match {
+        background-color: rgb(240 253 244) !important;
+        border-left: 4px solid rgb(34 197 94) !important;
+      }
+
+      tbody tr.search-match:hover {
+        background-color: rgb(220 252 231) !important;
+      }
+
+      /* Resizer styles */
+      .sidebar-resizer {
+        width: 4px;
+        background: transparent;
+        cursor: col-resize;
+        position: relative;
+        transition: background-color 0.2s ease;
+      }
+
+      .sidebar-resizer:hover {
+        background-color: #3b82f6;
+      }
+
+      .sidebar-resizer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -2px;
+        right: -2px;
+        bottom: 0;
+        background: transparent;
+      }
+
+      .sidebar-resizer.resizing {
+        background-color: #3b82f6;
+      }
+
+      /* Prevent text selection during resize */
+      .no-select {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 font-sans antialiased">
+    <div class="flex h-screen">
+      <aside id="sidebar" class="bg-white shadow-lg p-4 flex flex-col" style="width: 384px; min-width: 280px; max-width: 600px;">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 border-b pb-2">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="relative flex-1">Daftar SJ</div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button
+                id="offButton"
+                class="flex items-center justify-center w-8 h-8 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+                title="Off"
+              >
+                <i class="bi bi-power text-sm"></i>
+              </button>
+              <button
+                id="reloadButton"
+                class="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                title="Reload"
+              >
+                <i class="bi bi-arrow-clockwise text-sm"></i>
+              </button>
+              <button
+                id="autoReloadToggle"
+                class="flex items-center justify-center w-8 h-8 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-colors duration-200"
+                title="Pause Autoload"
+              >
+                <i id="autoReloadIcon" class="bi bi-pause-fill animate-pulse text-lg"></i>
+              </button>
+            </div>
+          </div>
+        </h2>
+        <div id="noDataMessage" class="text-center text-gray-500 hidden mb-4">
+          Tidak ada data yang ditemukan.
+        </div>
+
+        <!-- Search Box -->
+        <div class="mb-4">
+          <!-- Control Buttons and Search Input in one row -->
+          <div class="flex items-center gap-2 mb-2">
+            <div class="relative flex-1">
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Cari SJ, Marketing, Waktu, atau !count..."
+                class="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <i class="bi bi-search text-gray-400"></i>
+              </div>
+              <button
+                id="clearSearch"
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 hidden"
+              >
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            </div>
+          </div>
+          <div id="searchInfo" class="text-xs text-gray-500 mt-1 hidden">
+            Menampilkan <span id="searchCount">0</span> dari
+            <span id="totalCount">0</span> hasil
+          </div>
+        </div>
+
+        <div id="summaryList" class="space-y-2 overflow-y-auto h-[90vh]"></div>
+      </aside>
+      
+      <!-- Sidebar Resizer -->
+      <div id="sidebarResizer" class="sidebar-resizer"></div>
+
+      <main class="flex-1 p-2 overflow-y-auto">
+        <div class="bg-white shadow-md rounded-lg p-4">
+          <div id="progressBarContainer" style="position:fixed;top:0;left:0;width:100%;z-index:50;">
+            <div id="progressBar" style="height:4px;width:0%;background:#3b82f6;transition:width 0.2s;"></div>
+          </div>
+          <div class="flex items-center justify-between mb-4">
+            <!-- Title and User Info -->
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span id="realTimeClock" class="text-2xl font-mono font-bold text-red-700"></span>
+                <h1 class="text-3xl font-bold text-gray-800">Detail Surat Jalan</h1>
+              </div>
+              <p class="text-sm text-gray-600 mt-1">
+                <i class="bi bi-person-circle mr-1"></i>
+                Selamat datang, <span id="currentUserName" class="font-semibold text-blue-600"></span>
+              </p>
+            </div>
+
+            <!-- Tombol Aksi -->
+            <div id="actionButtons" class="flex items-center gap-2 hidden">
+              <button
+                <!-- refreshButton dihapus, hanya reloadButton yang digunakan -->
+              <button
+                id="backButton"
+                class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                title="Kembali ke dashboard"
+              >
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="detailContent" class="text-gray-600">
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="./script.js"></script>
+    <script src="./auth.js"></script>
+    <script type="module">
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+      import {
+        getDatabase,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+      const app0 = initializeApp(
+        {
+          databaseURL:
+            'https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app0'
+      );
+      const db0 = getDatabase(app0);
+
+      const app1 = initializeApp(
+        {
+          databaseURL:
+            'https://main-stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app1'
+      );
+      const db1 = getDatabase(app1);
+
+      const app2 = initializeApp(
+        {
+          databaseURL:
+            'https://stk-wv-default-rtdb.asia-southeast1.firebasedatabase.app',
+        },
+        'app2'
+      );
+      const db2 = getDatabase(app2);
+
+      Object.assign(window, {
+        db0,
+        db1,
+        db2,
+        ref,
+        set,
+        get,
+        update,
+        push,
+        query,
+        remove,
+        orderByChild,
+        equalTo,
+        onValue,
+        off,
+      });
+    </script>
+    <script>
+      let fbsSvc0, fbsSvc1, fbsSvc2;
+      let allSjData = {}; // Variabel untuk menyimpan semua data SJ
+      let originalSummaryData = []; // Menyimpan data asli untuk pencarian
+      let filteredSummaryData = []; // Menyimpan data yang sudah difilter
+      let listUsr = {};
+      // Global variable untuk menyimpan ukuran sidebar
+      let sidebarWidth = 384; // Default width in pixels (w-96 = 384px)
+
+
+
+
+      // Fungsi utilitas untuk mengelompokkan array berdasarkan key
+      function groupBy(arr, key) {
+        return arr.reduce((acc, obj) => {
+          const value = obj[key];
+          (acc[value] = acc[value] || []).push(obj);
+          return acc;
+        }, {});
+      }
+
+      // Fungsi untuk merender daftar ringkasan di sidebar
+      function renderSummaryList(data) {
+        const summaryList = document.getElementById('summaryList');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const searchInfo = document.getElementById('searchInfo');
+        const searchCount = document.getElementById('searchCount');
+        const totalCount = document.getElementById('totalCount');
+
+        summaryList.innerHTML = '';
+
+        // Update search info
+        if (originalSummaryData.length > 0) {
+          searchInfo.classList.remove('hidden');
+          searchCount.textContent = data.length;
+          totalCount.textContent = originalSummaryData.length;
+        } else {
+          searchInfo.classList.add('hidden');
+        }
+        if (data.length === 0) {
+          summaryList.innerHTML =
+            '<div class="text-center text-red-500 mb-4">Tidak ditemukan data.</div>';
+          return;
+        }
+
+        // Menggunakan DocumentFragment untuk meminimalkan manipulasi DOM
+        const fragment = document.createDocumentFragment();
+
+        data.forEach((item) => {
+          const listItem = document.createElement('div');
+          listItem.className =
+            'summary-item rounded-full p-0 ps-2 my-1 cursor-pointer bg-white hover:bg-blue-200 transition-colors duration-200 me-2 border-2 border-transparent';
+          listItem.dataset.idSj = item.id_sj;
+          listItem.innerHTML = `
+										<div class="flex items-center w-full gap-3">
+												<span class="w-[18%] rounded-lg mr-1 font-medium text-gray-700">${
+                          item.stamp_sj_min || '-'
+                        }</span>
+												<div class="w-[28%] flex justify-between items-center">
+														<span>${item.id_sj}</span>
+														<span class="font-bold">${item.count}</span>
+												</div>
+												<div class="flex items-center w-[44%]">
+														<span class="ml-1">${item.mkt_name || '-'}</span>
+												</div>
+												<div class="flex items-center gap-1 w-[10%]">
+														<button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+																<i class="bi bi-check-circle-fill"></i>
+														</button>
+												</div>
+										</div>
+								`;
+
+          listItem.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) {
+              // Remove active class from all items
+              document.querySelectorAll('.summary-item').forEach((item) => {
+                item.classList.remove('active-summary');
+                item.classList.add('bg-white', 'border-transparent');
+                item.classList.remove('bg-blue-50', 'border-blue-300');
+              });
+
+              // Add active class to clicked item
+              listItem.classList.add('active-summary');
+              listItem.classList.remove('bg-white', 'border-transparent');
+              listItem.classList.add('bg-blue-50', 'border-blue-300');
+
+              showDetail(item.id_sj);
+            } else {
+              // Handle button click - Acc functionality
+              e.preventDefault();
+              e.stopPropagation();
+              handleSidebarAcc(item.id_sj);
+            }
+          });
+          fragment.appendChild(listItem);
+        });
+
+        summaryList.appendChild(fragment);
+      }
+
+      // Fungsi untuk melakukan pencarian
+      function performSearch(query) {
+        // Reset detail content ke dashboard saat melakukan pencarian
+        showDashboard();
+
+        if (!query || query.trim() === '') {
+          filteredSummaryData = [...originalSummaryData];
+          renderSummaryList(filteredSummaryData);
+          return;
+        }
+
+        const searchQuery = query.trim().toLowerCase();
+
+        // Cek apakah pencarian untuk count (dimulai dengan !)
+        if (searchQuery.startsWith('!')) {
+          const countQuery = searchQuery.substring(1);
+          if (!isNaN(countQuery) && countQuery !== '') {
+            const targetCount = parseInt(countQuery);
+            filteredSummaryData = originalSummaryData.filter(
+              (item) => item.count === targetCount
+            );
+          } else {
+            filteredSummaryData = [];
+          }
+        } else {
+          // Pencarian normal untuk semua field
+          const searchTerms = searchQuery
+            .split(/\s+/)
+            .filter((term) => term.length > 0);
+
+          filteredSummaryData = originalSummaryData.filter((item) => {
+            const searchableText = [
+              item.id_sj || '',
+              item.mkt_name || '',
+              item.stamp_sj_min || '',
+              item.count.toString(),
+            ]
+              .join(' ')
+              .toLowerCase();
+
+            // Semua term harus ditemukan (bisa dalam urutan berbeda)
+            return searchTerms.every((term) => searchableText.includes(term));
+          });
+        }
+
+        renderSummaryList(filteredSummaryData);
+      }
+
+      // Fungsi untuk menangani input pencarian
+      function setupSearchHandlers() {
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+
+        // Event listener untuk input pencarian
+        searchInput.addEventListener('input', function (e) {
+          const query = e.target.value;
+
+          // Tampilkan/sembunyikan tombol clear
+          if (query.length > 0) {
+            clearSearch.classList.remove('hidden');
+          } else {
+            clearSearch.classList.add('hidden');
+          }
+
+          // Lakukan pencarian dengan debounce
+          clearTimeout(searchInput.searchTimeout);
+          searchInput.searchTimeout = setTimeout(() => {
+            performSearch(query);
+          }, 300);
+        });
+
+        // Event listener untuk tombol clear
+        clearSearch.addEventListener('click', function () {
+          searchInput.value = '';
+          clearSearch.classList.add('hidden');
+          performSearch('');
+          searchInput.focus();
+        });
+
+        // Event listener untuk Enter key
+        searchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch(e.target.value);
+          }
+        });
+      }
+
+      window.showDetail = async function (idSj) {
+        console.log(`Fungsi showDetail dipanggil untuk ID SJ: ${idSj}`);
+
+        const detailContent = document.getElementById('detailContent');
+        const actionButtons = document.getElementById('actionButtons');
+        const selectedSj = allSjData[idSj];
+
+        // Store current idSj for search functionality
+        window.currentIdSj = idSj;
+
+        if (selectedSj && selectedSj.length > 0) {
+
+          // Tampilkan tombol aksi saat menampilkan detail
+          actionButtons.classList.remove('hidden');
+          
+          // Gunakan makeSummary untuk mendapatkan data ringkasan
+          const summaryArr = makeSummary(selectedSj);
+          window.summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+          console.log("summaryFiltered", summaryFiltered);
+          
+          // Ambil user data untuk mendapatkan nama marketing
+          const userData = await new Promise((resolve, reject) => {
+            fbsSvc2.gDt('user', '', resolve, reject);
+          });
+          
+          // Bikin map id_mkt → mkt
+          const userMap = {};
+          for (const key in userData) {
+            if (Object.hasOwnProperty.call(userData, key)) {
+              const user = userData[key];
+              userMap[user.id_mkt] = user.mkt;
+            }
+          }
+          
+          // Cari nama mkt dari summaryFiltered.id_mkt
+          const mktName = userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
+
+          const qty = (qt, bs) => {
+            const qbs = bs ? ` [ +${bs} ]` : '';
+            return `${qt} <b class='text-red-500'>${qbs}</b>`;
+          };
+          const detailsHtml = `
+							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+							<!-- Id. S.J. -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-receipt text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Id. S.J.</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${
+                  summaryFiltered.id_sj || '-'
+                }</div>
+							</div>
+
+							<!-- Marketing -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-person-badge text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Mkt</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${mktName || '-'}</div>
+							</div>
+
+							<!-- Waktu Awal -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-clock-history text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Waktu Awal</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${
+                  summaryFiltered.stamp || '-'
+                }</div>
+							</div>
+
+							<!-- Total Item -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-collection text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Total Item</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.c}</div>
+							</div>
+							</div>
+
+							<div class="bg-white shadow-sm rounded-lg border border-gray-200">
+
+								<div class="overflow-y-auto h-[70vh]">
+									<table class="min-w-full divide-y divide-gray-200">
+										<thead class="bg-gray-50 sticky top-0 z-10">
+											<tr class="divide-x-2">
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
+											</tr>
+										</thead>
+										<tbody class="bg-white divide-y divide-gray-200">
+											${selectedSj
+                        .map(
+                          (item) => `
+												<tr class="divide-x-2">
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
+                            item.stamp ? formatToTimeHM(item.stamp) : '-'
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${
+                            item.id_stock || '-'
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${
+                            item.k || '-'
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${
+                            item.rol
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${
+                            item.kol
+                          }</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(
+                            item.qty,
+                            item.q_bs
+                          )}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+												</tr>
+											`
+                        )
+                        .join('')}
+										</tbody>
+									</table>
+								</div>
+
+								<div class="w-full bg-white shadow-md border-b flex items-center justify-between px-4 py-2">
+									<!-- Kiri -->
+									<div class="flex items-center space-x-2">
+										<!-- Search Input (always visible) -->
+										<div class="flex items-center bg-white border border-gray-300 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+											<div class="flex items-center pl-3">
+												<i class="bi bi-search text-gray-400"></i>
+											</div>
+											<input 
+												id="detailSearchInput"
+												type="text" 
+												placeholder="Cari dalam detail (ID, Barang, Qty, Lokasi, dll)..."
+												class="px-3 py-2 w-80 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-400 rounded-r-lg"
+											/>
+											<button 
+												id="searchClearBtn"
+												class="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200 hidden"
+												title="Hapus pencarian"
+											>
+												<i class="bi bi-x-circle-fill"></i>
+											</button>
+										</div>
+										
+										<!-- Search Results Info -->
+										<div id="searchResultsInfo" class="hidden text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-200">
+											<i class="bi bi-info-circle mr-1"></i>
+											<span id="searchResultsText">0 hasil ditemukan</span>
+										</div>
+									</div>
+
+									<!-- Kanan -->
+									<div class="flex items-center">
+										<button id="accSuratJalanBtn" class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors duration-200">
+											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+										</button>
+									</div>
+								</div>
+							</div>
+						`;
+          detailContent.innerHTML = detailsHtml;
+
+          // Setup search functionality after rendering
+          setupDetailSearch();
+          
+          // Reset pencarian detail setiap kali SJ baru dipilih
+          const detailSearchInput = document.getElementById('detailSearchInput');
+          const searchClearBtn = document.getElementById('searchClearBtn');
+          if (detailSearchInput) detailSearchInput.value = '';
+          if (searchClearBtn) searchClearBtn.classList.add('hidden');
+          hideDetailSearchInfo();
+          // Setup Acc Surat Jalan button
+          setupAccSuratJalanButton();
+        } else {
+          // Tampilkan tombol aksi meskipun data tidak ditemukan
+          actionButtons.classList.remove('hidden');
+          detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
+          
+          // Setup Acc Surat Jalan button even when no data
+          setupAccSuratJalanButton();
+        }
+      };
+
+      // Fungsi untuk kembali ke dashboard
+      function showDashboard() {
+        const detailContent = document.getElementById('detailContent');
+        const actionButtons = document.getElementById('actionButtons');
+
+        // Sembunyikan tombol aksi
+        actionButtons.classList.add('hidden');
+
+        /*
+        // Tampilkan konten dashboard
+        detailContent.innerHTML = `
+          <h1>Dashboard</h1>
+          <p>
+            Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk
+            melihat detailnya.
+          </p>
+        `;
+        */
+       dashboardRender();
+
+        // Hapus highlight dari semua summary items
+        document.querySelectorAll('.summary-item').forEach((item) => {
+          item.classList.remove('active-summary');
+          item.classList.add('bg-white', 'border-transparent');
+          item.classList.remove('bg-blue-50', 'border-blue-300');
+        });
+      }
+
+      // Fungsi utama untuk mengambil data secara paralel
+      async function fetchAndRender() {
+        // Reset semua input pencarian dan state ke default
+        const searchInput = document.getElementById('searchInput');
+        const clearSearch = document.getElementById('clearSearch');
+        const detailSearchInput = document.getElementById('detailSearchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
+        
+        // Reset sidebar search
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        if (clearSearch) {
+          clearSearch.classList.add('hidden');
+        }
+        
+        // Reset detail search jika ada
+        if (detailSearchInput) {
+          detailSearchInput.value = '';
+        }
+        if (searchClearBtn) {
+          searchClearBtn.classList.add('hidden');
+        }
+        
+        // Reset search info
+        const searchInfo = document.getElementById('searchInfo');
+        if (searchInfo) {
+          searchInfo.classList.add('hidden');
+        }
+        
+        // Reset current ID SJ
+        window.currentIdSj = null;
+        
+        // Reset ke dashboard view
+        showDashboard();
+
+        // Tampilkan loading di dalam summaryList
+        const summaryList = document.getElementById('summaryList');
+        summaryList.innerHTML =
+          '<div class="text-center text-gray-500 mb-4">Memuat data...</div>';
+
+        try {
+          // Ambil data user dari Firebase
+          const fetchUserData = new Promise((resolve, reject) => {
+            fbsSvc2.gDt('user', '', resolve, reject);
+          });
+
+          // Ambil data SJ dari API
+          const fetchSjData = new Promise((resolve, reject) => {
+            postToAPI(
+              'https://app.weva.my.id/api/data-sj-awal',
+              { id_sj: true },
+              resolve,
+              reject
+            );
+          });
+
+          // Jalankan kedua permintaan secara paralel dan tunggu hasilnya
+          const [userData, d] = await Promise.all([fetchUserData, fetchSjData]);
+
+          // Map data user
+          const userMap = {};
+          for (const key in userData) {
+            if (Object.hasOwnProperty.call(userData, key)) {
+              const user = userData[key];
+              userMap[user.id_mkt] = user.mkt;
+            }
+          }
+
+          // Cek data SJ
+          if (!d || !d.data || d.data.length === 0) {
+            console.log('Tidak ada data yang ditemukan.');
+            renderSummaryList([]);
+            return;
+          }
+
+          // Proses data SJ
+          const groupedData = groupBy(d.data, 'id_sj');
+          allSjData = {};
+          
+          // Gunakan makeSummary untuk membuat ringkasan
+          const summaryFromMakeSummary = makeSummary(d.data);
+          const summaryArray = [];
+
+          // Proses hasil makeSummary dan tambahkan nama marketing
+          summaryFromMakeSummary.forEach((summary) => {
+            const mktName = userMap[summary.id_mkt] || summary.id_mkt;
+            
+            // Simpan data asli untuk detail
+            allSjData[summary.id_sj] = groupedData[summary.id_sj];
+            
+            summaryArray.push({
+              id_sj: summary.id_sj,
+              count: summary.c,
+              mkt_name: mktName,
+              stamp_sj_min: summary.stamp,
+              // Simpan data makeSummary untuk digunakan di detail
+              summaryData: summary
+            });
+          });
+
+          // Urutkan data berdasarkan waktu minimal
+          summaryArray.sort((a, b) => {
+            if (a.stamp_sj_min < b.stamp_sj_min) return -1;
+            if (a.stamp_sj_min > b.stamp_sj_min) return 1;
+            return 0;
+          });
+
+          // Simpan data asli dan filtered
+          originalSummaryData = summaryArray;
+          filteredSummaryData = [...summaryArray];
+
+          renderSummaryList(summaryArray);
+
+          // Kembali ke tampilan dashboard setelah data dimuat
+          showDashboard();
+        } catch (error) {
+          console.error('Error saat mengambil data:', error);
+
+          // Tampilkan pesan error di dalam summaryList
+          summaryList.innerHTML =
+            '<div class="text-center text-red-500 mb-4">Gagal mengambil data.</div>';
+
+          // Tetap kembali ke dashboard meskipun ada error
+          showDashboard();
+        }
+      }
+
+      // Setup sidebar resizer functionality
+      function setupSidebarResizer() {
+        const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        const body = document.body;
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        // Load saved width from localStorage
+        const savedWidth = localStorage.getItem('sidebarWidth');
+        if (savedWidth) {
+          sidebarWidth = parseInt(savedWidth);
+          sidebar.style.width = sidebarWidth + 'px';
+        }
+
+        resizer.addEventListener('mousedown', function(e) {
+          isResizing = true;
+          startX = e.clientX;
+          startWidth = parseInt(window.getComputedStyle(sidebar).width, 10);
+          
+          // Add visual feedback
+          resizer.classList.add('resizing');
+          body.classList.add('no-select');
+          
+          // Prevent text selection during resize
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+          if (!isResizing) return;
+          
+          const deltaX = e.clientX - startX;
+          const newWidth = startWidth + deltaX;
+          
+          // Apply min and max width constraints
+          const minWidth = 280; // Minimum width
+          const maxWidth = 600; // Maximum width
+          const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+          
+          sidebar.style.width = constrainedWidth + 'px';
+          sidebarWidth = constrainedWidth;
+          
+          // Save to localStorage
+          localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+
+                        window.currentSummarySj = summaryFiltered;
+              const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+              console.log("summaryFiltered", summaryFiltered);
+
+        });
+
+        document.addEventListener('mouseup', function() {
+          if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('resizing');
+            body.classList.remove('no-select');
+          }
+        });
+
+        // Handle double-click to reset to default width
+        resizer.addEventListener('dblclick', function() {
+          const defaultWidth = 384;
+          sidebar.style.width = defaultWidth + 'px';
+          sidebarWidth = defaultWidth;
+          localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+        });
+      }
+
+function dashboardRender() {
+  const arr = dashKonten ? Object.values(dashKonten) : [];
+
+  // header manual dengan grid tailwind
+  const header = `
+    <div class="grid grid-cols-6 gap-2 font-bold bg-gray-100 p-2 rounded">
+      <div>Log</div>
+      <div>SJ</div>
+      <div>Time</div>
+      <div>Marketing</div>
+      <div>Ekspedisi</div>
+      <div>PIC</div>
+    </div>
+  `;
+
+  // jika kosong
+  if (arr.length === 0) {
+    $('#detailContent').html(`
+      <h1 class="text-xl font-semibold mb-2">Log Aktivitas / History</h1>
+      <hr class="mb-4">
+      ${header}
+      <div class="p-4 text-center text-gray-500">Tidak ditemukan data log.</div>
+    `);
+    return;
+  }
+
+  // isi data
+  const rows = arr.map(items => {
+    return `
+      <div class="grid grid-cols-6 gap-2 border-b p-2 hover:bg-gray-50">
+        <div>${items.stm}</div>
+        <div>${items.sj} [${items.tm}]</div>
+        <div></div>
+        <div>${items.mkt}</div>
+        <div>${items.eksp}</div>
+        <div>${items.nmpic}</div>
+      </div>
+    `;
+  }).join("");
+
+  // render ke html
+  $('#detailContent').html(`
+    <h1 class="text-xl font-semibold mb-2">Log Aktivitas / History</h1>
+    <hr class="mb-4">
+    <div class="space-y-1">
+      ${header}
+      ${rows}
+    </div>
+  `);
+}
+
+
+      function createLogAcc(tx, idSj) {
+        const dataLog = makeSummary(allSjData[idSj])[0];
+
+        const logAcc = {
+          c: dataLog.c,
+          tm: dataLog.stamp,
+          sj: dataLog.id_sj,
+          imkt: dataLog.id_mkt,
+          rtr: dataLog.rtr,
+          onOff: dataLog.onOff,
+          eksp: dataLog.ekspedisi,
+          stm: stm("w"),
+          ipic: getCurrentUserData().id,
+          nmpic: getCurrentUserData().nm,
+          pic: getCurrentUserData().usr,
+          mkt: nmMkt(dataLog.id_mkt)
+        };
+
+        fbsSvc1.iDtKy(`/log-acc-awal-mgr/${stm('t')}`,logAcc,(d)=>{
+            console.log(d);
+        })
+
+        console.log(logAcc);
+        dashboardRender();
+      }
+
+      var dashKonten = {};
+      
+      $(() => {
+        // Check authentication first
+        if (!initAuth()) {
+          return; // Stop execution if not authenticated
+        }
+        
+        fbsSvc0 = new Fbs(db0);
+        fbsSvc1 = new Fbs(db1);
+        fbsSvc2 = new Fbs(db2);
+
+fbsSvc1.gDtOn(`log-acc-awal-mgr/${stm('t')}`,(d)=>{
+    // console.log("Data Baru",d.val());
+  dashKonten = d.val();
+  dashboardRender();
+})
+
+        fbsSvc2.gDt('user', '', (d)=>{
+            console.log(d);
+        listUsr = d;
+        })
+        // console.log("userData", listUsr);
+
+        // Setup search handlers
+        setupSearchHandlers();
+
+        // Setup control buttons
+        setupControlButtons();
+        
+        // Setup sidebar resizer
+        setupSidebarResizer();
+
+        // Event listener untuk tombol kembali
+        document
+          .getElementById('backButton')
+          .addEventListener('click', () => {
+            console.log('Kembali ke dashboard dan reset ke default...');
+            // Hapus pemanggilan fetchAndRender()
+            // Reset tampilan ke kondisi default SPA
+            /*
+            document.getElementById('detailContent').innerHTML = `
+              <h1>Dashboard</h1>
+              <p>
+                Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk
+                melihat detailnya.
+              </p>
+            `;
+            */
+
+            dashboardRender();
+            // Sembunyikan actionButtons jika perlu
+            document.getElementById('actionButtons').classList.add('hidden');
+            // ...tambahkan reset elemen lain jika diperlukan...
+          });
+
+  // Event listener untuk tombol reload saja
+
+  // fetchAndRender dihapus, hanya dipanggil saat reloadButton diklik
+      });
+
+      // Fungsi untuk setup control buttons
+      function setupControlButtons() {
+        const offButton = document.getElementById('offButton');
+        const reloadButton = document.getElementById('reloadButton');
+
+        // Event listener untuk tombol reload
+        if (reloadButton) {
+          reloadButton.addEventListener('click', function () {
+            console.log('Reload button clicked');
+            fetchAndRender();
+          });
+        }
+      }
+    </script>
+    <script>
+      // Fungsi untuk mencari detail
+      window.cariDetail = function (idSj, keywords) {
+        const selectedSj = allSjData[idSj];
+        if (!selectedSj || selectedSj.length === 0) {
+          console.log('Data tidak ditemukan untuk ID SJ:', idSj);
+          renderDetailTable([]); // render tabel kosong
+          updateDetailSearchInfo(0, 0);
+          return;
+        }
+
+        if (!keywords || keywords.trim() === '') {
+          renderDetailTable(selectedSj); // render semua data
+          hideDetailSearchInfo(); // sembunyikan info pencarian
+          return;
+        }
+
+        // Properti yang akan dicari
+        const searchableProperties = [
+          'id_stock', 'k', 'lot', 'rol', 'rak', 'kol', 'ge', 'qty', 'q_bs', 'c_o', 'notes', 'ekspedisi'
+        ];
+
+        const searchTerms = keywords
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((term) => term.length > 0);
+
+        // Filter data berdasarkan pencarian
+        const matchedItems = selectedSj.filter((item) => {
+          const searchableText = searchableProperties
+            .map((prop) => {
+              const value = item[prop];
+              return value !== null && value !== undefined
+                ? String(value).toLowerCase()
+                : '';
+            })
+            .join(' ');
+          return searchTerms.every((term) => searchableText.includes(term));
+        });
+
+        renderDetailTable(matchedItems); // render hasil pencarian
+        updateDetailSearchInfo(matchedItems.length, selectedSj.length);
+      };
+
+      // Fungsi untuk render ulang isi tabel detail
+      function renderDetailTable(data) {
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+        
+        const qty = (qt, bs) => {
+          const qbs = bs ? ` [ +${bs} ]` : '';
+          return `${qt} <b class='text-red-500'>${qbs}</b>`;
+        };
+        
+        tbody.innerHTML = '';
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" class="px-6 py-8 text-center">
+                <div class="flex flex-col items-center justify-center space-y-3">
+                  <i class="bi bi-search text-gray-400 text-3xl"></i>
+                  <div class="text-gray-500">
+                    <p class="font-medium">Tidak ada hasil yang ditemukan</p>
+                    <p class="text-sm">Coba gunakan kata kunci yang berbeda</p>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        data.forEach(item => {
+          const row = document.createElement('tr');
+          row.className = 'divide-x-2 hover:bg-gray-50 transition-colors duration-150';
+          row.innerHTML = `
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.stamp ? formatToTimeHM(item.stamp) : '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${item.id_stock || '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.k || '-'}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${item.rol}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${item.kol}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${qty(item.qty, item.q_bs)}</td>
+            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+      
+      // Fungsi untuk setup tombol Acc Surat Jalan
+      function setupAccSuratJalanButton() {
+        const accButton = document.getElementById('accSuratJalanBtn');
+        
+        if (accButton) {
+          // Remove existing event listeners to prevent duplicates
+          accButton.replaceWith(accButton.cloneNode(true));
+          const newAccButton = document.getElementById('accSuratJalanBtn');
+          
+          newAccButton.addEventListener('click', function() {
+            handleAccSuratJalan();
+          });
+        }
+      }
+      
+      // Fungsi untuk menangani klik tombol Acc Surat Jalan
+      function handleAccSuratJalan() {
+        if (!window.currentIdSj) {
+          console.log('Tidak ada Surat Jalan yang dipilih');
+          return;
+        }
+        
+        const selectedSjData = allSjData[window.currentIdSj];
+        
+        if (!selectedSjData || selectedSjData.length === 0) {
+          console.log('Data Surat Jalan tidak ditemukan untuk ID:', window.currentIdSj);
+          return;
+        }
+        
+        const userData = getCurrentUserData();
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        const accData = {
+          d_mgr: timestamp,
+          id_m: userData ? userData.id : null,
+          id_sj: window.currentIdSj
+        };
+        
+        // Kirim data ke API
+        postToAPI(
+          'https://app.weva.my.id/api/upd-sj',
+          accData,
+          (response) => {
+            console.log('Acc Surat Jalan berhasil:', response);
+            showAccNotification();
+            // Hapus data SJ dari semua variabel
+            const idSj = window.currentIdSj;
+            createLogAcc("detail",accData.id_sj);
+            if (idSj) {
+              delete allSjData[idSj];
+              originalSummaryData = originalSummaryData.filter(item => item.id_sj !== idSj);
+              filteredSummaryData = filteredSummaryData.filter(item => item.id_sj !== idSj);
+              renderSummaryList(filteredSummaryData);
+              // Jika SJ yang di-ACC adalah yang sedang aktif, kembali ke dashboard
+              showDashboard();
+            }
+          },
+          (error) => {
+            console.error('Gagal Acc Surat Jalan:', error);
+            showAccErrorNotification();
+          }
+        );
+      }
+      
+      // Fungsi untuk menampilkan notifikasi error
+      function showAccErrorNotification() {
+        const button = document.getElementById('accSuratJalanBtn');
+        if (!button) return;
+        
+        const originalText = button.innerHTML;
+        
+        // Ubah tampilan button untuk error
+        button.innerHTML = '<i class="bi bi-x-circle text-lg"></i> Gagal!';
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-red-500');
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 3 detik
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('bg-red-500');
+          button.classList.add('bg-green-600', 'hover:bg-green-700');
+          button.disabled = false;
+        }, 3000);
+  }
+      
+      // Fungsi untuk menampilkan notifikasi visual
+      function showAccNotification() {
+        const button = document.getElementById('accSuratJalanBtn');
+        const originalText = button.innerHTML;
+        
+        // Ubah tampilan button sementara
+        button.innerHTML = '<i class="bi bi-check2 text-lg"></i> Berhasil!';
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-green-500');
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 2 detik
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.classList.remove('bg-green-500');
+          button.classList.add('bg-green-600', 'hover:bg-green-700');
+          button.disabled = false;
+        }, 2000);
+      }
+      
+      // Fungsi untuk menangani klik tombol Acc di sidebar
+      function handleSidebarAcc(idSj) {
+        const selectedSjData = allSjData[idSj];
+        
+        if (!selectedSjData || selectedSjData.length === 0) {
+          console.log('Data Surat Jalan tidak ditemukan untuk ID:', idSj);
+          return;
+        }
+        
+        const userData = getCurrentUserData();
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        const itemData = {
+          d_mgr: timestamp,
+          id_m: userData ? userData.id : null,
+          id_sj: idSj
+        };
+        
+        // Kirim data ke API
+        postToAPI(
+          'https://app.weva.my.id/api/upd-sj',
+          itemData,
+          (response) => {
+            console.log('Acc Surat Jalan berhasil:', response);
+            showSidebarAccNotification(idSj);
+            createLogAcc("sidebar",itemData.id_sj);
+            // Hapus data SJ dari semua variabel
+            if (idSj) {
+              delete allSjData[idSj];
+              originalSummaryData = originalSummaryData.filter(item => item.id_sj !== idSj);
+              filteredSummaryData = filteredSummaryData.filter(item => item.id_sj !== idSj);
+              renderSummaryList(filteredSummaryData);
+              // Jika SJ yang di-ACC adalah yang sedang aktif, kembali ke dashboard
+              if (window.currentIdSj === idSj) {
+                showDashboard();
+              }
+            }
+          },
+          (error) => {
+            console.error('Gagal Acc Surat Jalan:', error);
+            showSidebarAccErrorNotification(idSj);
+          }
+        );
+      }
+      
+      // Fungsi untuk menampilkan notifikasi error pada button sidebar
+      function showSidebarAccErrorNotification(idSj) {
+        const summaryItem = document.querySelector(`[data-id-sj="${idSj}"]`);
+        if (!summaryItem) return;
+        
+        const button = summaryItem.querySelector('button');
+        if (!button) return;
+        
+        const originalClasses = button.className;
+        const originalIcon = button.innerHTML;
+        
+        // Ubah tampilan button untuk error
+        button.className = 'rounded-full w-[32px] h-[32px] bg-red-500 text-white font-medium py-0 px-0 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2';
+        button.innerHTML = '<i class="bi bi-x-circle"></i>';
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 3 detik
+        setTimeout(() => {
+          button.className = originalClasses;
+          button.innerHTML = originalIcon;
+          button.disabled = false;
+        }, 3000);
+  }
+      
+      // Fungsi untuk menampilkan notifikasi visual pada button sidebar
+      function showSidebarAccNotification(idSj) {
+        const summaryItem = document.querySelector(`[data-id-sj="${idSj}"]`);
+        if (!summaryItem) return;
+        
+        const button = summaryItem.querySelector('button');
+        if (!button) return;
+        
+        const originalClasses = button.className;
+        const originalIcon = button.innerHTML;
+        
+        // Ubah tampilan button sementara
+        button.className = 'rounded-full w-[32px] h-[32px] bg-green-500 text-white font-medium py-0 px-0 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2';
+        button.innerHTML = '<i class="bi bi-check2"></i>';
+        button.disabled = true;
+        
+        // Kembalikan ke tampilan semula setelah 2 detik
+        setTimeout(() => {
+          button.className = originalClasses;
+          button.innerHTML = originalIcon;
+          button.disabled = false;
+        }, 2000);
+      }
+
+      // Fungsi untuk escape regex characters
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      // Fungsi untuk update search results info
+      function updateDetailSearchInfo(matchCount, totalCount) {
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+        const searchResultsText = document.getElementById('searchResultsText');
+
+        if (searchResultsInfo && searchResultsText) {
+          searchResultsText.textContent = `${matchCount} dari ${totalCount} item ditemukan`;
+          searchResultsInfo.classList.remove('hidden');
+        }
+      }
+
+      // Fungsi untuk menyembunyikan search results info
+      function hideDetailSearchInfo() {
+        const searchResultsInfo = document.getElementById('searchResultsInfo');
+        if (searchResultsInfo) {
+          searchResultsInfo.classList.add('hidden');
+        }
+      }
+
+      // Expose resetDetailSearch ke global scope
+      window.resetDetailSearch = resetDetailSearch;
+
+      // Fungsi untuk reset pencarian detail
+      function resetDetailSearch() {
+        const tbody = document.querySelector('table tbody');
+        if (!tbody) return;
+        // Render ulang semua data detail jika ada
+        if (window.currentIdSj && allSjData[window.currentIdSj]) {
+          renderDetailTable(allSjData[window.currentIdSj]);
+          hideDetailSearchInfo();
+        } else {
+          tbody.innerHTML = '';
+          hideDetailSearchInfo();
+        }
+      }
+
+      // Setup search functionality
+      function setupDetailSearch() {
+        const detailSearchInput = document.getElementById('detailSearchInput');
+        const searchClearBtn = document.getElementById('searchClearBtn');
+
+        let searchTimeout;
+
+        if (!detailSearchInput) return;
+
+        // Function to clear search
+        function clearDetailSearch() {
+          detailSearchInput.value = '';
+          searchClearBtn.classList.add('hidden');
+          resetDetailSearch();
+        }
+
+        // Event listener untuk tombol clear
+        if (searchClearBtn) {
+          searchClearBtn.addEventListener('click', clearDetailSearch);
+        }
+
+        // Search input functionality
+        detailSearchInput.addEventListener('input', function (e) {
+          const keywords = e.target.value.trim();
+
+          // Tampilkan/sembunyikan tombol clear
+          if (keywords.length > 0) {
+            searchClearBtn.classList.remove('hidden');
+          } else {
+            searchClearBtn.classList.add('hidden');
+          }
+
+          // Clear previous timeout
+          clearTimeout(searchTimeout);
+
+          // Debounce search
+          searchTimeout = setTimeout(() => {
+            if (window.currentIdSj) {
+              cariDetail(window.currentIdSj, keywords);
+            }
+          }, 200);
+        });
+
+        // Handle escape key untuk clear search
+        detailSearchInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            clearDetailSearch();
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        displayCurrentUser();
+        // Real-time clock
+        setInterval(() => {
+          const clock = document.getElementById('realTimeClock');
+          if (clock) {
+            const now = new Date();
+            clock.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+          }
+        }, 1000);
+
+        // Progress bar & auto reload toggle
+        let progress = 0;
+        let progressInterval = null;
+        let autoReloadActive = true;
+        function startProgressBar() {
+          progress = 0;
+          const bar = document.getElementById('progressBar');
+          if (bar) bar.style.width = '0%';
+          if (progressInterval) clearInterval(progressInterval);
+          progressInterval = setInterval(() => {
+            if (!autoReloadActive) return;
+            progress += 1;
+            if (bar) bar.style.width = (progress/60*100) + '%';
+            if (progress >= 60) {
+              clearInterval(progressInterval);
+              if (bar) bar.style.width = '100%';
+              // Trigger reload
+              const reloadBtn = document.getElementById('reloadButton');
+              if (reloadBtn) reloadBtn.click();
+              setTimeout(startProgressBar, 1000); // restart after reload
+            }
+          }, 1000);
+        }
+        startProgressBar();
+
+        // Toggle button handler
+        const autoReloadToggle = document.getElementById('autoReloadToggle');
+        const autoReloadIcon = document.getElementById('autoReloadIcon');
+        if (autoReloadToggle && autoReloadIcon) {
+          autoReloadToggle.addEventListener('click', function() {
+            autoReloadActive = !autoReloadActive;
+            if (autoReloadActive) {
+              autoReloadToggle.title = 'Pause Autoload';
+              autoReloadIcon.className = 'bi bi-pause-fill animate-pulse text-lg';
+              startProgressBar();
+            } else {
+              autoReloadToggle.title = 'Play Autoload';
+              autoReloadIcon.className = 'bi bi-play-fill animate-pulse text-lg';
+              if (progressInterval) clearInterval(progressInterval);
+            }
+          });
+        }
+
+        setTimeout(() => {
+          // Tampilkan spinner tailwind di summaryList
+          const summaryList = document.getElementById('summaryList');
+          if (summaryList) {
+            summaryList.innerHTML = `
+              <div class="flex justify-center items-center py-8">
+                <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+              </div>
+            `;
+          }
+          setTimeout(() => {
+            // Setelah 500ms, lakukan fetchAndRender
+            if (typeof fetchAndRender === 'function') {
+              fetchAndRender();
+            }
+          }, 500);
+        }, 200);
+      });
+    </script>
+  </body>
+</html>
