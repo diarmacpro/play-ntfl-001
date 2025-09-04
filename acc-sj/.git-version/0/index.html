@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Proses WH</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"/>
+		<style>
+				/* Untuk browser berbasis WebKit (Chrome, Safari, Edge) */
+				.overflow-y-auto::-webkit-scrollbar {
+						width: 1px; /* Mengatur lebar scrollbar vertikal */
+				}
+
+				/* Untuk track (jalur) scrollbar */
+				.overflow-y-auto::-webkit-scrollbar-track {
+						background: #f1f1f1; /* Warna latar belakang jalur */
+				}
+
+				/* Untuk thumb (pegangan) scrollbar */
+				.overflow-y-auto::-webkit-scrollbar-thumb {
+						background: #888; /* Warna pegangan scrollbar */
+						border-radius: 1px;
+				}
+
+				/* Opsi hover (saat kursor diarahkan ke scrollbar) */
+				.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+						background: #555;
+				}
+
+				/* Untuk browser Firefox (menggunakan properti non-standar) */
+				.overflow-y-auto {
+						scrollbar-width: 1px; /* Mengatur lebar scrollbar menjadi 'thin' (sekitar 1px) atau 'none' */
+				}
+		</style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+		<div class="flex h-screen">
+				<aside class="w-96 bg-white shadow-lg p-4 flex flex-col">
+						<h2 class="text-2xl font-bold text-gray-800 mb-2 border-b pb-2">Daftar SJ</h2>
+						<div id="loadingMessage" class="text-center text-gray-500 mb-4">
+								Memuat data...
+						</div>
+						<div id="noDataMessage" class="text-center text-gray-500 hidden mb-4">
+								Tidak ada data yang ditemukan.
+						</div>
+						<div id="summaryList" class="space-y-2 overflow-y-auto h-[90vh]">
+								</div>
+				</aside>
+
+				<main class="flex-1 p-2 overflow-y-auto">
+						<div class="bg-white shadow-md rounded-lg p-4">
+<div class="flex items-center justify-between mb-4">
+  <!-- Title -->
+  <h1 class="text-3xl font-bold text-gray-800">
+    Detail Surat Jalan
+  </h1>
+
+  <!-- Tombol Aksi -->
+  <div class="flex items-center gap-2">
+    <button class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+    <button class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+</div>
+
+								<div id="detailContent" class="text-gray-600">
+										<p>Silakan pilih salah satu Surat Jalan dari daftar di sidebar untuk melihat detailnya.</p>
+								</div>
+						</div>
+				</main>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@4849b7e3a19e88b14d27454f60d16c062e16648d/core.js" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/gh/diarmacpro/cdnku@35e5003dbb8177b966f240b861c2bb547fc7f013/firebase-olah-data/f.o.d_v.0.2.js" crossorigin="anonymous"></script>
+
+
+		<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+		<script src="./pub-sub.js"></script>
+		<script>
+			// ------------------------------------
+			// Contoh Penggunaan Publik Client
+			// ------------------------------------
+			// Jalankan kode ini setelah dokumen dimuat.
+			document.addEventListener('DOMContentLoaded', () => {
+					const ablyClient = new PubSubClient("fGNEag.D9-iTQ:-QxlogxXs4VFnIWJEy0CbHlXKJZ7QcmNOku6rDoUUto");
+
+					const handleChatMessage = (message) => {
+							console.log('📩 Chat Message:', message.data);
+					};
+
+					const handleStatusMessage = (message) => {
+							console.log('🔔 Status Update:', message.data);
+					};
+
+					ablyClient.subscribe('my-app-channel', 'chat-message', handleChatMessage);
+
+					ablyClient.subscribe('my-app-channel', 'status-update', handleStatusMessage);
+
+					setTimeout(() => {
+							ablyClient.publish('my-app-channel', 'chat-message', { user: 'Alice', text: 'Halo, semua!' });
+							ablyClient.publish('my-app-channel', 'status-update', { user: 'System', status: 'User Alice joined the chat.' });
+					}, 2000);
+
+					setTimeout(() => ablyClient.close(), 10000);
+			});
+				</script>
+
+		<script src="./script.js"></script>
+		<script type="module">
+				import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+				import { getDatabase, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+				const app0 = initializeApp({ databaseURL: 'https://stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app'}, 'app0');
+				const db0 = getDatabase(app0);
+
+				const app1 = initializeApp( { databaseURL: 'https://main-stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app' }, 'app1' );
+				const db1 = getDatabase(app1);
+
+				const app2 = initializeApp( { databaseURL: 'https://stk-wv-default-rtdb.asia-southeast1.firebasedatabase.app' }, 'app2' );
+				const db2 = getDatabase(app2);
+
+				Object.assign(window, { db0, db1, db2, ref, set, get, update, push, query, remove, orderByChild, equalTo, onValue, off });
+		</script>
+		<script>
+				let fbsSvc0, fbsSvc1, fbsSvc2;
+				let allSjData = {}; // Variabel untuk menyimpan semua data SJ
+
+				// Fungsi utilitas untuk mengelompokkan array berdasarkan key
+				function groupBy(arr, key) {
+						return arr.reduce((acc, obj) => {
+								const value = obj[key];
+								(acc[value] = acc[value] || []).push(obj);
+								return acc;
+						}, {});
+				}
+
+				// Fungsi untuk merender daftar ringkasan di sidebar
+				function renderSummaryList(data) {
+						const summaryList = document.getElementById('summaryList');
+						const loadingMessage = document.getElementById('loadingMessage');
+						const noDataMessage = document.getElementById('noDataMessage');
+
+						loadingMessage.classList.add('hidden');
+						summaryList.innerHTML = '';
+						
+						if (data.length === 0) {
+								noDataMessage.classList.remove('hidden');
+								return;
+						}
+
+						noDataMessage.classList.add('hidden');
+						
+						// Menggunakan DocumentFragment untuk meminimalkan manipulasi DOM
+						const fragment = document.createDocumentFragment();
+
+						data.forEach(item => {
+								const listItem = document.createElement('div');
+								listItem.className = 'rounded-full p-0 ps-2 my-1 cursor-pointer bg-white hover:bg-blue-200 transition-none me-2';
+								listItem.dataset.idSj = item.id_sj;
+								listItem.innerHTML = `
+										<div class="flex items-center w-full gap-3">
+												<span class="w-[18%] rounded-lg mr-1 font-medium text-gray-700">${item.stamp_sj_min || '-'}</span>
+												<div class="w-[28%] flex justify-between items-center">
+														<span>${item.id_sj}</span>
+														<span class="font-bold">${item.count}</span>
+												</div>
+												<div class="flex items-center w-[44%]">
+														<span class="ml-1">${item.mkt_name || '-'}</span>
+												</div>
+												<div class="flex items-center gap-1 w-[10%]">
+														<button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+																<i class="bi bi-check-circle-fill"></i>
+														</button>
+												</div>
+										</div>
+								`;
+								
+								listItem.addEventListener('click', e => {
+										if (!e.target.closest('button')) {
+												showDetail(item.id_sj);
+										}
+								});
+								fragment.appendChild(listItem);
+						});
+
+						summaryList.appendChild(fragment);
+				}
+
+				window.showDetail = async function(idSj) {
+					console.log(`Fungsi showDetail dipanggil untuk ID SJ: ${idSj}`);
+
+					const detailContent = document.getElementById('detailContent');
+					const selectedSj = allSjData[idSj];
+
+					if (selectedSj && selectedSj.length > 0) {
+						// filter hanya properti tertentu
+						const filtered = selectedSj.map(item => ({
+							stamp_sj: item.stamp_sj,
+							stamp: item.stamp,
+							ky: item.ky,
+							id_sj: item.id_sj,
+							id_stock: item.id_stock,
+							id_kain: item.id_kain,
+							id_mkt: item.id_mkt,
+							k: item.k,
+							lot: item.lot,
+							rol: item.rol,
+							rak: item.rak,
+							kol: item.kol,
+							ge: item.ge,
+							qty: item.qty,
+							q_bs: item.q_bs,
+							c_o: item.c_o,
+							rtr: item.rtr,
+							notes: item.notes,
+							onOff: item.onOff,
+							ekspedisi: item.ekspedisi
+						}));
+
+						const summaryArr = makeSummary(filtered);
+						const summaryFiltered = summaryArr[0]; // ambil hasil pertama (karena group by id_sj)
+
+						// ambil user data (promise → harus tunggu)
+						const userData = await new Promise((resolve, reject) => {
+							fbsSvc2.gDt('user', '', resolve, reject);
+						});
+
+						// bikin map id_mkt → mkt
+						const userMap = {};
+						for (const key in userData) {
+							if (Object.hasOwnProperty.call(userData, key)) {
+								const user = userData[key];
+								userMap[user.id_mkt] = user.mkt;
+							}
+						}
+
+						// cari nama mkt dari summaryFiltered.id_mkt
+						const mktName = userMap[summaryFiltered.id_mkt] || summaryFiltered.id_mkt;
+
+						// console.log(summaryFiltered);
+						// console.log(filtered);
+						// console.log(selectedSj);
+
+						const detailsHtml = `
+							<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+							<!-- Id. S.J. -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-receipt text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Id. S.J.</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.id_sj || '-'}</div>
+							</div>
+
+							<!-- Marketing -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-person-badge text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Mkt</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${mktName || '-'}</div>
+							</div>
+
+							<!-- Waktu Awal -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-clock-history text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Waktu Awal</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.stamp || '-'}</div>
+							</div>
+
+							<!-- Total Item -->
+							<div class="px-4 py-1 bg-white border border-blue-200 rounded-xl flex items-center justify-between shadow-sm hover:shadow-md transition">
+								<div class="flex items-center gap-2">
+								<i class="bi bi-collection text-blue-600 text-lg"></i>
+								<span class="text-sm font-medium text-blue-600">Total Item</span>
+								</div>
+								<div class="text-lg font-bold text-gray-900">${summaryFiltered.c}</div>
+							</div>
+							</div>
+
+							<div class="bg-white shadow-sm rounded-lg border border-gray-200">
+
+								<div class="overflow-y-auto h-[70vh]">
+									<table class="min-w-full divide-y divide-gray-200">
+										<thead class="bg-gray-50 sticky top-0 z-10">
+											<tr class="divide-x-2">
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot#Rol</th>
+												<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">G/E</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Out</th>
+																				<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">...</th>
+											</tr>
+										</thead>
+										<tbody class="bg-white divide-y divide-gray-200">
+											${selectedSj.map(item => `
+												<tr class="divide-x-2">
+													<td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${item.id_stock || '-'}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.k || '-'}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.lot} ${item.rol}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.rak} ${item.kol}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ge}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.qty} ${item.q_bs}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.c_o}</td>
+													<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">${item.ket || '-'}</td>
+												</tr>
+											`).join('')}
+										</tbody>
+									</table>
+								</div>
+
+								<div class="w-full bg-white shadow-md border-b flex items-center justify-between px-4 py-2">
+									<!-- Kiri -->
+									<div class="flex items-center space-x-2">
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-list text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-house-door text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-search text-xl"></i>
+										</button>
+									</div>
+
+									<!-- Kanan -->
+									<div class="flex items-center space-x-2">
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-bell text-xl"></i>
+										</button>
+										<button class="p-2 rounded-lg hover:bg-gray-100">
+											<i class="bi bi-gear text-xl"></i>
+										</button>
+										<button class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700">
+											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+										</button>
+									</div>
+								</div>
+							</div>
+						`;
+						detailContent.innerHTML = detailsHtml;
+					} else {
+						detailContent.innerHTML = `<p class="text-red-500">Detail untuk SJ ${idSj} tidak ditemukan.</p>`;
+					}
+				};
+
+
+				// Fungsi utama untuk mengambil data secara paralel
+				async function fetchAndRender() {
+						document.getElementById('loadingMessage').classList.remove('hidden');
+
+						try {
+								// Ambil data user dari Firebase
+								const fetchUserData = new Promise((resolve, reject) => {
+										fbsSvc2.gDt('user', '', resolve, reject);
+								});
+
+								// Ambil data SJ dari API
+								const fetchSjData = new Promise((resolve, reject) => {
+										postToAPI('https://app.weva.my.id/api/data-sj-awal', { id_sj: true }, resolve, reject);
+								});
+
+								// Jalankan kedua permintaan secara paralel dan tunggu hasilnya
+								const [userData, d] = await Promise.all([fetchUserData, fetchSjData]);
+
+								// Map data user
+								const userMap = {};
+								for (const key in userData) {
+										if (Object.hasOwnProperty.call(userData, key)) {
+												const user = userData[key];
+												userMap[user.id_mkt] = user.mkt;
+										}
+								}
+
+								// Cek data SJ
+								if (!d || !d.data || d.data.length === 0) {
+										console.log('Tidak ada data yang ditemukan.');
+										renderSummaryList([]);
+										return;
+								}
+
+								// Proses data SJ
+								const groupedData = groupBy(d.data, 'id_sj');
+								allSjData = {};
+								const summaryArray = [];
+
+								for (const idSj in groupedData) {
+										if (Object.hasOwnProperty.call(groupedData, idSj)) {
+												const items = groupedData[idSj];
+												const firstItem = items[0];
+												const mktName = userMap[firstItem.id_mkt] || firstItem.id_mkt;
+												
+												// Cari waktu minimal
+												const minTimestamp = items.reduce((min, item) => {
+														const itemFullTime = item.stamp_sj.split(' ')[1];
+														return (min === null || itemFullTime < min) ? itemFullTime : min;
+												}, null);
+
+												const formattedTime = minTimestamp ? minTimestamp.substring(0, 5) : null;
+												
+												allSjData[idSj] = items;
+												
+												summaryArray.push({
+														id_sj: idSj,
+														count: items.length,
+														mkt_name: mktName,
+														stamp_sj_min: formattedTime
+												});
+										}
+								}
+								
+								// Urutkan data berdasarkan waktu minimal
+								summaryArray.sort((a, b) => {
+										if (a.stamp_sj_min < b.stamp_sj_min) return -1;
+										if (a.stamp_sj_min > b.stamp_sj_min) return 1;
+										return 0;
+								});
+
+								renderSummaryList(summaryArray);
+
+						} catch (error) {
+								console.error('Error saat mengambil data:', error);
+								document.getElementById('loadingMessage').classList.add('hidden');
+								alert('Gagal mengambil data.');
+						}
+				}
+
+				$(() => {
+						fbsSvc0 = new Fbs(db0);
+						fbsSvc1 = new Fbs(db1);
+						fbsSvc2 = new Fbs(db2);
+						fetchAndRender();
+				});
+		</script>
+</body>
+</html>
