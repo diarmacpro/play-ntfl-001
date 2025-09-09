@@ -18,8 +18,8 @@ function nmMkt(id_mkt) {
 async function fetchDataSjAwal(body = { id_sj: true }) {
   return new Promise((resolve, reject) => {
     postToAPI(
-      'https://app.weva.my.id/api/data-sj-awal',
-      body,
+      'https://app.weva.my.id/api/data-sj-by-date-post',
+      { tgl: '2025-09-08' },
       resolve,
       reject
     );
@@ -126,6 +126,24 @@ function makeSummary(data) {
         let ekspedisiVals = [...new Set(items.map(i => i.ekspedisi).filter(v => v && v !== "0" && v !== ""))];
         let ekspedisi = ekspedisiVals.length > 0 ? ekspedisiVals.join(", ") : null;
 
+        const dMgrSum = items.reduce((acc, i) => acc + (i.d_mgr == null ? 0 : 1), 0);
+        const d_mgr = dMgrSum > 0 ? 1 : 0;
+        
+        const dWhSum = items.reduce((acc, i) => acc + (i.d_wh == null ? 0 : 1), 0);
+        const d_wh = dWhSum > 0 ? 1 : 0;
+        
+        const dFinishSum = items.reduce((acc, i) => acc + (i.d_finish == null ? 0 : 1), 0);
+        const d_finish = dFinishSum > 0 ? 1 : 0;
+
+        let status = 0;
+        if (d_finish !== 0) {
+            status = 3;
+        } else if (d_wh !== 0) {
+            status = 2;
+        } else if (d_mgr !== 0) {
+            status = 1;
+        }
+
         summary.push({
             c: count,
             stamp,
@@ -133,7 +151,11 @@ function makeSummary(data) {
             id_mkt,
             rtr,
             onOff,
-            ekspedisi
+            ekspedisi,
+            d_mgr,
+            d_wh,
+            d_finish,
+            status
         });
     }
 

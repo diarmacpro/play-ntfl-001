@@ -317,6 +317,8 @@
 
       // Fungsi untuk merender daftar ringkasan di sidebar
       function renderSummaryList(data) {
+        console.log(data);
+        
         const summaryList = document.getElementById('summaryList');
         const noDataMessage = document.getElementById('noDataMessage');
         const searchInfo = document.getElementById('searchInfo');
@@ -352,18 +354,25 @@
 												<span class="w-[18%] rounded-lg mr-1 font-medium text-gray-700">${
                           item.stamp_sj_min || '-'
                         }</span>
-												<div class="w-[28%] flex justify-between items-center">
+												<div class="w-[22%] flex justify-between items-center">
 														<span>${item.id_sj}</span>
 														<span class="font-bold">${item.count}</span>
 												</div>
-												<div class="flex items-center w-[44%]">
+												<div class="flex items-center w-[36%]">
 														<span class="ml-1">${item.mkt_name || '-'}</span>
 												</div>
-												<div class="flex items-center gap-1 w-[10%]">
-														<button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
-																<i class="bi bi-check-circle-fill"></i>
-														</button>
-												</div>
+                        <div class="w-[12%]">
+                          <i class="bi bi-circle-fill"
+                            style="color:${item.status==0?'#3b82f6':item.status==1?'#22c55e':item.status==2?'#eab308':item.status==3?'#ef4444':'#6b7280'};font-size:1.5em;"
+                            title="Status ${item.status}"></i>
+                        </div>
+                        <div class="flex items-center gap-1 w-[12%]">
+                          ${item.status==0 ? `
+                            <button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+                              <i class="bi bi-check-circle-fill"></i>
+                            </button>
+                          ` : ''}
+                        </div>
 										</div>
 								`;
 
@@ -650,13 +659,23 @@
 									<!-- Kanan -->
 									<div class="flex items-center">
 										<button id="accSuratJalanBtn" class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors duration-200">
-											<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
-										</button>
+                      <i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+                    </button>
 									</div>
 								</div>
 							</div>
 						`;
           detailContent.innerHTML = detailsHtml;
+
+          // Hide/show Acc Surat Jalan button based on status
+          const accBtn = document.getElementById('accSuratJalanBtn');
+          if (accBtn) {
+            if (window.summaryFiltered && window.summaryFiltered.status !== 0) {
+              accBtn.style.display = 'none';
+            } else {
+              accBtn.style.display = '';
+            }
+          }
 
           // Setup search functionality after rendering
           setupDetailSearch();
@@ -756,9 +775,9 @@
 
           // Ambil data SJ dari API
           const fetchSjData = new Promise((resolve, reject) => {
-            postToAPI(
-              'https://app.weva.my.id/api/data-sj-awal',
-              { id_sj: true },
+              postToAPI(
+                'https://app.weva.my.id/api/data-sj-by-date-post',
+                { tgl: '2025-09-08' },
               resolve,
               reject
             );
@@ -804,7 +823,8 @@
               mkt_name: mktName,
               stamp_sj_min: summary.stamp,
               // Simpan data makeSummary untuk digunakan di detail
-              summaryData: summary
+              summaryData: summary,
+              status: summary.status
             });
           });
 

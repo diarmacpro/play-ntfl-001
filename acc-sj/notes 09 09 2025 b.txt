@@ -1,0 +1,39 @@
+{
+    "status": "success",
+    "message": "Data retrieved successfully",
+    "data": [
+        {
+            "bayar": 0,
+            "c_o": 11,
+            "d_create": "2025-09-08 07:57:33",
+            "d_finish": null,
+            "d_mgr": "2025-09-08 07:57:33",
+            "d_wh": null,
+            "dlt": 2,
+            "ekspedisi": "spx",
+            "erw": 0,
+            "ge": "e",
+            "habis": null,
+            "id_kain": 400,
+            "id_mkt": 15,
+            "id_sj": 49849,
+            "id_stock": 51203,
+            "k": "Micro Ns Wevatex Hitam, K.1",
+            "kol": "C",
+            "ky": 113970,
+            "lot": "55",
+            "notes": "",
+            "onOff": 1,
+            "q_bs": null,
+            "qty": "1.00",
+            "rak": "046",
+            "rol": "6",
+            "rtr": 0,
+            "stamp": "2025-09-03 14:12:29",
+            "stamp_sj": "2025-09-03 14:13:27"
+        },
+        ...
+    ],
+    "count": 310,
+    "timestamp": "2025-09-09T06:45:24.752487552Z"
+}

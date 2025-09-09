@@ -1,0 +1,26 @@
+bekerjalah pada path acc-sj
+dan ganti end-point 
+pR('https://app.weva.my.id/api/data-sj-awal',{id_sj: true},(e,d)=>{
+    console.log(d.data);
+})
+
+menjadi ini
+pR('https://app.weva.my.id/api/data-sj-by-date-post',{tgl: '2025-09-08'},(e,d)=>{
+    console.log(d.data);
+})
+
+----------------------------------
+bekerjalah pada acc-sj
+
+dari hal ini
+<button class="rounded-full w-[32px] h-[32px] bg-blue-600 text-white font-medium py-0 px-0 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+	<i class="bi bi-check-circle-fill"></i>
+</button>
+
+<button id="accSuratJalanBtn" class="py-1 ps-2 pe-3 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors duration-200">
+	<i class="bi bi-check-circle-fill text-lg"></i> Acc Surat Jalan
+</button>
+
+buat supaya itu disabled ataupun tidak ada saat :
+properti dari data yang ada (meliputi : d_mgr, d_wh, d_finish adalah tidak null)
+saat minimal pada step d_mgr adalah null maka tampilkan 2 hal itu secara normal dan default
