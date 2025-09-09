@@ -1,0 +1,7 @@
+pR('https://app.weva.my.id/api/data-sj-by-date-post',{tgl: '2025-09-08'},(e,d)=>{
+    console.log(d.data);
+})
+
+pR('https://app.weva.my.id/api/data-sj-awal',{id_sj: true},(e,d)=>{
+    console.log(d.data);
+})
