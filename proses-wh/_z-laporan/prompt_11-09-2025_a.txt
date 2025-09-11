@@ -1,0 +1,6 @@
+buatkan file : laporan-fix-relevan.md
+dari sumber didalam folder '_z-laporan' lalu laporan-1 dan laporan-2 sumber trial and error ada pada folder '_ver' dan laporan-3 sumber ada pada root (index.html & script.js)
+
+laporan harus menggambarkan pekerjaan saya secara real dan nyata serta relevan, dari awal banyak melakukan perubahan termasuk percobaan memecah menjadi beberapa file yang akhirnya error, lalu mengulang rollback ke tahap awal dengan 2 file saja dan melakukan perubahan pada modal (pop-up : Tambah Stock Baru) di tomol 'Tambah' serta handling terkait data yang tampil supaya ringan, lalu handling konsep pencarian supaya fleksibel,
+
+sajikan semua secara rapih dan berurutan supaya atasan saya memahami jika saya bekerja sepenuhnya dan melalui banyak proses.

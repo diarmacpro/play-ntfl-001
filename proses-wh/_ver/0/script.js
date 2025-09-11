@@ -1515,38 +1515,8 @@ function modalStockLainya(mode) {
   modal.classList.remove('hidden');
 }
 
-function renderDataKain(data) {
-  const stockList = document.querySelector('.list-stock');
-  if (!stockList) return;
-
-  if (!data || data.length === 0) {
-    stockList.innerHTML = `
-      <div class="text-center py-8 text-gray-500">
-        <i class="bi bi-inbox text-4xl mb-2"></i>
-        <p>Tidak ada data kain yang ditemukan</p>
-      </div>
-    `;
-    return;
-  }
-
-  const top100 = data.slice(0, 100);
-
-  stockList.innerHTML = top100.map(item => `
-    <div class="border p-2 mb-2 rounded cursor-pointer hover:bg-gray-100 item-kain" data-id-kain="${item.ik}">
-      <p class="font-bold">${item.k}</p>
-      <div class="text-sm text-gray-600">
-        <span>IK: <span class="font-semibold">${item.ik}</span></span> |
-        <span>E: <span class="font-semibold">${item.e}</span></span> |
-        <span>G: <span class="font-semibold">${item.g}</span></span> |
-        <span>S: <span class="font-semibold">${item.s}</span></span>
-      </div>
-    </div>
-  `).join('');
-}
-
 function generateTambahStockContent() {
-  // Render initial content with a search bar
-  const content = `
+  return `
     <div class="space-y-4">
       <!-- Search Bar -->
       <div class="relative">
@@ -1557,6 +1527,19 @@ function generateTambahStockContent() {
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
         <i class="bi bi-search absolute right-3 top-3 text-gray-400"></i>
+      </div>
+
+      <!-- Filter Options -->
+      <div class="flex gap-2 flex-wrap">
+        <button class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 filter-btn" data-filter="all">
+          Semua
+        </button>
+        <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 filter-btn" data-filter="available">
+          Tersedia
+        </button>
+        <button class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 filter-btn" data-filter="low-stock">
+          Stock Rendah
+        </button>
       </div>
 
       <!-- Stock List -->
@@ -1580,35 +1563,6 @@ function generateTambahStockContent() {
       </div>
     </div>
   `;
-
-  // Use a timeout to ensure the modal is in the DOM before we manipulate it
-  setTimeout(() => {
-    const searchInput = document.getElementById('searchStock');
-    const stockList = document.querySelector('.list-stock');
-
-    if (searchInput && stockList) {
-        // Initially clear the list
-        stockList.innerHTML = '';
-
-        // Add event listener for search
-        searchInput.addEventListener('input', (e) => {
-            const searchTerms = e.target.value.toLowerCase().split(' ').filter(term => term.trim() !== '');
-
-            if (searchTerms.length === 0) {
-                stockList.innerHTML = ''; // Clear if search is empty
-                return;
-            }
-
-            const filteredData = data.kain.filter(item => {
-                const itemText = item.k.toLowerCase();
-                return searchTerms.every(term => itemText.includes(term));
-            });
-            renderDataKain(filteredData);
-        });
-    }
-  }, 0);
-
-  return content;
 }
 
 function generateSwitchStockContent() {
