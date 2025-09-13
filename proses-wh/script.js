@@ -165,15 +165,27 @@ function cekPerPropertiStamp(tglPerItemDetail, jmlData) {
 
 function renderDetailByIdSj(idSj) {
   const detailContainer = document.getElementById('detail');
-  detailContainer.innerHTML = ''; // reset isi
+  detailContainer.innerHTML = '';
+
+  // Enable tombol tambah-stock-btn
+  const tambahBtn = document.getElementById('tambah-stock-btn');
+  if (tambahBtn) {
+    tambahBtn.disabled = false;
+    tambahBtn.classList.remove('text-gray-400', 'cursor-not-allowed', 'opacity-60');
+    tambahBtn.classList.add('text-gray-600', 'hover:bg-green-100', 'hover:text-green-600', 'active:scale-95', 'shadow');
+  }
 
   const dataDetail = cariByIdSj(idSj);
-
   const jmlData = dataDetail.length;
 
   if (!dataDetail || dataDetail.length === 0) {
-    detailContainer.innerHTML =
-      '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
+    detailContainer.innerHTML = '<p class="text-gray-500 italic">Tidak ada detail untuk SJ ini.</p>';
+    // Jika tidak ada detail, disable tombol tambah
+    if (tambahBtn) {
+      tambahBtn.disabled = true;
+      tambahBtn.classList.remove('text-gray-600', 'hover:bg-green-100', 'hover:text-green-600', 'active:scale-95', 'shadow');
+      tambahBtn.classList.add('text-gray-400', 'cursor-not-allowed', 'opacity-60');
+    }
     return;
   }
 
@@ -625,6 +637,13 @@ function generateDetailedRecentActivity(rawData) {
 }
 
 function renderDashboard() {
+  // Disable tombol tambah-stock-btn saat dashboard aktif
+  const tambahBtn = document.getElementById('tambah-stock-btn');
+  if (tambahBtn) {
+    tambahBtn.disabled = true;
+    tambahBtn.classList.remove('text-gray-600', 'hover:bg-green-100', 'hover:text-green-600', 'active:scale-95', 'shadow');
+    tambahBtn.classList.add('text-gray-400', 'cursor-not-allowed', 'opacity-60');
+  }
   closeDetail();
   const detailContainer = document.getElementById('detail');
   detailContainer.innerHTML = '';
@@ -1531,6 +1550,7 @@ function renderDataKain(data) {
 
   const top100 = data.slice(0, 100);
 
+
   stockList.innerHTML = top100.map(item => `
     <div class="border p-2 mb-2 rounded cursor-pointer hover:bg-gray-100 item-kain" data-id-kain="${item.ik}">
       <p class="font-bold">${item.k}</p>
@@ -1542,6 +1562,19 @@ function renderDataKain(data) {
       </div>
     </div>
   `).join('');
+
+  // Tambahkan event listener untuk setiap item-kain
+  const itemKainEls = stockList.querySelectorAll('.item-kain');
+  itemKainEls.forEach((el, idx) => {
+    el.addEventListener('click', function() {
+      // Panggil openLayer2Handler dengan id_kain dari item
+      if (typeof openLayer2Handler === 'function') {
+        // Simulasikan event jQuery dengan data-id-kain
+        el.setAttribute('data-id-kain', top100[idx].ik);
+        openLayer2Handler.call(el);
+      }
+    });
+  });
 }
 
 function generateTambahStockContent() {
@@ -1549,18 +1582,19 @@ function generateTambahStockContent() {
   const content = `
     <div class="space-y-4">
       <!-- Search Bar -->
-      <div class="relative">
+      <div class="relative flex items-center gap-2">
         <input 
           type="text" 
           id="searchStock" 
           placeholder="Cari berdasarkan nama kain atau kode..."
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
+        <button id="back-btn-layer-2" class="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm">Kembali</button>
         <i class="bi bi-search absolute right-3 top-3 text-gray-400"></i>
       </div>
 
       <!-- Stock List -->
-      <div class="list-stock max-h-[400px] overflow-y-auto space-y-2">
+      <div class="list-stock h-[400px] max-h-[400px] overflow-y-auto space-y-2">
         <div class="text-center py-8 text-gray-500">
           <i class="bi bi-search text-4xl mb-2"></i>
           <p>Gunakan pencarian untuk menemukan stock</p>
@@ -1583,28 +1617,68 @@ function generateTambahStockContent() {
 
   // Use a timeout to ensure the modal is in the DOM before we manipulate it
   setTimeout(() => {
-    const searchInput = document.getElementById('searchStock');
-    const stockList = document.querySelector('.list-stock');
+  const searchInput = document.getElementById('searchStock');
+  const stockList = document.querySelector('.list-stock');
+  const backBtn = document.getElementById('back-btn-layer-2');
 
     if (searchInput && stockList) {
-        // Initially clear the list
-        stockList.innerHTML = '';
+      // Tampilkan pesan default saat belum ada pencarian
+      stockList.innerHTML = `
+        <div class="text-center py-8 text-gray-500">
+          <i class="bi bi-search text-4xl mb-2"></i>
+          <p>Gunakan pencarian untuk menemukan stock</p>
+        </div>
+      `;
 
-        // Add event listener for search
-        searchInput.addEventListener('input', (e) => {
-            const searchTerms = e.target.value.toLowerCase().split(' ').filter(term => term.trim() !== '');
+      // Add event listener for search
+      searchInput.addEventListener('input', (e) => {
+        const searchTerms = e.target.value.toLowerCase().split(' ').filter(term => term.trim() !== '');
 
-            if (searchTerms.length === 0) {
-                stockList.innerHTML = ''; // Clear if search is empty
-                return;
-            }
+        if (searchTerms.length === 0) {
+          stockList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="bi bi-search text-4xl mb-2"></i>
+              <p>Gunakan pencarian untuk menemukan stock</p>
+            </div>
+          `;
+          return;
+        }
 
-            const filteredData = data.kain.filter(item => {
-                const itemText = item.k.toLowerCase();
-                return searchTerms.every(term => itemText.includes(term));
-            });
-            renderDataKain(filteredData);
+        const filteredData = data.kain.filter(item => {
+          const itemText = item.k.toLowerCase();
+          return searchTerms.every(term => itemText.includes(term));
         });
+        if (filteredData.length === 0) {
+          stockList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="bi bi-emoji-frown text-4xl mb-2"></i>
+              <p>Stock tidak ditemukan</p>
+            </div>
+          `;
+        } else {
+          renderDataKain(filteredData);
+        }
+      });
+
+      // Event tombol kembali
+      if (backBtn) {
+        backBtn.addEventListener('click', function() {
+          // Ambil keywords dari kolom pencarian
+          const keywords = searchInput.value;
+          const searchTerms = keywords.toLowerCase().split(' ').filter(term => term.trim() !== '');
+          let filteredData = [];
+          if (searchTerms.length === 0) {
+            filteredData = data.kain;
+          } else {
+            filteredData = data.kain.filter(item => {
+              const itemText = item.k.toLowerCase();
+              return searchTerms.every(term => itemText.includes(term));
+            });
+          }
+          // Render hasil pencarian kembali
+          renderDataKain(filteredData);
+        });
+      }
     }
   }, 0);
 
