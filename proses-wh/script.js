@@ -1777,8 +1777,13 @@ function modalBackdropHandler(e) {
 
 function addItemHandler() {
   const idStock = $(this).data('id');
-  const idKain = $(this).data('id-kain');
-  console.log(idStock, idKain);
+  // Asumsikan data.layer2 adalah array berisi banyak items dengan properti id_stock
+  const item = data.layer2.find(i => i.id_stock == idStock);
+  if (item) {
+    console.log(item);
+  } else {
+    console.log('Item dengan id_stock', idStock, 'tidak ditemukan di layer2');
+  }
 }
 
 function helperInputHandler(e) {
