@@ -1559,9 +1559,10 @@ function renderDataKain(data) {
     <span class="px-2 py-0.5 font-medium rounded-full shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300">E [${item.c_e}]</span>
     <span class="px-2 py-0.5 font-medium rounded-full shadow-sm bg-blue-100 text-blue-700 border border-blue-300">G [${item.c_g}]</span>
   </span>
-  <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full shadow-sm border border-gray-300">
-    <span class="font-semibold">Sisa: ${(Number(item.e) + Number(item.g)).toFixed(2)} ${item.s}</span>
-  </span>
+    <span class="px-2 py-0.5 rounded-full shadow-sm border font-semibold ${((Number(item.e) + Number(item.g)) === 0 || isNaN(Number(item.e) + Number(item.g))) ? 'bg-red-100 text-red-600 border-red-300' : 'bg-gray-100 text-gray-600 border-gray-300'}">
+      Sisa: ${(Number(item.e) + Number(item.g)).toFixed(2)} ${item.s}
+      ${((Number(item.e) + Number(item.g)) === 0 || isNaN(Number(item.e) + Number(item.g))) ? '<span class="ml-2 text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded">Kosong</span>' : ''}
+    </span>
   <span class="px-2 py-0.5 font-mono text-blue-400">ID.${item.ik}</span>
 </div>
 
@@ -1571,14 +1572,31 @@ function renderDataKain(data) {
   // Tambahkan event listener untuk setiap item-kain
   const itemKainEls = stockList.querySelectorAll('.item-kain');
   itemKainEls.forEach((el, idx) => {
-    el.addEventListener('click', function() {
-      // Panggil openLayer2Handler dengan id_kain dari item
-      if (typeof openLayer2Handler === 'function') {
-        // Simulasikan event jQuery dengan data-id-kain
-        el.setAttribute('data-id-kain', top100[idx].ik);
-        openLayer2Handler.call(el);
-      }
-    });
+      el.addEventListener('click', function() {
+        const sisa = Number(top100[idx].e) + Number(top100[idx].g);
+        if (sisa === 0 || isNaN(sisa)) {
+          // Show nested alert popup
+          const alertDiv = document.createElement('div');
+          alertDiv.innerHTML = `<div style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:9999;display:flex;align-items:center;justify-content:center;">
+            <div style="background:white;padding:2rem 1.5rem;border-radius:1rem;box-shadow:0 2px 16px rgba(0,0,0,0.2);text-align:center;max-width:90vw;">
+              <div class='text-red-600 font-bold text-lg mb-2'>Stock Kosong</div>
+              <div class='mb-4'>Stock untuk item <span class='font-semibold'>${top100[idx].k}</span> kosong.<br>Silakan pilih item lain.</div>
+              <button style="background:#ef4444;color:white;padding:0.5rem 1.5rem;border-radius:0.5rem;font-weight:bold;" id="closeAlertBtn">Tutup</button>
+            </div>
+          </div>`;
+          document.body.appendChild(alertDiv);
+          alertDiv.querySelector('#closeAlertBtn').onclick = () => document.body.removeChild(alertDiv);
+          return;
+        }
+        // Tampilkan tombol kembali
+        const backBtn = document.getElementById('back-btn-layer-2');
+        if (backBtn) backBtn.classList.remove('hidden');
+        // Panggil openLayer2Handler dengan id_kain dari item
+        if (typeof openLayer2Handler === 'function') {
+          el.setAttribute('data-id-kain', top100[idx].ik);
+          openLayer2Handler.call(el);
+        }
+      });
   });
 }
 
@@ -1589,13 +1607,12 @@ function generateTambahStockContent() {
       <!-- Search Bar -->
       <div class="relative flex items-center gap-2">
         <input 
-          type="text" 
+          type="search" 
           id="searchStock" 
           placeholder="Cari berdasarkan nama kain atau kode..."
           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-        <button id="back-btn-layer-2" class="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm">Kembali</button>
-        <i class="bi bi-search absolute right-3 top-3 text-gray-400"></i>
+        <button id="back-btn-layer-2" class="px-3 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm hidden">Kembali</button>
       </div>
 
       <!-- Stock List -->
@@ -1603,18 +1620,6 @@ function generateTambahStockContent() {
         <div class="text-center py-8 text-gray-500">
           <i class="bi bi-search text-4xl mb-2"></i>
           <p>Gunakan pencarian untuk menemukan stock</p>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex justify-between pt-4 border-t">
-        <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
-          <i class="bi bi-plus-circle mr-2"></i>Stock Baru
-        </button>
-        <div class="space-x-2">
-          <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" id="confirmTambah">
-            <i class="bi bi-check-lg mr-2"></i>Tambah Terpilih
-          </button>
         </div>
       </div>
     </div>
@@ -1625,6 +1630,11 @@ function generateTambahStockContent() {
   const searchInput = document.getElementById('searchStock');
   const stockList = document.querySelector('.list-stock');
   const backBtn = document.getElementById('back-btn-layer-2');
+  if (backBtn) {
+    backBtn.addEventListener('click', function() {
+      backBtn.classList.add('hidden');
+    });
+  }
 
     if (searchInput && stockList) {
       // Tampilkan pesan default saat belum ada pencarian

@@ -373,7 +373,7 @@
         <!-- Tombol Close -->
         <button
           id="close-layer-2"
-          class="absolute top-2 right-2 text-gray-600 hover:text-black text-xl"
+          class="absolute top-6 right-6 text-gray-600 hover:text-black text-xl"
         >
           ✕
         </button>
@@ -381,14 +381,6 @@
         <div id="modal-content-layer-2" class="text-gray-700">
           <!-- Konten akan diisi lewat JS -->
           <div class="list-stock max-h-[500px] overflow-y-auto"></div>
-        </div>
-        <div class="mt-4 text-right">
-          <button
-            id="close-btn-layer-2"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Tutup
-          </button>
         </div>
       </div>
     </div>
@@ -449,9 +441,19 @@
       );
       const db2 = getDatabase(app2);
 
+      const app3 = initializeApp(
+        {
+          databaseURL:
+            'https://main-stock-wv-default-rtdb.asia-southeast1.firebasedatabase.app/',
+        },
+        'app3'
+      );
+      const db3 = getDatabase(app3);
+
       Object.assign(window, {
         db,
         db2,
+        db3,
         ref,
         set,
         get,
@@ -825,6 +827,7 @@
         // Load data marketing & data SJ
         fbsSvc = new Fbs(db);
         fbsSvcX = new Fbs(db2);
+        fbsSvcY = new Fbs(db3);
 
         // Initialize all event listeners once
         initializeEventListeners();
