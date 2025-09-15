@@ -1516,7 +1516,7 @@ function modalStockLainya(mode) {
 
   // Set title berdasarkan mode
   if (mode === 'tambah') {
-    modalTitle.textContent = 'Tambah Stock Baru';
+    modalTitle.textContent = 'Tambah Items Baru';
   } else if (mode === 'switch') {
     modalTitle.textContent = 'Ganti Stock Item';
   }
@@ -1554,12 +1554,17 @@ function renderDataKain(data) {
   stockList.innerHTML = top100.map(item => `
     <div class="border p-2 mb-2 rounded cursor-pointer hover:bg-gray-100 item-kain" data-id-kain="${item.ik}">
       <p class="font-bold">${item.k}</p>
-      <div class="text-sm text-gray-600">
-        <span>IK: <span class="font-semibold">${item.ik}</span></span> |
-        <span>E: <span class="font-semibold">${item.e}</span></span> |
-        <span>G: <span class="font-semibold">${item.g}</span></span> |
-        <span>S: <span class="font-semibold">${item.s}</span></span>
-      </div>
+<div class="text-sm text-gray-600">
+  <span class="font-semibold">
+    <span class="px-2 py-0.5 font-medium rounded-full shadow-sm bg-yellow-100 text-yellow-700 border border-yellow-300">E [${item.c_e}]</span>
+    <span class="px-2 py-0.5 font-medium rounded-full shadow-sm bg-blue-100 text-blue-700 border border-blue-300">G [${item.c_g}]</span>
+  </span>
+  <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full shadow-sm border border-gray-300">
+    <span class="font-semibold">Sisa: ${(Number(item.e) + Number(item.g)).toFixed(2)} ${item.s}</span>
+  </span>
+  <span class="px-2 py-0.5 font-mono text-blue-400">ID.${item.ik}</span>
+</div>
+
     </div>
   `).join('');
 
