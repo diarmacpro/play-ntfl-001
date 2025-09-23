@@ -1,0 +1,52 @@
+# Laporan Komunikasi & Tindak Lanjut Kendala Perangkat
+
+**Tanggal:** Senin, 22 September 2025
+**Disusun oleh:** Yusril Abdin
+
+---
+
+## 1. Latar Belakang
+
+PIC menyampaikan adanya kendala pada perangkat monitor yang mati-nyala secara acak dalam beberapa hari terakhir. Kondisi ini sebelumnya juga dialami oleh perangkat lain dan dapat teratasi setelah penggantian kabel. Namun, pada monitor PIC, kendala tetap berlanjut meskipun sudah dilakukan penggantian kabel DisplayPort/HDMI.
+
+---
+
+## 2. Kronologi
+
+10:55 – 10:58 → PIC melaporkan kendala monitor mati-nyala, menjelaskan bahwa meski kabel sudah diganti, masalah masih terjadi. Monitor mati jika meja bergoyang, namun kabel dan port terlihat aman saat disentuh.
+11:00 – 11:01 → Saya menyampaikan kemungkinan penyebab ada pada CPU, khususnya port VGA yang mungkin kendur atau socket sudah usang. Saya juga mengusulkan pengecekan langsung pada perangkat agar tidak perlu berulang kali dibawa ke gudang.
+11:06 → PIC menyampaikan akan memantau terlebih dahulu frekuensi gangguan dalam beberapa jam ke depan sebelum diputuskan pengecekan lebih lanjut.
+11:07 – 11:08 → Saya menegaskan kesiapan untuk menindaklanjuti jika diperlukan. Komunikasi ditutup dengan baik.
+
+---
+
+## 3. Analisis Awal
+
+* **Kemungkinan penyebab:**
+
+  * Port VGA/HDMI pada CPU kendur.
+  * Socket port mengalami aus/usang.
+  * Kemungkinan jarum konektor patah.
+* **Observasi:**
+
+  * Gangguan berkurang dibanding hari-hari sebelumnya.
+  * Gangguan muncul jika meja bergoyang.
+
+---
+
+## 4. Rencana Tindak Lanjut
+
+* Menunggu konfirmasi PIC terkait frekuensi gangguan dalam beberapa jam ke depan.
+* Jika gangguan berlanjut, dilakukan pengecekan langsung pada CPU (fokus pada port VGA/HDMI).
+* Pengecekan dilakukan agar permasalahan bisa dipastikan tanpa perlu bolak-balik ke gudang.
+
+---
+
+## 5. Kesimpulan
+
+* Permasalahan sedang dalam tahap pemantauan.
+* Saya sudah memberikan analisis awal serta opsi tindak lanjut.
+* Komunikasi dengan PIC berjalan baik dan kondusif.
+* PIC menyampaikan apresiasi atas respon cepat dan solusi yang ditawarkan.
+
+**Catatan:** Akan dilakukan update laporan jika PIC memberikan konfirmasi lanjutan terkait kondisi monitor setelah masa observasi beberapa jam ke depan.
