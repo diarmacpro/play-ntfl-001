@@ -474,6 +474,8 @@
       let fbsSvc, fbsSvcX;
       let isLoading = false;
 
+      let layer2Aktif = {};
+
       var countSumaryData = {
         totalData: 0,
         totalOnline: 0,
@@ -663,9 +665,14 @@
           try {
             data.result = result;
             data.dataside = data.result.summary;
-            renderElemenSummary(data.dataside);
-            renderJumlahDataSummary();
-            
+            // Cek kolom pencarian
+            const cariVal = $('#cariDataSj').val();
+            if (cariVal && cariVal.trim() !== '') {
+              renderFiltered(cariVal);
+            } else {
+              renderElemenSummary(data.dataside);
+              renderJumlahDataSummary();
+            }
             updateProgress('step4', 'completed');
           } catch (error) {
             console.error('Error loading surat jalan data:', error);
@@ -743,8 +750,14 @@
         prosesDataSJ('https://cdn.weva.my.id/apix/dtSj', { tgl }, (result) => {
           data.result = result;
           data.dataside = data.result.summary;
-          renderElemenSummary(data.dataside);
-          renderJumlahDataSummary();
+          // Cek kolom pencarian
+          const cariVal = $('#cariDataSj').val();
+          if (cariVal && cariVal.trim() !== '') {
+            renderFiltered(cariVal);
+          } else {
+            renderElemenSummary(data.dataside);
+            renderJumlahDataSummary();
+          }
         });
       }
 
@@ -808,13 +821,29 @@
           window.history.replaceState({}, '', `?${params.toString()}`);
         }
 
+
         // Set nilai awal input tanggal
         $('#tanggalInput').val(initDate);
 
         // Event input search
         $('#cariDataSj').on('input', function () {
-          renderFiltered($(this).val());
+          const val = $(this).val();
+          renderFiltered(val);
+          // Update URL query cariSide
+          if (val && val.trim() !== '') {
+            params.set('cariSide', val);
+          } else {
+            params.delete('cariSide');
+          }
+          window.history.replaceState({}, '', `?${params.toString()}`);
         });
+
+        // Jika ada query cariSide di URL, isi kolom pencarian dan filter otomatis
+        const cariSide = params.get('cariSide');
+        if (cariSide && cariSide.trim() !== '') {
+          $('#cariDataSj').val(cariSide);
+          renderFiltered(cariSide);
+        }
 
         // Event change tanggal
         $('#tanggalInput').on('change', function () {
@@ -867,12 +896,14 @@
       let alertTimer = null;
       let alertCountdown = null;
 
+      /*
       function tampilkanPilihanStockLain(d) {
         // getDtStock(d,(r)=>{
         //   console.log(data.tempOlahSj);
         //   console.log(d,r);
         // });
       }
+      */
 
       function showAlert(message, duration = 3000) {
         const modal = document.getElementById('alertModal');
@@ -935,6 +966,7 @@
       // Fungsi untuk menampilkan pilihan stock lain di modal
       function tampilkanPilihanStockLain(id) {
         getDtStock(id, (r) => {
+          console.log([tempData,r]);
           let html = r
             .map((item) => {
               const outCount =

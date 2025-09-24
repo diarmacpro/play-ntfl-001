@@ -1759,8 +1759,21 @@ function switchItemHandler() {
 }
 
 function openLayer2Handler() {
+  // Ambil id SJ yang sedang aktif/terpilih
+  let idSjAktif = null;
+  const aktifEl = document.querySelector('#summary > div.bg-yellow-200');
+  if (aktifEl) {
+    idSjAktif = aktifEl.getAttribute('data-id-sj');
+  }
   console.log('Listener Layer2');
+  if (idSjAktif) {
+    console.log('SJ aktif:', idSjAktif);
+  } else {
+    console.log('Tidak ada SJ yang sedang dipilih');
+  }
   const idKain = $(this).data('id-kain');
+  // Tampilkan data layer2 pada console
+  // console.log('Data layer2:', data.layer2);
   $('#layer-2-modal').removeClass('hidden');
   tampilkanPilihanStockLain(idKain);
 }
