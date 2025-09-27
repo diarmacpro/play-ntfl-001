@@ -1,0 +1,57 @@
+pR('https://cdn.weva.my.id/apix/data/dtRak',{},(e,d)=>{
+    console.log(d.data);
+})
+
+fbsSvc.gDt('/','',(d)=>{
+    console.log(d);
+})
+
+fbsSvcX.gDt('/','',(d)=>{
+    console.log(d);
+})
+
+
+pR('https://cdn.weva.my.id/apix/data/dtRak', {}, (e, d) => {
+    if (d && d.data) {
+        d.data.map(item => {
+            fbsSvcX.iDtKy('/app/data/rakx', item, () => {
+                console.log('Data berhasil di-insert:', item);
+            });
+        });
+    }
+});
+
+pR('https://cdn.weva.my.id/apix/data/dtRak', {}, (e, d) => {
+    if (d && d.data) {
+        d.data.forEach((item, idx) => {
+            fbsSvcX.iDt('/data/rak/' + idx, item, () => {
+                console.log('Data berhasil di-insert dengan key:', idx, item);
+            });
+        });
+    }
+});
+
+
+------------------------------- [SOS]
+gdt('/').then((data)=>{
+    console.log(data)
+}).catch(error=>console.error(error));
+
+---------------
+
+snd('https://cdn.weva.my.id/apix/data/dtRak', {})
+  .then(d => {
+    if (d && d.length) {
+      const hasil = d.map(item => ({
+        kd_rak: item.i,
+        rak: item.v
+      }));
+
+      console.log(hasil);
+      // langsung insert array ke path "rakz"
+      idt('rak', hasil);
+    }
+  })
+  .catch(err => {
+    console.error('Gagal ambil data:', err);
+  });

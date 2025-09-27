@@ -1,0 +1,72 @@
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+"print label buffering"
+pic dalam melakukan pengolahan data barang masuk mengalami kendala saat proses print, hal yang mendasari terjadinya kendala belum diketahui, dilakukan beberapa tindakan penyelesaian sebagaian cara yang dapat dijadikan alternatif untuk mengatasi hal tersebut, diantaranya,
+dengan melakukan pengecekan perangkat lokal, hingga koneksi internet dan melakukan pengecekan pada kode program,
+setelah dilakukan pengecekan yang signifikan tidak ditemui hal-hal yang krusial atau yang terindikasi sebagai penyebab kendala,
+secara berkala melakukan konfirmasi kepada pic yang memberikan laporan kendala,
+pic memberikan feedback positif, dapat disimpulkan bahwa kendala sudah tidak terjadi,
+
+tulis laporan pada file laporan-24092025-a.md
+-------------------------------
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+pic operasional memberikan instruksi terkait adanya penambahan data rak baru,
+perintah diterima dengan baik dan melakukan penambahan data pada database di server utama,
+selanjutnya pada beberapa server cache yang memiliki keterkaitan dengan sistem operasional dan lini lainya,
+setiap server cache pada google cloud dilakukan penyesuaian dengan sinkronasi data,
+setelah inisiasi dilakukan sesuai dengan prosedur yang ada, dan memastikan tidak ada hal yang terlewat,
+menginformasikan bahwa rak sudah berhasil di tambahkan dan dapat digunakan untuk keperluan operasional serta pada lini lainya,
+feeback pic baik dan menanggapi positif
+
+tulis laporan pada file laporan-24092025-b.md
+-------------------------------
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+pic menyampaikan feedback lanjutan terkait issue penambahan data rak baru,
+setelah proses dilakukan, pic memproses beberapa tindakan mutasi barang,
+saat dilakukan mutasi barang di rak lain yang dimutasi ke rak baru tidak berhasil dilakukan
+tindakan pengecekan dilakukan dengan menelusuri jalur data yang ada pada sub sistem tersebut,
+ditemukan bahwa adanya proses propagasi yang belum selesai,
+sehingga setelah propagasi yang memang berjalan otomatis usai lalu menginformasikan kepada pic yang memberikan laporan
+bahwa sistem dapat digunakan kembali
+feeback pic baik dan menanggapi dengan positif
+
+tulis laporan pada file laporan-24092025-c.md
+-------------------------------
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+masuk laporan bahwa ada nomor sj yang tidak tampil pada halaman proses, pic menyampaikan saat melakukan proses di tahap penyiapan barang, sj yang seharusnya ada tidak disajikan pada halaman terkait,
+dengan melampirkan foto fisik dari sj didapati nomor sj adalah 051916,
+
+melakukan monitoring pada halaman tracking-data-sj
+ditemukan kondisi disabled, untuk memastikan lalu dilakukan tindakan melakukan pengecekan pada database utama didalam tabel sj serta tabel out (sebagai langkah perfentif memastikan barang belum memotong jumlah stock),
+usai dilakukan pengecekan didapati bahwa nomor sj tersebut dalam keadaan disabled, belum diketahui apa hal yang menyebabkan issue tersebut terjadi, lalu dilakukan enabling dengan mengganti value 1 ke value 2 pada sebuah kolom yang berfungsi sebagai indikator enabling
+lalu melaporkan kembali hasil dari tindakan kepada pic, untuk melakukan pengecekan pada halaman terkait, pic menanggapi positif dan baik,
+dapat disimpulkan bahwa issue berhasil diatasi dengan tetap melakukan penelusuran terkait kode program tentang hal yang menyebabkan issue tersebut terjadi
+ada juga kemungkinan terjadi beberapa pergantian items saat melakukan proses pengolahan dan berkemungkinan adanya items yang tidak sengaja diproses sehingga menimbulkan data terdisabled, ataupun terkait koneksi jaringan dan sebab lain terutama adanya bug yang menyebabkan anomali tersebut
+
+tulis laporan pada file laporan-24092025-d.md
+-------------------------------
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+pic menyampaikan intruksi terkait adanya penyesuaian pada barang di id 56869 supaya dilakukan penyesuaian pada setiap data transaksi keluar yang terhubung pada kondisi jumlah stock pada barang, berupa mengalihkan data transaksi pada id barang lainya yaitu 56876,
+berdasarkan hal hal di masa sebelumnya, issue ini sudah sempat terjadi, dan dikarenakan adanya miss transaksi sehingga seharusnya dilakukan hal seperti ini untuk menyelaraskan kondisi real dan kondisi pada sistem,
+tindakan yang dilakukan, pada navicat melakukan akses pada database di server utama dan melakukan pengolahan data pada tabel out serta  tabel sj guna memastikan data data tersebut benar adanya,
+selanjutnya proses perpindahan atau pengalihan transaksi dilakukan sesuai prosedur dan memastikan dilakukan dengan hati hati dan detail untuk menghindari adanya proses yang terlewat, proses dilakukan dengan querying sederhana,
+lalu langkah penting lainya dengan melakukan sinkronasi data kepada cache yang ada, sebagai bentuk load balancer dari sistem yang membuat sistem utama tidak mengalami bootleneck,
+lalu ada tambahan sebelumnya bahwa pic mengarapkan hasil akhirnya adalah id 56876 => ecer dan id 56869 => grosir
+setelah proses selesai dilakukan, melakukan penginformasian kepada pic terkait bahwa intruksi berhasil dijalankan sesuai prosedur dan dapat melakukan pengecekan pada sistem, feedback pic baik dan positif
+
+tulis laporan pada file laporan-24092025-e.md
+-------------------------------
+buat laporan pekerjaan untuk hal ini dengan format profesional:
+
+memasukan rak baru pada database cloud lainya karena ada laporan saat melakukan so tidak dapat meload rak baru
+setelah sebelumnya sudah dilakukan penyesuaian pada data rak baru ada laporan masuk saat pic yang melakukan stock opname tidak mendeteksi rak baru, lalu dilakukan pengecekan pada setiap lini data, ditemukan adanya server cache yang terlewat tidak mengalami update data rak,
+sehingga melakukan scripting sederhana untuk meload seluruh data rak dari server utama dan menuliskan via script looping kedalam database cache di google cloud yang digunakan untuk prosesi stock opname
+setelah langkah langakah tindakan sudah usai dilakukan sesuai prosedur selanjutnya menginformasikan kepada pic bahwa sistem sudah dilakukan troubleshooting dan dapat dicoba kembali,
+feedback pic baik dan positif
+
+tulis laporan pada file laporan-24092025-f.md
+-------------------------------

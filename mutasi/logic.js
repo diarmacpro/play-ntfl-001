@@ -141,62 +141,54 @@ setTimeout(() => {
     kirimMutasiJQuery(payload).then(data => {
       console.log('Hasil:', data);
       if (data && data.id_stock !== null) {
-
-
+        // Sukses kirim mutasi
+        showAlert('Data mutasi berhasil direkam!', 'success');
         // console.log( data.dataPick,data.helperLokasi );
         fbsSvc.iDtKy(`/app/mutasi/${stm('t')}/`,result,()=>{
-
-
           fbsSvc.gDt(`/layer2/${result.id_kain}`, '', (d) => {
             const indexes = [];
             console.log(result);
-
             d.forEach((item, index) => {
               if (item.id_stock === result.id) {
                 indexes.push(index);
               }
             });
-
             if (indexes.length > 0) {
               const idx = indexes[0];
               const path = `/layer2/${result.id_kain}/${idx}`;
-
               fbsSvc.gDt(path, '', (oldData) => {
                 const updatedData = {
                   kol:result.lokasi_akhir.kol,
                   rak:result.lokasi_akhir.rak,
                   rkkl:`${result.lokasi_akhir.rak} ${result.lokasi_akhir.kol}`
                 };
-
-
-                console.log(
-                  {result,updatedData}
-                );
-                
+                console.log({result,updatedData});
                 fbsSvc.upd(path, null, updatedData, (err) => {
                   if (err) {
+                    showAlert('Gagal update data stok: ' + err, 'error');
                     console.error('Gagal update:', err);
                   } else {
                     updateLayer2ByIdStock(result.id, updatedData)
+                    showAlert('Data stok berhasil diupdate!', 'success');
                     console.log('Data berhasil diupdate:', updatedData);
                     cekNav();
                   }
                 });
-                
               });
             } else {
+              showAlert('ID stock tidak ditemukan pada layer2!', 'warning');
               console.log('id_stock tidak ditemukan');
             }
           });
-
-
         });
       } else {
+        showAlert('Gagal merekam data mutasi!', 'error');
         console.log("Error");
       }
-
-    }).catch(console.error);
-
+    }).catch((err) => {
+      showAlert('Terjadi error saat merekam data mutasi: ' + err, 'error');
+      console.error(err);
+    });
 
     console.log(result);
     offFunction();
