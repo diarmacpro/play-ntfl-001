@@ -469,6 +469,7 @@
     </script>
 
     <script>
+      // var sementara = {};
       var data = {};
       var tempData = {};
       let fbsSvc, fbsSvcX;
@@ -1021,6 +1022,8 @@
 
 function activateCard(idSj) {
   console.log(`Load Detail ${idSj}`);
+  // sementara.idSj = idSj;
+
   if (!idSj) return;
 
   // Update query param di URL
@@ -1029,6 +1032,8 @@ function activateCard(idSj) {
   // Ambil data
   tempData = cariByIdSj(idSj);
   console.log(tempData);
+  // sementara.tempData = tempData;
+
 
   // Reset highlight
   document.querySelectorAll("#summary > div").forEach((el) => {
